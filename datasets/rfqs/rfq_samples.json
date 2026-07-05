@@ -1,0 +1,65 @@
+[
+  {
+    "rfq_id": "RFQ-001",
+    "domain": "it_equipment",
+    "customer_id": "CUST-001",
+    "input_text": "We would like to purchase 50 standard business laptops for a new operations team. We signed a master agreement in May 2026. Please provide your best quotation with the applicable discount.",
+    "expected_product_id": "IT-LAP-001",
+    "quantity": 50,
+    "expected_contract_id": "CON-2026-ACME-IT"
+  },
+  {
+    "rfq_id": "RFQ-002",
+    "domain": "office_furniture",
+    "customer_id": "CUST-002",
+    "input_text": "Our retail headquarters needs 120 ergonomic office chairs and 60 office desks for the new floor expansion. Please quote based on our existing office supply agreement.",
+    "expected_product_ids": [
+      "OF-CHAIR-002",
+      "OF-DESK-001"
+    ],
+    "quantity": {
+      "OF-CHAIR-002": 120,
+      "OF-DESK-001": 60
+    },
+    "expected_contract_id": "CON-2026-NORTHWIND-OFFICE"
+  },
+  {
+    "rfq_id": "RFQ-003",
+    "domain": "facility_maintenance",
+    "customer_id": "CUST-003",
+    "input_text": "We need a commercial HVAC maintenance package for our outpatient facility. Please include compliance terms and service-level commitments.",
+    "expected_product_id": "FM-AC-001",
+    "quantity": 1,
+    "expected_contract_id": "CON-2026-VERTEX-FACILITY"
+  },
+  {
+    "rfq_id": "RFQ-004",
+    "domain": "software_subscription",
+    "customer_id": "CUST-005",
+    "input_text": "Please provide an annual quotation for 300 CRM Enterprise seats and 300 endpoint security seats for our school administration teams.",
+    "expected_product_ids": [
+      "SW-CRM-001",
+      "SW-SEC-002"
+    ],
+    "quantity": {
+      "SW-CRM-001": 300,
+      "SW-SEC-002": 300
+    },
+    "expected_contract_id": "CON-2026-GREENFIELD-SOFTWARE"
+  },
+  {
+    "rfq_id": "RFQ-005",
+    "domain": "logistics_equipment",
+    "customer_id": "CUST-004",
+    "input_text": "We need 12 electric pallet trucks and 40 warehouse storage rack sets for the new distribution center. Please apply the logistics framework agreement terms.",
+    "expected_product_ids": [
+      "LG-FORK-001",
+      "LG-RACK-002"
+    ],
+    "quantity": {
+      "LG-FORK-001": 12,
+      "LG-RACK-002": 40
+    },
+    "expected_contract_id": "CON-2026-BLUEHARBOR-LOGISTICS"
+  }
+]

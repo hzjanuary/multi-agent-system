@@ -1,0 +1,47 @@
+[
+  {
+    "customer_id": "CUST-001",
+    "name": "Acme Manufacturing Group",
+    "industry": "Manufacturing",
+    "contact_name": "Emily Carter",
+    "contact_email": "emily.carter@acme-mfg.example",
+    "risk_tier": "LOW",
+    "payment_history": "GOOD"
+  },
+  {
+    "customer_id": "CUST-002",
+    "name": "Northwind Retail Holdings",
+    "industry": "Retail",
+    "contact_name": "James Wilson",
+    "contact_email": "james.wilson@northwind.example",
+    "risk_tier": "MEDIUM",
+    "payment_history": "AVERAGE"
+  },
+  {
+    "customer_id": "CUST-003",
+    "name": "Vertex Healthcare Services",
+    "industry": "Healthcare",
+    "contact_name": "Sophia Nguyen",
+    "contact_email": "sophia.nguyen@vertex-health.example",
+    "risk_tier": "LOW",
+    "payment_history": "GOOD"
+  },
+  {
+    "customer_id": "CUST-004",
+    "name": "BlueHarbor Logistics",
+    "industry": "Logistics",
+    "contact_name": "Daniel Brooks",
+    "contact_email": "daniel.brooks@blueharbor.example",
+    "risk_tier": "MEDIUM",
+    "payment_history": "GOOD"
+  },
+  {
+    "customer_id": "CUST-005",
+    "name": "GreenField Education Network",
+    "industry": "Education",
+    "contact_name": "Olivia Martin",
+    "contact_email": "olivia.martin@greenfield.example",
+    "risk_tier": "LOW",
+    "payment_history": "GOOD"
+  }
+]

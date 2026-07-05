@@ -1,0 +1,6 @@
+customer_id,name,industry,contact_name,contact_email,risk_tier,payment_history
+CUST-001,Acme Manufacturing Group,Manufacturing,Emily Carter,emily.carter@acme-mfg.example,LOW,GOOD
+CUST-002,Northwind Retail Holdings,Retail,James Wilson,james.wilson@northwind.example,MEDIUM,AVERAGE
+CUST-003,Vertex Healthcare Services,Healthcare,Sophia Nguyen,sophia.nguyen@vertex-health.example,LOW,GOOD
+CUST-004,BlueHarbor Logistics,Logistics,Daniel Brooks,daniel.brooks@blueharbor.example,MEDIUM,GOOD
+CUST-005,GreenField Education Network,Education,Olivia Martin,olivia.martin@greenfield.example,LOW,GOOD

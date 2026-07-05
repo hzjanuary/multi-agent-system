@@ -1,0 +1,6 @@
+rule_id,domain,min_quantity,discount_percent,requires_manager_approval
+PR-IT-001,it_equipment,50,10,True
+PR-OF-001,office_furniture,100,8,True
+PR-FM-001,facility_maintenance,1,5,False
+PR-SW-001,software_subscription,200,15,True
+PR-LG-001,logistics_equipment,10,7,True

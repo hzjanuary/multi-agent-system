@@ -1,0 +1,101 @@
+[
+  {
+    "product_id": "IT-LAP-001",
+    "domain": "it_equipment",
+    "name": "Business Laptop Standard 14 inch",
+    "unit_price": 980,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 12
+  },
+  {
+    "product_id": "IT-DESK-002",
+    "domain": "it_equipment",
+    "name": "Desktop Workstation i7 32GB",
+    "unit_price": 1250,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 15
+  },
+  {
+    "product_id": "IT-MON-003",
+    "domain": "it_equipment",
+    "name": "27 inch Productivity Monitor",
+    "unit_price": 230,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 10
+  },
+  {
+    "product_id": "OF-DESK-001",
+    "domain": "office_furniture",
+    "name": "Ergonomic Office Desk",
+    "unit_price": 310,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 10
+  },
+  {
+    "product_id": "OF-CHAIR-002",
+    "domain": "office_furniture",
+    "name": "Ergonomic Mesh Chair",
+    "unit_price": 180,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 10
+  },
+  {
+    "product_id": "FM-AC-001",
+    "domain": "facility_maintenance",
+    "name": "Commercial HVAC Maintenance Package",
+    "unit_price": 1500,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 18
+  },
+  {
+    "product_id": "FM-CLEAN-002",
+    "domain": "facility_maintenance",
+    "name": "Monthly Cleaning Service Package",
+    "unit_price": 900,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 20
+  },
+  {
+    "product_id": "SW-CRM-001",
+    "domain": "software_subscription",
+    "name": "CRM Enterprise Annual Seat",
+    "unit_price": 240,
+    "currency": "USD",
+    "vat_percent": 0,
+    "min_margin_percent": 25
+  },
+  {
+    "product_id": "SW-SEC-002",
+    "domain": "software_subscription",
+    "name": "Endpoint Security Annual Seat",
+    "unit_price": 72,
+    "currency": "USD",
+    "vat_percent": 0,
+    "min_margin_percent": 22
+  },
+  {
+    "product_id": "LG-FORK-001",
+    "domain": "logistics_equipment",
+    "name": "Electric Pallet Truck",
+    "unit_price": 4200,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 15
+  },
+  {
+    "product_id": "LG-RACK-002",
+    "domain": "logistics_equipment",
+    "name": "Warehouse Storage Rack Set",
+    "unit_price": 760,
+    "currency": "USD",
+    "vat_percent": 8,
+    "min_margin_percent": 12
+  }
+]

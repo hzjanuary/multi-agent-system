@@ -1,0 +1,56 @@
+[
+  {
+    "document_id": "CON-2026-ACME-IT",
+    "type": "contract",
+    "path": "datasets/contracts/CON-2026-ACME-IT.md",
+    "should_index_to_qdrant": true
+  },
+  {
+    "document_id": "CON-2026-NORTHWIND-OFFICE",
+    "type": "contract",
+    "path": "datasets/contracts/CON-2026-NORTHWIND-OFFICE.md",
+    "should_index_to_qdrant": true
+  },
+  {
+    "document_id": "CON-2026-VERTEX-FACILITY",
+    "type": "contract",
+    "path": "datasets/contracts/CON-2026-VERTEX-FACILITY.md",
+    "should_index_to_qdrant": true
+  },
+  {
+    "document_id": "CON-2026-GREENFIELD-SOFTWARE",
+    "type": "contract",
+    "path": "datasets/contracts/CON-2026-GREENFIELD-SOFTWARE.md",
+    "should_index_to_qdrant": true
+  },
+  {
+    "document_id": "CON-2026-BLUEHARBOR-LOGISTICS",
+    "type": "contract",
+    "path": "datasets/contracts/CON-2026-BLUEHARBOR-LOGISTICS.md",
+    "should_index_to_qdrant": true
+  },
+  {
+    "document_id": "POLICY-DISCOUNT-APPROVAL",
+    "type": "policy",
+    "path": "datasets/policies/POLICY-DISCOUNT-APPROVAL.md",
+    "should_index_to_qdrant": true
+  },
+  {
+    "document_id": "POLICY-PAYMENT-TERMS",
+    "type": "policy",
+    "path": "datasets/policies/POLICY-PAYMENT-TERMS.md",
+    "should_index_to_qdrant": true
+  },
+  {
+    "document_id": "POLICY-EMAIL-APPROVAL",
+    "type": "policy",
+    "path": "datasets/policies/POLICY-EMAIL-APPROVAL.md",
+    "should_index_to_qdrant": true
+  },
+  {
+    "document_id": "POLICY-DOMAIN-COMPLIANCE",
+    "type": "policy",
+    "path": "datasets/policies/POLICY-DOMAIN-COMPLIANCE.md",
+    "should_index_to_qdrant": true
+  }
+]

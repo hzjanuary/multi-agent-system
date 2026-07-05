@@ -1,0 +1,12 @@
+product_id,domain,name,unit_price,currency,vat_percent,min_margin_percent
+IT-LAP-001,it_equipment,Business Laptop Standard 14 inch,980,USD,8,12
+IT-DESK-002,it_equipment,Desktop Workstation i7 32GB,1250,USD,8,15
+IT-MON-003,it_equipment,27 inch Productivity Monitor,230,USD,8,10
+OF-DESK-001,office_furniture,Ergonomic Office Desk,310,USD,8,10
+OF-CHAIR-002,office_furniture,Ergonomic Mesh Chair,180,USD,8,10
+FM-AC-001,facility_maintenance,Commercial HVAC Maintenance Package,1500,USD,8,18
+FM-CLEAN-002,facility_maintenance,Monthly Cleaning Service Package,900,USD,8,20
+SW-CRM-001,software_subscription,CRM Enterprise Annual Seat,240,USD,0,25
+SW-SEC-002,software_subscription,Endpoint Security Annual Seat,72,USD,0,22
+LG-FORK-001,logistics_equipment,Electric Pallet Truck,4200,USD,8,15
+LG-RACK-002,logistics_equipment,Warehouse Storage Rack Set,760,USD,8,12

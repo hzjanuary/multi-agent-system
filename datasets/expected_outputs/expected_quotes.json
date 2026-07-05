@@ -1,0 +1,138 @@
+{
+  "RFQ-001": {
+    "items": [
+      {
+        "product_id": "IT-LAP-001",
+        "quantity": 50,
+        "unit_price": 980,
+        "subtotal": 49000,
+        "discount_percent": 10,
+        "discount_amount": 4900,
+        "taxable_amount": 44100,
+        "vat_percent": 8,
+        "vat_amount": 3528,
+        "total": 47628
+      }
+    ],
+    "currency": "USD",
+    "grand_total": 47628,
+    "approval_required": true,
+    "compliance_expected": "PASS"
+  },
+  "RFQ-002": {
+    "items": [
+      {
+        "product_id": "OF-CHAIR-002",
+        "quantity": 120,
+        "unit_price": 180,
+        "subtotal": 21600,
+        "discount_percent": 8,
+        "discount_amount": 1728,
+        "taxable_amount": 19872,
+        "vat_percent": 8,
+        "vat_amount": 1589.76,
+        "total": 21461.76
+      },
+      {
+        "product_id": "OF-DESK-001",
+        "quantity": 60,
+        "unit_price": 310,
+        "subtotal": 18600,
+        "discount_percent": 8,
+        "discount_amount": 1488,
+        "taxable_amount": 17112,
+        "vat_percent": 8,
+        "vat_amount": 1368.96,
+        "total": 18480.96
+      }
+    ],
+    "currency": "USD",
+    "grand_total": 39942.72,
+    "approval_required": true,
+    "compliance_expected": "PASS"
+  },
+  "RFQ-003": {
+    "items": [
+      {
+        "product_id": "FM-AC-001",
+        "quantity": 1,
+        "unit_price": 1500,
+        "subtotal": 1500,
+        "discount_percent": 5,
+        "discount_amount": 75,
+        "taxable_amount": 1425,
+        "vat_percent": 8,
+        "vat_amount": 114,
+        "total": 1539
+      }
+    ],
+    "currency": "USD",
+    "grand_total": 1539,
+    "approval_required": false,
+    "compliance_expected": "PASS"
+  },
+  "RFQ-004": {
+    "items": [
+      {
+        "product_id": "SW-CRM-001",
+        "quantity": 300,
+        "unit_price": 240,
+        "subtotal": 72000,
+        "discount_percent": 15,
+        "discount_amount": 10800,
+        "taxable_amount": 61200,
+        "vat_percent": 0,
+        "vat_amount": 0,
+        "total": 61200
+      },
+      {
+        "product_id": "SW-SEC-002",
+        "quantity": 300,
+        "unit_price": 72,
+        "subtotal": 21600,
+        "discount_percent": 15,
+        "discount_amount": 3240,
+        "taxable_amount": 18360,
+        "vat_percent": 0,
+        "vat_amount": 0,
+        "total": 18360
+      }
+    ],
+    "currency": "USD",
+    "grand_total": 79560,
+    "approval_required": true,
+    "compliance_expected": "PASS"
+  },
+  "RFQ-005": {
+    "items": [
+      {
+        "product_id": "LG-FORK-001",
+        "quantity": 12,
+        "unit_price": 4200,
+        "subtotal": 50400,
+        "discount_percent": 7,
+        "discount_amount": 3528,
+        "taxable_amount": 46872,
+        "vat_percent": 8,
+        "vat_amount": 3749.76,
+        "total": 50621.76
+      },
+      {
+        "product_id": "LG-RACK-002",
+        "quantity": 40,
+        "unit_price": 760,
+        "subtotal": 30400,
+        "discount_percent": 7,
+        "discount_amount": 2128,
+        "taxable_amount": 28272,
+        "vat_percent": 8,
+        "vat_amount": 2261.76,
+        "total": 30533.76
+      }
+    ],
+    "currency": "USD",
+    "grand_total": 81155.52,
+    "approval_required": true,
+    "compliance_expected": "PASS"
+  }
+}

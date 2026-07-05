@@ -1,0 +1,37 @@
+[
+  {
+    "rule_id": "PR-IT-001",
+    "domain": "it_equipment",
+    "min_quantity": 50,
+    "discount_percent": 10,
+    "requires_manager_approval": true
+  },
+  {
+    "rule_id": "PR-OF-001",
+    "domain": "office_furniture",
+    "min_quantity": 100,
+    "discount_percent": 8,
+    "requires_manager_approval": true
+  },
+  {
+    "rule_id": "PR-FM-001",
+    "domain": "facility_maintenance",
+    "min_quantity": 1,
+    "discount_percent": 5,
+    "requires_manager_approval": false
+  },
+  {
+    "rule_id": "PR-SW-001",
+    "domain": "software_subscription",
+    "min_quantity": 200,
+    "discount_percent": 15,
+    "requires_manager_approval": true
+  },
+  {
+    "rule_id": "PR-LG-001",
+    "domain": "logistics_equipment",
+    "min_quantity": 10,
+    "discount_percent": 7,
+    "requires_manager_approval": true
+  }
+]
