@@ -59,6 +59,20 @@ LOG_LEVEL=DEBUG
 
 Do not commit real API keys, database credentials, or object storage secrets.
 
+## Logging And Middleware
+
+`app/main.py` wires the core middleware foundation:
+
+- `RequestIdMiddleware` attaches a request ID to every request.
+- If `X-Request-ID` is provided, the same value is reused.
+- If `X-Request-ID` is missing, a UUID request ID is generated.
+- Every response includes `X-Request-ID`.
+- `RequestLoggingMiddleware` emits JSON-compatible request logs with
+  `request_id`, `method`, `path`, `status_code`, and `duration_ms`.
+- CORS origins are loaded from `BACKEND_CORS_ORIGINS`.
+- GZip response compression is enabled.
+- The global exception handler returns the standard JSON error envelope.
+
 ## Test And Check
 
 ```bash
