@@ -30,6 +30,35 @@ The OpenAPI documentation will be available at:
 http://127.0.0.1:8000/docs
 ```
 
+## Settings
+
+Application settings live in `app/config/settings.py` and are loaded with
+Pydantic v2 through `pydantic-settings`.
+
+Create a local `.env` file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Supported environments are:
+
+```text
+development
+testing
+production
+```
+
+Settings can be overridden with environment variables such as:
+
+```bash
+APP_ENV=testing
+DEBUG=false
+LOG_LEVEL=DEBUG
+```
+
+Do not commit real API keys, database credentials, or object storage secrets.
+
 ## Test And Check
 
 ```bash
