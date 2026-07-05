@@ -8,6 +8,12 @@ The human does not need to classify risk. The harness does.
 
 ## Intake Flow
 
+For this project, requests that need discussion, feature intake, docs, or story
+shaping should use the project-scoped skill at
+`.codex/skills/harness-intake-griller/SKILL.md`. That skill preserves the
+required reading order: read `SPEC.md` first, then Harness docs and relevant
+`.ai/project` contracts before implementation.
+
 ```text
 User prompt
     |
