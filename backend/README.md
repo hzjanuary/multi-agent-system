@@ -261,6 +261,22 @@ embeddings, document chunking, document indexing, RAG, hybrid search, Retrieval
 Agent logic, LangGraph, agents, MinIO, and frontend work are deferred to later
 tasks.
 
+Qdrant-backed vector store support lives in `app/vectorstore/qdrant.py`.
+
+```text
+QdrantVectorStore.from_url()       creates a provider from a Qdrant URL
+create_qdrant_vector_store()       creates a provider from QDRANT_URL settings
+QdrantVectorStore.health_check()   verifies Qdrant responds
+```
+
+`QdrantVectorStore` implements the `VectorStore` contract with async operations
+for collection creation, collection existence checks, point upsert, vector
+search, point deletion, and client close. It uses cosine distance for created
+collections and supports simple exact-match payload filters. Qdrant operation
+failures are wrapped as vector store operation errors. The provider does not
+implement embeddings, chunking, indexing, RAG, hybrid search, Retrieval Agent
+logic, LangGraph, agents, MinIO, or frontend behavior.
+
 ## Docker
 
 Build and run the backend plus Phase 1 infrastructure services from the
