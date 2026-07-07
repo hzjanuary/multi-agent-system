@@ -87,6 +87,17 @@ audit_logs
 The model layer defines table shape and relationships only. Authentication
 services and workflow runtime behavior are separate tasks.
 
+Generic repository primitives live in:
+
+```text
+app/repositories/base.py  BaseRepository with caller-owned AsyncSession
+app/repositories/crud.py  CRUDRepository with reusable async model operations
+```
+
+Repositories receive an `AsyncSession` from the caller. They do not create
+sessions and do not commit transactions automatically; transaction boundaries
+stay in the service or request layer.
+
 Alembic is configured for async SQLAlchemy in:
 
 ```text
