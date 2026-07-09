@@ -359,13 +359,20 @@ Workflow API schemas and error mapping for SPEC-007 live in:
 ```text
 app/schemas/workflows_api.py     request/response models for future workflow routes
 app/api/v1/workflow_errors.py    workflow exception to HTTP error mapping helpers
+app/api/v1/workflows.py          workflow router foundation and RBAC scaffolding
 ```
 
 These modules provide direct Pydantic request/response models for future
 workflow REST endpoints and map known workflow lifecycle exceptions to safe
-HTTP error details. They do not define routes, register routers, implement RBAC
-endpoint dependencies, run workflows, query audit logs, stream events, execute
-LangGraph, or call Agents.
+HTTP error details. The workflow router is mounted under `/api/v1/workflows`
+with a static `GET /api/v1/workflows/_meta` metadata placeholder so OpenAPI can
+show the foundation route while endpoint business behavior remains deferred.
+Workflow service providers and baseline RBAC role sets are prepared for later
+SPEC-007 endpoint tasks.
+
+The SPEC-007 foundation does not implement workflow create/read/list,
+transition, state update, event read behavior, run/resume routes, audit query
+APIs, event streaming, LangGraph runtime execution, or Agent calls.
 
 ## Docker
 
