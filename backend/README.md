@@ -354,6 +354,19 @@ query APIs, event streaming, workflow API routes, LangGraph runtime, Agents, LLM
 providers, RAG, document indexing, email generation, and frontend behavior
 remain deferred to later specs.
 
+Workflow API schemas and error mapping for SPEC-007 live in:
+
+```text
+app/schemas/workflows_api.py     request/response models for future workflow routes
+app/api/v1/workflow_errors.py    workflow exception to HTTP error mapping helpers
+```
+
+These modules provide direct Pydantic request/response models for future
+workflow REST endpoints and map known workflow lifecycle exceptions to safe
+HTTP error details. They do not define routes, register routers, implement RBAC
+endpoint dependencies, run workflows, query audit logs, stream events, execute
+LangGraph, or call Agents.
+
 ## Docker
 
 Build and run the backend plus Phase 1 infrastructure services from the
