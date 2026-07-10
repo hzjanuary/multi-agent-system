@@ -51,6 +51,45 @@ def test_create_app_registers_workflow_router_under_api_v1() -> None:
     assert workflow_meta["summary"] == "Workflow API router metadata"
 
 
+def test_create_app_registers_completed_spec_007_workflow_routes() -> None:
+    app = create_app()
+    route_paths = _route_paths(app.routes)
+
+    expected_paths = {
+        "/api/v1/workflows",
+        "/api/v1/workflows/{workflow_id}",
+        "/api/v1/workflows/{workflow_id}/transition",
+        "/api/v1/workflows/{workflow_id}/state",
+        "/api/v1/workflows/{workflow_id}/events",
+        "/api/v1/workflows/_meta",
+    }
+
+    assert expected_paths.issubset(route_paths)
+
+
+def test_workflow_openapi_metadata_for_completed_spec_007_routes() -> None:
+    app = create_app()
+    openapi_paths = app.openapi()["paths"]
+
+    expected_operations = {
+        ("/api/v1/workflows", "post", "Create workflow"),
+        ("/api/v1/workflows", "get", "List workflows"),
+        ("/api/v1/workflows/{workflow_id}", "get", "Get workflow"),
+        (
+            "/api/v1/workflows/{workflow_id}/transition",
+            "post",
+            "Transition workflow status",
+        ),
+        ("/api/v1/workflows/{workflow_id}/state", "patch", "Update workflow state"),
+        ("/api/v1/workflows/{workflow_id}/events", "get", "List workflow events"),
+    }
+
+    for path, method, summary in expected_operations:
+        operation = openapi_paths[path][method]
+        assert operation["tags"] == ["workflows"]
+        assert operation["summary"] == summary
+
+
 def test_deferred_workflow_operation_routes_are_not_registered_yet() -> None:
     app = create_app()
     route_paths = _route_paths(app.routes)

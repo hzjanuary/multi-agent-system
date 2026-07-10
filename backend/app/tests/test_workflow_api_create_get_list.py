@@ -198,6 +198,25 @@ async def test_allowed_read_roles_can_get_workflow(
 
 
 @pytest.mark.asyncio
+async def test_user_without_workflow_read_role_cannot_get_workflow(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-get-forbidden",
+    )
+
+    response = await client.get(
+        f"/api/v1/workflows/{workflow.workflow_id}",
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_get_workflow_requires_authentication(client: AsyncClient) -> None:
     response = await client.get(f"/api/v1/workflows/{uuid4()}")
 
@@ -266,6 +285,57 @@ async def test_allowed_reader_can_list_workflows_with_pagination_and_status_filt
     assert data["limit"] == 100
     assert data["offset"] == 0
     assert data["status"] == "CREATED"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "role_name",
+    [
+        RoleName.ADMIN,
+        RoleName.MANAGER,
+        RoleName.SALES,
+        RoleName.LEGAL,
+        RoleName.FINANCE,
+        RoleName.VIEWER,
+    ],
+)
+async def test_all_read_roles_can_list_workflows(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    role_name: RoleName,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[role_name])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-list-role-{role_name.value}",
+    )
+
+    response = await client.get(
+        "/api/v1/workflows",
+        headers=auth_headers(user),
+        params={"status": "CREATED"},
+    )
+    data = response.json()
+
+    assert response.status_code == 200
+    assert workflow.workflow_id in {
+        listed_workflow["workflow_id"] for listed_workflow in data["workflows"]
+    }
+
+
+@pytest.mark.asyncio
+async def test_user_without_workflow_read_role_cannot_list_workflows(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[])
+
+    response = await client.get(
+        "/api/v1/workflows",
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -894,6 +964,83 @@ async def test_list_workflow_events_rejects_invalid_query_params(
     assert response.status_code == 422
 
 
+@pytest.mark.asyncio
+async def test_workflow_api_responses_do_not_expose_internal_orm_fields(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.ADMIN])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-schema-safety",
+    )
+    await append_workflow_event_directly(
+        db_session,
+        workflow_id=UUID(workflow.workflow_id),
+        event_type="schema.checked",
+        sequence=1,
+    )
+
+    workflow_response = await client.get(
+        f"/api/v1/workflows/{workflow.workflow_id}",
+        headers=auth_headers(user),
+    )
+    workflow_payload = workflow_response.json()["workflow"]
+
+    events_response = await client.get(
+        f"/api/v1/workflows/{workflow.workflow_id}/events",
+        headers=auth_headers(user),
+    )
+    event_payload = events_response.json()["events"][0]
+
+    assert workflow_response.status_code == 200
+    assert events_response.status_code == 200
+    assert_no_internal_fields(workflow_payload)
+    assert_no_internal_fields(event_payload)
+    assert "workflow_id" in workflow_payload
+    assert "event_id" in event_payload
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/v1/workflows",
+        "/api/v1/workflows/{workflow_id}",
+        "/api/v1/workflows/{workflow_id}/events",
+    ],
+)
+async def test_read_workflow_routes_do_not_commit(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.VIEWER])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-read-no-commit",
+    )
+    await append_workflow_event_directly(
+        db_session,
+        workflow_id=UUID(workflow.workflow_id),
+        event_type="read.checked",
+        sequence=1,
+    )
+
+    async def fail_commit() -> None:
+        raise AssertionError("Read-only workflow API route attempted to commit")
+
+    monkeypatch.setattr(db_session, "commit", fail_commit)
+
+    response = await client.get(
+        path.format(workflow_id=workflow.workflow_id),
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 200
+
+
 async def create_user_with_roles(
     session: AsyncSession,
     *,
@@ -991,6 +1138,21 @@ def workflow_state_update_payload(
     payload = workflow.model_dump(mode="json")
     payload.update(overrides)
     return payload
+
+
+def assert_no_internal_fields(payload: dict[str, object]) -> None:
+    """Assert API responses expose schema fields, not ORM internals."""
+    internal_fields = {
+        "id",
+        "_sa_instance_state",
+        "deleted_at",
+        "created_by_id",
+        "request_payload",
+        "state_payload",
+        "workflow",
+    }
+
+    assert internal_fields.isdisjoint(payload)
 
 
 async def cleanup_test_records(session: AsyncSession) -> None:
