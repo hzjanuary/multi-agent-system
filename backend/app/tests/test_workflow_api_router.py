@@ -56,9 +56,6 @@ def test_deferred_workflow_operation_routes_are_not_registered_yet() -> None:
     route_paths = _route_paths(app.routes)
 
     deferred_paths = {
-        "/api/v1/workflows",
-        "/api/v1/workflows/{workflow_id}",
-        "/api/v1/workflows/{workflow_id}/transition",
         "/api/v1/workflows/{workflow_id}/state",
         "/api/v1/workflows/{workflow_id}/events",
         "/api/v1/workflows/{workflow_id}/run",

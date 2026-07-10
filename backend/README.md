@@ -362,17 +362,31 @@ app/api/v1/workflow_errors.py    workflow exception to HTTP error mapping helper
 app/api/v1/workflows.py          workflow router foundation and RBAC scaffolding
 ```
 
-These modules provide direct Pydantic request/response models for future
-workflow REST endpoints and map known workflow lifecycle exceptions to safe
-HTTP error details. The workflow router is mounted under `/api/v1/workflows`
-with a static `GET /api/v1/workflows/_meta` metadata placeholder so OpenAPI can
-show the foundation route while endpoint business behavior remains deferred.
-Workflow service providers and baseline RBAC role sets are prepared for later
-SPEC-007 endpoint tasks.
+These modules provide direct Pydantic request/response models for workflow REST
+endpoints and map known workflow lifecycle exceptions to safe HTTP error
+details. The workflow router is mounted under `/api/v1/workflows` and currently
+implements:
 
-The SPEC-007 foundation does not implement workflow create/read/list,
-transition, state update, event read behavior, run/resume routes, audit query
-APIs, event streaming, LangGraph runtime execution, or Agent calls.
+```text
+POST /api/v1/workflows                 Admin, Manager, Sales
+GET  /api/v1/workflows                 Admin, Manager, Sales, Legal, Finance, Viewer
+GET  /api/v1/workflows/{workflow_id}   Admin, Manager, Sales, Legal, Finance, Viewer
+POST /api/v1/workflows/{workflow_id}/transition
+                                      Admin, Manager
+GET  /api/v1/workflows/_meta           authenticated workflow readers
+```
+
+Workflow list supports minimal `limit`, `offset`, and optional `status` query
+parameters. Workflow create uses `WorkflowService`, returns a direct
+`WorkflowResponse`, and commits at the API route boundary after the service
+flushes its caller-owned transaction. Workflow status transition uses
+`WorkflowTransitionRequest`, existing SPEC-005 transition validation through
+`WorkflowService`, maps missing workflows to `404`, maps invalid transitions to
+`409`, and commits only after successful service execution.
+
+The SPEC-007 workflow API slices implemented so far do not implement state
+update, event read behavior, run/resume routes, audit query APIs, event
+streaming, LangGraph runtime execution, or Agent calls.
 
 ## Docker
 
