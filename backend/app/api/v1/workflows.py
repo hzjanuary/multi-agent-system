@@ -17,6 +17,7 @@ from app.models import User
 from app.models.enums import WorkflowStatus
 from app.schemas.workflows_api import (
     WorkflowCreateRequest,
+    WorkflowEventListResponse,
     WorkflowListResponse,
     WorkflowResponse,
     WorkflowStateUpdateRequest,
@@ -214,6 +215,36 @@ async def update_workflow_state(
 
     await session.commit()
     return WorkflowResponse(workflow=workflow)
+
+
+@router.get(
+    "/{workflow_id}/events",
+    response_model=WorkflowEventListResponse,
+    summary="List workflow events",
+)
+async def list_workflow_events(
+    workflow_id: UUID,
+    _current_user: WorkflowReadAccessDependency,
+    workflow_event_service: WorkflowEventServiceDependency,
+    limit: WorkflowLimitQuery = 100,
+    offset: WorkflowOffsetQuery = 0,
+) -> WorkflowEventListResponse:
+    """List workflow events in deterministic chronological order."""
+    try:
+        events = await workflow_event_service.list_events_for_workflow(
+            workflow_id,
+            limit=limit,
+            offset=offset,
+        )
+    except WorkflowNotFoundError as error:
+        raise workflow_http_exception(error) from error
+
+    return WorkflowEventListResponse(
+        events=events,
+        count=len(events),
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get(

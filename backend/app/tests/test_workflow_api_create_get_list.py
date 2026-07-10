@@ -16,10 +16,12 @@ from app.core.dependencies import provide_db_session
 from app.db import create_database_engine, create_session_factory
 from app.main import create_app
 from app.models import AuditLog, Role, User, Workflow
-from app.models.enums import WorkflowStatus
+from app.models.enums import WorkflowEventStatus, WorkflowStatus
 from app.workflows import (
     WORKFLOW_STATE_UPDATED_ACTION,
     WORKFLOW_STATUS_TRANSITIONED_ACTION,
+    WorkflowEventCreate,
+    WorkflowEventService,
     WorkflowService,
     WorkflowState,
     WorkflowStateCreate,
@@ -696,6 +698,202 @@ async def test_update_workflow_state_rejects_invalid_workflow_id(
     assert response.status_code == 422
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "role_name",
+    [
+        RoleName.ADMIN,
+        RoleName.MANAGER,
+        RoleName.SALES,
+        RoleName.LEGAL,
+        RoleName.FINANCE,
+        RoleName.VIEWER,
+    ],
+)
+async def test_allowed_read_roles_can_list_workflow_events(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    role_name: RoleName,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[role_name])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-events-{role_name.value}",
+    )
+    await append_workflow_event_directly(
+        db_session,
+        workflow_id=UUID(workflow.workflow_id),
+        event_type="workflow.created",
+        sequence=1,
+    )
+    await append_workflow_event_directly(
+        db_session,
+        workflow_id=UUID(workflow.workflow_id),
+        event_type="planner.started",
+        sequence=2,
+        agent_name="planner",
+        status=WorkflowEventStatus.STARTED,
+    )
+
+    response = await client.get(
+        f"/api/v1/workflows/{workflow.workflow_id}/events",
+        headers=auth_headers(user),
+    )
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["count"] == 2
+    assert data["limit"] == 100
+    assert data["offset"] == 0
+    assert [event["event_type"] for event in data["events"]] == [
+        "workflow.created",
+        "planner.started",
+    ]
+    assert [event["payload"]["sequence"] for event in data["events"]] == [1, 2]
+    assert data["events"][1]["agent_name"] == "planner"
+    assert data["events"][1]["status"] == WorkflowEventStatus.STARTED
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_events_returns_empty_list_for_workflow_without_events(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.VIEWER])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-events-empty",
+    )
+
+    response = await client.get(
+        f"/api/v1/workflows/{workflow.workflow_id}/events",
+        headers=auth_headers(user),
+    )
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data == {
+        "events": [],
+        "count": 0,
+        "limit": 100,
+        "offset": 0,
+    }
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_events_supports_limit_and_offset(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.SALES])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-events-pagination",
+    )
+    for sequence in range(3):
+        await append_workflow_event_directly(
+            db_session,
+            workflow_id=UUID(workflow.workflow_id),
+            event_type=f"workflow.event.{sequence}",
+            sequence=sequence,
+        )
+
+    response = await client.get(
+        f"/api/v1/workflows/{workflow.workflow_id}/events",
+        headers=auth_headers(user),
+        params={"limit": 1, "offset": 1},
+    )
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["count"] == 1
+    assert data["limit"] == 1
+    assert data["offset"] == 1
+    assert data["events"][0]["event_type"] == "workflow.event.1"
+    assert data["events"][0]["payload"]["sequence"] == 1
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_events_requires_authentication(
+    client: AsyncClient,
+) -> None:
+    response = await client.get(f"/api/v1/workflows/{uuid4()}/events")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_user_without_workflow_read_role_cannot_list_workflow_events(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-events-forbidden",
+    )
+
+    response = await client.get(
+        f"/api/v1/workflows/{workflow.workflow_id}/events",
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_events_returns_404_for_missing_workflow(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.LEGAL])
+    missing_workflow_id = uuid4()
+
+    response = await client.get(
+        f"/api/v1/workflows/{missing_workflow_id}/events",
+        headers=auth_headers(user),
+    )
+    data = response.json()
+
+    assert response.status_code == 404
+    assert data["detail"]["code"] == "workflow_not_found"
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_events_rejects_invalid_workflow_id(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.VIEWER])
+
+    response = await client.get(
+        "/api/v1/workflows/not-a-uuid/events",
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_events_rejects_invalid_query_params(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.FINANCE])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-events-invalid-query",
+    )
+
+    response = await client.get(
+        f"/api/v1/workflows/{workflow.workflow_id}/events",
+        headers=auth_headers(user),
+        params={"limit": 0},
+    )
+
+    assert response.status_code == 422
+
+
 async def create_user_with_roles(
     session: AsyncSession,
     *,
@@ -760,6 +958,29 @@ async def create_workflow_directly(
     )
     await session.commit()
     return workflow
+
+
+async def append_workflow_event_directly(
+    session: AsyncSession,
+    *,
+    workflow_id: UUID,
+    event_type: str,
+    sequence: int,
+    agent_name: str | None = None,
+    status: WorkflowEventStatus | None = WorkflowEventStatus.COMPLETED,
+) -> None:
+    """Append and commit one workflow event through the event service."""
+    service = WorkflowEventService(session)
+    await service.append_event(
+        WorkflowEventCreate(
+            workflow_id=workflow_id,
+            event_type=event_type,
+            agent_name=agent_name,
+            status=status,
+            payload={"sequence": sequence},
+        ),
+    )
+    await session.commit()
 
 
 def workflow_state_update_payload(
