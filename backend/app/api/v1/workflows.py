@@ -19,12 +19,14 @@ from app.schemas.workflows_api import (
     WorkflowCreateRequest,
     WorkflowListResponse,
     WorkflowResponse,
+    WorkflowStateUpdateRequest,
     WorkflowTransitionRequest,
 )
 from app.workflows.events import WorkflowEventService
 from app.workflows.exceptions import (
     InvalidWorkflowTransitionError,
     WorkflowNotFoundError,
+    WorkflowStateMismatchError,
 )
 from app.workflows.service import WorkflowService
 
@@ -180,6 +182,34 @@ async def transition_workflow_status(
             reason=payload.reason,
         )
     except (InvalidWorkflowTransitionError, WorkflowNotFoundError) as error:
+        raise workflow_http_exception(error) from error
+
+    await session.commit()
+    return WorkflowResponse(workflow=workflow)
+
+
+@router.patch(
+    "/{workflow_id}/state",
+    response_model=WorkflowResponse,
+    summary="Update workflow state",
+)
+async def update_workflow_state(
+    workflow_id: UUID,
+    payload: WorkflowStateUpdateRequest,
+    workflow_service: WorkflowServiceDependency,
+    session: DbSessionDependency,
+    current_user: WorkflowFullAccessDependency,
+) -> WorkflowResponse:
+    """Update one workflow state payload through the workflow service."""
+    try:
+        workflow = await workflow_service.update_workflow_state(
+            workflow_id,
+            payload.state,
+            actor_type="user",
+            actor_id=current_user.id,
+            reason=payload.reason,
+        )
+    except (WorkflowNotFoundError, WorkflowStateMismatchError) as error:
         raise workflow_http_exception(error) from error
 
     await session.commit()

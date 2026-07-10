@@ -1,6 +1,7 @@
 """API tests for workflow create/get/list endpoints."""
 
 from collections.abc import AsyncIterator
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -17,6 +18,7 @@ from app.main import create_app
 from app.models import AuditLog, Role, User, Workflow
 from app.models.enums import WorkflowStatus
 from app.workflows import (
+    WORKFLOW_STATE_UPDATED_ACTION,
     WORKFLOW_STATUS_TRANSITIONED_ACTION,
     WorkflowService,
     WorkflowState,
@@ -458,6 +460,242 @@ async def test_transition_workflow_rejects_invalid_workflow_id(
     assert response.status_code == 422
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("role_name", [RoleName.ADMIN, RoleName.MANAGER])
+async def test_allowed_state_update_roles_can_update_workflow_state(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    role_name: RoleName,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[role_name])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-state-update-{role_name.value}",
+    )
+    state_payload = workflow_state_update_payload(
+        workflow,
+        customer={"name": "Acme Manufacturing Group"},
+        current_step="planner",
+    )
+
+    response = await client.patch(
+        f"/api/v1/workflows/{workflow.workflow_id}/state",
+        headers=auth_headers(user),
+        json={"state": state_payload, "reason": "Captured customer details"},
+    )
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["workflow"]["workflow_id"] == workflow.workflow_id
+    assert data["workflow"]["status"] == WorkflowStatus.CREATED
+    assert data["workflow"]["customer"]["name"] == "Acme Manufacturing Group"
+    assert data["workflow"]["current_step"] == "planner"
+    assert not db_session.in_transaction()
+
+    persisted_workflow = await db_session.get(Workflow, UUID(workflow.workflow_id))
+    assert persisted_workflow is not None
+    assert persisted_workflow.status is WorkflowStatus.CREATED
+    persisted_payload = cast(dict[str, Any], persisted_workflow.state_payload)
+    persisted_customer = cast(dict[str, Any], persisted_payload["customer"])
+    assert persisted_customer["name"] == "Acme Manufacturing Group"
+    assert persisted_payload["current_step"] == "planner"
+
+    audit_log = await db_session.scalar(
+        select(AuditLog).where(
+            AuditLog.workflow_id == UUID(workflow.workflow_id),
+            AuditLog.action == WORKFLOW_STATE_UPDATED_ACTION,
+        ),
+    )
+    assert audit_log is not None
+    assert audit_log.actor_type == "user"
+    assert audit_log.actor_id == user.id
+    assert audit_log.payload["status"] == WorkflowStatus.CREATED
+    assert audit_log.payload["reason"] == "Captured customer details"
+    updated_fields = cast(list[str], audit_log.payload["updated_fields"])
+    assert set(updated_fields).issuperset(
+        {"customer", "current_step"},
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "role_name",
+    [RoleName.SALES, RoleName.LEGAL, RoleName.FINANCE, RoleName.VIEWER],
+)
+async def test_non_state_update_roles_cannot_update_workflow_state(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    role_name: RoleName,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[role_name])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-state-forbidden-{role_name.value}",
+    )
+
+    response = await client.patch(
+        f"/api/v1/workflows/{workflow.workflow_id}/state",
+        headers=auth_headers(user),
+        json={"state": workflow_state_update_payload(workflow)},
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_update_workflow_state_requires_authentication(
+    client: AsyncClient,
+) -> None:
+    response = await client.patch(
+        f"/api/v1/workflows/{uuid4()}/state",
+        json={"state": {}},
+    )
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_update_workflow_state_returns_404_for_missing_workflow(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.MANAGER])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-state-missing-template",
+    )
+    missing_workflow_id = uuid4()
+    state_payload = workflow_state_update_payload(
+        workflow,
+        workflow_id=str(missing_workflow_id),
+    )
+
+    response = await client.patch(
+        f"/api/v1/workflows/{missing_workflow_id}/state",
+        headers=auth_headers(user),
+        json={"state": state_payload},
+    )
+    data = response.json()
+
+    assert response.status_code == 404
+    assert data["detail"]["code"] == "workflow_not_found"
+
+
+@pytest.mark.asyncio
+async def test_update_workflow_state_id_mismatch_returns_400_without_commit(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.ADMIN])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-state-id-mismatch",
+    )
+    state_payload = workflow_state_update_payload(workflow, workflow_id=str(uuid4()))
+
+    response = await client.patch(
+        f"/api/v1/workflows/{workflow.workflow_id}/state",
+        headers=auth_headers(user),
+        json={"state": state_payload},
+    )
+    data = response.json()
+
+    assert response.status_code == 400
+    assert data["detail"]["code"] == "workflow_state_mismatch"
+
+    persisted_workflow = await db_session.get(Workflow, UUID(workflow.workflow_id))
+    assert persisted_workflow is not None
+    assert persisted_workflow.state_payload["workflow_id"] == workflow.workflow_id
+
+    state_audit_log = await db_session.scalar(
+        select(AuditLog).where(
+            AuditLog.workflow_id == UUID(workflow.workflow_id),
+            AuditLog.action == WORKFLOW_STATE_UPDATED_ACTION,
+        ),
+    )
+    assert state_audit_log is None
+
+
+@pytest.mark.asyncio
+async def test_update_workflow_state_status_mismatch_returns_400_without_commit(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.MANAGER])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-state-status-mismatch",
+    )
+    state_payload = workflow_state_update_payload(
+        workflow,
+        status=WorkflowStatus.PLANNING.value,
+    )
+
+    response = await client.patch(
+        f"/api/v1/workflows/{workflow.workflow_id}/state",
+        headers=auth_headers(user),
+        json={"state": state_payload},
+    )
+    data = response.json()
+
+    assert response.status_code == 400
+    assert data["detail"]["code"] == "workflow_state_mismatch"
+
+    persisted_workflow = await db_session.get(Workflow, UUID(workflow.workflow_id))
+    assert persisted_workflow is not None
+    assert persisted_workflow.status is WorkflowStatus.CREATED
+
+    state_audit_log = await db_session.scalar(
+        select(AuditLog).where(
+            AuditLog.workflow_id == UUID(workflow.workflow_id),
+            AuditLog.action == WORKFLOW_STATE_UPDATED_ACTION,
+        ),
+    )
+    assert state_audit_log is None
+
+
+@pytest.mark.asyncio
+async def test_update_workflow_state_rejects_invalid_payload(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.MANAGER])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-state-invalid-payload",
+    )
+    state_payload = workflow_state_update_payload(workflow)
+    state_payload["retry_count"] = -1
+
+    response = await client.patch(
+        f"/api/v1/workflows/{workflow.workflow_id}/state",
+        headers=auth_headers(user),
+        json={"state": state_payload},
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_update_workflow_state_rejects_invalid_workflow_id(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.MANAGER])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-state-invalid-id",
+    )
+
+    response = await client.patch(
+        "/api/v1/workflows/not-a-uuid/state",
+        headers=auth_headers(user),
+        json={"state": workflow_state_update_payload(workflow)},
+    )
+
+    assert response.status_code == 422
+
+
 async def create_user_with_roles(
     session: AsyncSession,
     *,
@@ -522,6 +760,16 @@ async def create_workflow_directly(
     )
     await session.commit()
     return workflow
+
+
+def workflow_state_update_payload(
+    workflow: WorkflowState,
+    **overrides: object,
+) -> dict[str, object]:
+    """Return a JSON-compatible workflow state update payload."""
+    payload = workflow.model_dump(mode="json")
+    payload.update(overrides)
+    return payload
 
 
 async def cleanup_test_records(session: AsyncSession) -> None:

@@ -373,6 +373,8 @@ GET  /api/v1/workflows                 Admin, Manager, Sales, Legal, Finance, Vi
 GET  /api/v1/workflows/{workflow_id}   Admin, Manager, Sales, Legal, Finance, Viewer
 POST /api/v1/workflows/{workflow_id}/transition
                                       Admin, Manager
+PATCH /api/v1/workflows/{workflow_id}/state
+                                      Admin, Manager
 GET  /api/v1/workflows/_meta           authenticated workflow readers
 ```
 
@@ -382,11 +384,15 @@ parameters. Workflow create uses `WorkflowService`, returns a direct
 flushes its caller-owned transaction. Workflow status transition uses
 `WorkflowTransitionRequest`, existing SPEC-005 transition validation through
 `WorkflowService`, maps missing workflows to `404`, maps invalid transitions to
-`409`, and commits only after successful service execution.
+`409`, and commits only after successful service execution. Workflow state
+update uses `WorkflowStateUpdateRequest`, requires the supplied state id and
+status to match the persisted workflow, maps missing workflows to `404`, maps
+state mismatches to `400`, preserves existing service-level audit behavior, and
+commits only after successful service execution.
 
-The SPEC-007 workflow API slices implemented so far do not implement state
-update, event read behavior, run/resume routes, audit query APIs, event
-streaming, LangGraph runtime execution, or Agent calls.
+The SPEC-007 workflow API slices implemented so far do not implement workflow
+event read behavior, run/resume routes, audit query APIs, event streaming,
+LangGraph runtime execution, or Agent calls.
 
 ## Docker
 
