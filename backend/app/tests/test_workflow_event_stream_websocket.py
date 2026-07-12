@@ -8,23 +8,31 @@ from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketException
 from fastapi.testclient import TestClient
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocketDisconnect
 
 from app.api.v1 import workflows as workflow_routes
+from app.auth import create_access_token, hash_password
+from app.auth.rbac import RoleName
+from app.config import get_settings
 from app.core.dependencies import (
     provide_db_session,
     provide_workflow_event_service,
     provide_workflow_event_subscriber,
 )
+from app.db import create_database_engine, create_session_factory
 from app.main import create_app
-from app.models import User
+from app.models import Role, User
 from app.models.enums import WorkflowEventStatus
 from app.streaming import WorkflowEventStreamMessage
 from app.workflows.exceptions import WorkflowNotFoundError
 from app.workflows.schemas import WorkflowEventRead
+
+TEST_EMAIL_PREFIX = "workflow-stream"
+TEST_ROLE_DESCRIPTION = "Workflow stream test role"
 
 
 class FakeWorkflowEventService:
@@ -59,14 +67,124 @@ class FakeWorkflowEventSubscriber:
     def __init__(self, messages: list[WorkflowEventStreamMessage]) -> None:
         self.messages = messages
         self.subscribed_workflow_ids: list[UUID] = []
+        self.closed = False
 
     async def subscribe_workflow_events(
         self,
         workflow_id: UUID | str,
     ) -> AsyncIterator[WorkflowEventStreamMessage]:
         self.subscribed_workflow_ids.append(UUID(str(workflow_id)))
-        for message in self.messages:
-            yield message
+        try:
+            for message in self.messages:
+                yield message
+        finally:
+            self.closed = True
+
+
+class FakeAuthWebSocket:
+    """Small WebSocket test double for stream auth helper tests."""
+
+    def __init__(
+        self,
+        *,
+        headers: dict[str, str] | None = None,
+        query_params: dict[str, str] | None = None,
+    ) -> None:
+        self.headers = headers or {}
+        self.query_params = query_params or {}
+
+
+@pytest.fixture
+async def db_session() -> AsyncIterator[AsyncSession]:
+    """Provide a database session and clean stream auth test rows."""
+    engine = create_database_engine(get_settings().database_url)
+    session_factory = create_session_factory(engine)
+    try:
+        async with session_factory() as session:
+            try:
+                yield session
+            finally:
+                await cleanup_auth_records(session)
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "role_name",
+    [
+        RoleName.ADMIN,
+        RoleName.MANAGER,
+        RoleName.SALES,
+        RoleName.LEGAL,
+        RoleName.FINANCE,
+        RoleName.VIEWER,
+    ],
+)
+async def test_stream_access_helper_allows_read_roles_with_authorization_header(
+    db_session: AsyncSession,
+    role_name: RoleName,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[role_name])
+
+    authorized_user = await workflow_routes.require_workflow_stream_access(
+        cast(WebSocket, FakeAuthWebSocket(headers=auth_headers(user))),
+        db_session,
+    )
+
+    assert authorized_user.id == user.id
+
+
+@pytest.mark.asyncio
+async def test_stream_access_helper_allows_access_token_query_param(
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.VIEWER])
+
+    authorized_user = await workflow_routes.require_workflow_stream_access(
+        cast(
+            WebSocket,
+            FakeAuthWebSocket(
+                query_params={"access_token": create_access_token(str(user.id))},
+            ),
+        ),
+        db_session,
+    )
+
+    assert authorized_user.id == user.id
+
+
+@pytest.mark.asyncio
+async def test_stream_access_helper_rejects_user_without_role(
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[])
+
+    with pytest.raises(WebSocketException) as error:
+        await workflow_routes.require_workflow_stream_access(
+            cast(WebSocket, FakeAuthWebSocket(headers=auth_headers(user))),
+            db_session,
+        )
+
+    assert error.value.code == workflow_routes.WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE
+    assert error.value.reason == "Insufficient permissions"
+
+
+@pytest.mark.asyncio
+async def test_stream_access_helper_rejects_invalid_token(
+    db_session: AsyncSession,
+) -> None:
+    with pytest.raises(WebSocketException) as error:
+        await workflow_routes.require_workflow_stream_access(
+            cast(
+                WebSocket,
+                FakeAuthWebSocket(headers={"Authorization": "Bearer invalid-token"}),
+            ),
+            db_session,
+        )
+
+    assert error.value.code == workflow_routes.WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE
+    assert error.value.reason == "Authentication required"
 
 
 def test_workflow_stream_sends_bounded_backlog_events(
@@ -131,6 +249,103 @@ def test_workflow_stream_forwards_live_subscriber_messages(
     assert live_payload["event_id"] == str(live_message.event_id)
     assert live_payload["payload"] == {"stage": "planner"}
     assert_internal_fields_absent(live_payload)
+    assert subscriber.closed is True
+
+
+def test_workflow_stream_handles_empty_backlog_and_forwards_live_message(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow_id = uuid4()
+    live_message = stream_message(
+        workflow_id=workflow_id,
+        event_type="workflow.node.completed",
+        payload={"stage": "validation"},
+    )
+    event_service = FakeWorkflowEventService([])
+    subscriber = FakeWorkflowEventSubscriber([live_message])
+    app = create_stream_test_app(event_service, subscriber, monkeypatch=monkeypatch)
+
+    with (
+        TestClient(app) as client,
+        client.websocket_connect(f"/api/v1/workflows/{workflow_id}/stream") as ws,
+    ):
+        live_payload = ws.receive_json()
+
+    assert event_service.calls == [
+        (workflow_id, workflow_routes.WORKFLOW_STREAM_BACKLOG_LIMIT, 0),
+    ]
+    assert live_payload["event_type"] == "workflow.node.completed"
+    assert live_payload["payload"] == {"stage": "validation"}
+    assert subscriber.closed is True
+
+
+def test_workflow_stream_backlog_delivery_is_bounded(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow_id = uuid4()
+    backlog_events = [
+        workflow_event_read(
+            workflow_id=workflow_id,
+            event_type=f"workflow.node.{sequence}",
+            payload={"stage": "planner", "sequence": sequence},
+        )
+        for sequence in range(workflow_routes.WORKFLOW_STREAM_BACKLOG_LIMIT + 5)
+    ]
+    event_service = FakeWorkflowEventService(backlog_events)
+    subscriber = FakeWorkflowEventSubscriber([])
+    app = create_stream_test_app(event_service, subscriber, monkeypatch=monkeypatch)
+
+    with (
+        TestClient(app) as client,
+        client.websocket_connect(f"/api/v1/workflows/{workflow_id}/stream") as ws,
+    ):
+        messages = [
+            ws.receive_json()
+            for _ in range(workflow_routes.WORKFLOW_STREAM_BACKLOG_LIMIT)
+        ]
+
+    assert event_service.calls == [
+        (workflow_id, workflow_routes.WORKFLOW_STREAM_BACKLOG_LIMIT, 0),
+    ]
+    assert len(messages) == workflow_routes.WORKFLOW_STREAM_BACKLOG_LIMIT
+    assert messages[0]["event_type"] == "workflow.node.0"
+    assert messages[-1]["event_type"] == (
+        f"workflow.node.{workflow_routes.WORKFLOW_STREAM_BACKLOG_LIMIT - 1}"
+    )
+    assert subscriber.subscribed_workflow_ids == [workflow_id]
+    assert subscriber.closed is True
+
+
+def test_workflow_stream_messages_sanitize_sensitive_and_internal_payload_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow_id = uuid4()
+    backlog_event = workflow_event_read(
+        workflow_id=workflow_id,
+        event_type="workflow.runtime.failed",
+        payload={
+            "stage": "retrieval",
+            "password": "do-not-send",
+            "details": {"api_key": "do-not-send", "safe": "kept"},
+            "request_payload": {"customer": "internal"},
+            "_sa_instance_state": "internal",
+        },
+    )
+    event_service = FakeWorkflowEventService([backlog_event])
+    subscriber = FakeWorkflowEventSubscriber([])
+    app = create_stream_test_app(event_service, subscriber, monkeypatch=monkeypatch)
+
+    with (
+        TestClient(app) as client,
+        client.websocket_connect(f"/api/v1/workflows/{workflow_id}/stream") as ws,
+    ):
+        message = ws.receive_json()
+
+    assert message["payload"] == {
+        "stage": "retrieval",
+        "details": {"safe": "kept"},
+    }
+    assert_internal_fields_absent(message)
 
 
 def test_workflow_stream_rejects_missing_workflow(
@@ -177,10 +392,17 @@ def test_resume_and_sse_stream_routes_remain_absent(
     subscriber = FakeWorkflowEventSubscriber([])
     app = create_stream_test_app(event_service, subscriber, monkeypatch=monkeypatch)
     route_paths = route_paths_for(app.routes)
+    route_methods = route_methods_for(app.routes)
 
     assert "/api/v1/workflows/{workflow_id}/stream" in route_paths
     assert "/api/v1/workflows/{workflow_id}/resume" not in route_paths
     assert "/api/v1/workflows/{workflow_id}/stream/sse" not in route_paths
+    assert "/api/v1/workflows/{workflow_id}/tokens" not in route_paths
+    assert "/api/v1/workflows/{workflow_id}/agent-thoughts" not in route_paths
+    assert "POST" not in route_methods.get(
+        "/api/v1/workflows/{workflow_id}/events",
+        set(),
+    )
 
 
 def create_stream_test_app(
@@ -297,3 +519,82 @@ def route_paths_for(routes: Iterable[object]) -> set[str]:
             )
 
     return paths
+
+
+def route_methods_for(routes: Iterable[object]) -> dict[str, set[str]]:
+    """Return route paths and HTTP methods including nested routers."""
+    methods_by_path: dict[str, set[str]] = {}
+    for route in routes:
+        path = getattr(route, "path", None)
+        methods = getattr(route, "methods", None)
+        if isinstance(path, str) and isinstance(methods, set):
+            methods_by_path.setdefault(path, set()).update(methods)
+
+        nested_prefix = ""
+        include_context = getattr(route, "include_context", None)
+        if include_context is not None:
+            context_prefix = getattr(include_context, "prefix", "")
+            if isinstance(context_prefix, str):
+                nested_prefix = context_prefix
+
+        nested_router = getattr(route, "original_router", route)
+        nested_routes = getattr(nested_router, "routes", None)
+        if isinstance(nested_routes, Iterable):
+            nested_methods = route_methods_for(nested_routes)
+            for nested_path, nested_method_set in nested_methods.items():
+                methods_by_path.setdefault(
+                    f"{nested_prefix}{nested_path}",
+                    set(),
+                ).update(nested_method_set)
+
+    return methods_by_path
+
+
+async def create_user_with_roles(
+    session: AsyncSession,
+    *,
+    role_names: list[RoleName],
+) -> User:
+    """Create and commit a user with the requested exact RBAC role names."""
+    roles = [await ensure_role(session, role_name) for role_name in role_names]
+    user = User(
+        email=f"{TEST_EMAIL_PREFIX}-{uuid4()}@example.test",
+        hashed_password=hash_password("not-used-in-stream-tests"),
+        full_name="Workflow Stream Test User",
+        is_active=True,
+        roles=roles,
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user, attribute_names=["roles"])
+    return user
+
+
+async def ensure_role(session: AsyncSession, role_name: RoleName) -> Role:
+    """Return an existing role or create one for stream auth tests."""
+    result = await session.scalar(select(Role).where(Role.name == role_name.value))
+    if result is not None:
+        return result
+
+    role = Role(
+        name=role_name.value,
+        description=TEST_ROLE_DESCRIPTION,
+    )
+    session.add(role)
+    await session.flush()
+    return role
+
+
+def auth_headers(user: User) -> dict[str, str]:
+    """Return bearer token authorization headers for a user."""
+    return {"authorization": f"Bearer {create_access_token(str(user.id))}"}
+
+
+async def cleanup_auth_records(session: AsyncSession) -> None:
+    """Remove committed auth rows created by stream auth tests."""
+    if session.in_transaction():
+        await session.rollback()
+
+    await session.execute(delete(User).where(User.email.like(f"{TEST_EMAIL_PREFIX}-%")))
+    await session.execute(delete(Role).where(Role.description == TEST_ROLE_DESCRIPTION))
+    await session.commit()

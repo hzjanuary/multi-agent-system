@@ -25,6 +25,16 @@ SENSITIVE_KEY_PARTS = (
     "secret",
     "token",
 )
+INTERNAL_PAYLOAD_KEYS = {
+    "_sa_instance_state",
+    "created_by_id",
+    "deleted_at",
+    "hashed_password",
+    "id",
+    "request_payload",
+    "state_payload",
+    "workflow",
+}
 
 
 class WorkflowEventStreamMessage(BaseModel):
@@ -107,7 +117,7 @@ def _sanitize_mapping(payload: dict[str, Any], *, depth: int) -> dict[str, Any]:
         if index >= MAX_PAYLOAD_ITEMS:
             break
         normalized_key = str(key)[:MAX_STRING_LENGTH]
-        if _is_sensitive_key(normalized_key):
+        if _is_unsafe_payload_key(normalized_key):
             continue
         sanitized[normalized_key] = _sanitize_value(value, depth=depth + 1)
     return sanitized
@@ -137,6 +147,10 @@ def _sanitize_value(value: Any, *, depth: int) -> Any:
     return str(value)[:MAX_STRING_LENGTH]
 
 
-def _is_sensitive_key(key: str) -> bool:
+def _is_unsafe_payload_key(key: str) -> bool:
     normalized_key = key.lower()
-    return any(part in normalized_key for part in SENSITIVE_KEY_PARTS)
+    return (
+        normalized_key in INTERNAL_PAYLOAD_KEYS
+        or normalized_key.startswith("_sa_")
+        or any(part in normalized_key for part in SENSITIVE_KEY_PARTS)
+    )

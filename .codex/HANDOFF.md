@@ -28,8 +28,8 @@ Planned tasks:
 - `TASK 008.1 - Event Stream Schemas and Publisher Contracts` - Approved
 - `TASK 008.2 - Redis Pub/Sub Event Publisher` - Approved
 - `TASK 008.3 - WorkflowEvent Publish Integration` - Approved
-- `TASK 008.4 - WebSocket Stream Endpoint` - Implemented, awaiting review
-- `TASK 008.5 - Stream Auth/RBAC and Recovery Tests`
+- `TASK 008.4 - WebSocket Stream Endpoint` - Approved
+- `TASK 008.5 - Stream Auth/RBAC and Recovery Tests` - Implemented, awaiting review
 - `TASK 008.6 - Event Streaming Hardening and SPEC-008 Final Review`
 
 TASK 008.1 deliverables:
@@ -144,6 +144,33 @@ TASK 008.4 behavior:
   workflows, mutate workflow status, mutate runtime state, change `/run`
   behavior, add SSE, add `/resume`, add migrations, or modify database models.
 
+TASK 008.5 deliverables:
+
+- `backend/app/streaming/schemas.py`
+- `backend/app/tests/test_workflow_event_stream_websocket.py`
+- `.codex/HANDOFF.md`
+
+TASK 008.5 behavior:
+
+- Strengthens WebSocket stream auth coverage for `Authorization: Bearer <token>`
+  and `access_token` query parameter handling.
+- Covers the full SPEC-008 stream read-role matrix: Admin, Manager, Sales,
+  Legal, Finance, and Viewer can access stream delivery.
+- Verifies authenticated users without a workflow read/event role, invalid
+  tokens, and unauthenticated connections are rejected with WebSocket policy
+  close behavior.
+- Strengthens backlog/recovery coverage for bounded backlog delivery, empty
+  backlog handling, live subscriber forwarding after backlog, missing workflow
+  rejection, and subscriber cleanup.
+- Hardens stream payload sanitization so ORM/database internal field names and
+  `_sa_*` keys are removed from delivered payload DTOs along with sensitive
+  fields.
+- Confirms deferred routes remain absent: `/resume`, SSE, event append, real LLM
+  token streaming, and Agent thought streaming endpoints.
+- Keeps WebSocket delivery read-only: no stream route appends events, runs
+  workflows, changes runtime behavior, changes `/run`, adds SSE, adds
+  `/resume`, creates migrations, or modifies database models.
+
 Overall SPEC-008 scope:
 
 - `WorkflowEvent` remains the source of truth.
@@ -177,9 +204,9 @@ Explicit SPEC-008 deferrals:
 
 ## Next Task
 
-- Review `TASK 008.4 - WebSocket Stream Endpoint`.
-- Then implement `TASK 008.5 - Stream Auth/RBAC and Recovery Tests` only after
-  TASK 008.4 is approved.
+- Review `TASK 008.5 - Stream Auth/RBAC and Recovery Tests`.
+- Then implement `TASK 008.6 - Event Streaming Hardening and SPEC-008 Final
+  Review` only after TASK 008.5 is approved.
 
 ## Expected SPEC-008 Quality Gate
 
@@ -228,3 +255,4 @@ Explicit SPEC-008 deferrals:
 - TASK 008.2 implementation recorded with Harness intake #59.
 - TASK 008.3 implementation recorded with Harness intake #60.
 - TASK 008.4 implementation recorded with Harness intake #61.
+- TASK 008.5 implementation recorded with Harness intake #62.
