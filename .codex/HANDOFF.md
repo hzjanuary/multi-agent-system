@@ -13,7 +13,7 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-006 LangGraph Runtime - TASK 006.2 implemented, awaiting review
+- SPEC-006 LangGraph Runtime - TASK 006.4 implemented, awaiting review
 
 ## Current SPEC-006 Implementation State
 
@@ -26,6 +26,8 @@ Completed tasks:
 
 - `TASK 006.1 - Runtime State Adapter and Contracts`
 - `TASK 006.2 - LangGraph Dependency and Graph Skeleton`
+- `TASK 006.3 - Deterministic Runtime Nodes`
+- `TASK 006.4 - Runtime Service`
 
 TASK 006.1 deliverables:
 
@@ -74,6 +76,59 @@ TASK 006.2 behavior:
 - Keeps production runtime node logic, runtime service persistence, and API
   route behavior out of scope.
 
+TASK 006.3 deliverables:
+
+- `backend/app/runtime/nodes.py`
+- `backend/app/tests/test_runtime_nodes.py`
+- `backend/app/runtime/__init__.py` node exports
+- `backend/README.md` deterministic node notes
+
+TASK 006.3 behavior:
+
+- Adds deterministic, no-LLM runtime node handlers for planner, retrieval,
+  quotation, compliance, validation, approval, and email_preparation.
+- Adds `create_deterministic_node_handlers` to provide a complete
+  `RuntimeStage -> RuntimeNodeHandler` mapping for the graph builder.
+- Each node returns a new `RuntimeWorkflowState` with current stage, completed
+  stages, small JSON-compatible placeholder output, and runtime progress
+  metadata.
+- Nodes preserve unrelated workflow/runtime fields and do not mutate input
+  state.
+- Approval placeholder does not make an approval decision.
+- Email preparation placeholder does not send email.
+- Keeps runtime service persistence, API route behavior, WorkflowService calls,
+  WorkflowEventService calls, external services, Agents, LLMs, RAG, event
+  streaming, frontend behavior, migrations, and model changes out of scope.
+
+TASK 006.4 deliverables:
+
+- `backend/app/runtime/service.py`
+- `backend/app/tests/test_runtime_service.py`
+- `backend/app/runtime/__init__.py` service exports
+- `backend/app/runtime/graph.py` optional stage subset support for runtime
+  service subgraphs
+- `backend/README.md` runtime service notes
+
+TASK 006.4 behavior:
+
+- Adds `RuntimeService` initialized with `WorkflowService`,
+  `WorkflowEventService`, and optional runtime node handlers for tests.
+- Runs a deterministic LangGraph subgraph from planner through approval and
+  stops at `WAITING_APPROVAL`.
+- Uses `WorkflowService.get_workflow`, `transition_workflow_status`, and
+  `update_workflow_state` for persisted workflow state and lifecycle behavior.
+- Uses `WorkflowEventService.append_event` for runtime started, node started,
+  node completed, runtime waiting-for-approval, and failure events.
+- Keeps transactions caller-owned and does not call `commit()`.
+- Rejects non-`CREATED` runtime starts with a runtime precondition error.
+- Handles node failures by appending failure events, persisting safe error
+  state where practical, and transitioning to `FAILED` through
+  `WorkflowService` when lifecycle rules allow it.
+- Does not add `/run`, `/resume`, API route behavior, external service calls,
+  real Agents, LLMs, RAG, streaming, frontend behavior, distributed workers,
+  retry scheduler, migrations, model changes, workflow API behavior changes,
+  auth/RBAC changes, or procurement-specific business logic.
+
 Overall SPEC-006 scope:
 
 - LangGraph-based workflow runtime foundation.
@@ -102,9 +157,9 @@ Explicit SPEC-006 deferrals:
 
 ## Next Task
 
-- Review `TASK 006.2 - LangGraph Dependency and Graph Skeleton`.
-- Then implement `TASK 006.3 - Deterministic Runtime Nodes` only after
-  TASK 006.2 is approved.
+- Review `TASK 006.4 - Runtime Service`.
+- Then implement `TASK 006.5 - Run Workflow API Endpoint` only after TASK 006.4 is
+  approved.
 
 ## Expected SPEC-006 Quality Gate
 
@@ -143,4 +198,6 @@ Explicit SPEC-006 deferrals:
 - SPEC-007 final review recorded and approved.
 - SPEC-006 planning recorded.
 - TASK 006.1 implementation recorded and approved.
-- TASK 006.2 implementation should be recorded after current validation.
+- TASK 006.2 implementation recorded and approved.
+- TASK 006.3 implementation recorded and approved.
+- TASK 006.4 implementation should be recorded after current validation.

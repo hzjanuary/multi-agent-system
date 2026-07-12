@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, TypedDict, cast
 
 from langgraph.graph import END, START, StateGraph
@@ -50,27 +50,38 @@ def runtime_stage_sequence() -> tuple[RuntimeStage, ...]:
     return RUNTIME_STAGES
 
 
-def runtime_graph_topology() -> tuple[RuntimeGraphEdge, ...]:
+def runtime_graph_topology(
+    stages: Sequence[RuntimeStage] | None = None,
+) -> tuple[RuntimeGraphEdge, ...]:
     """Return the linear runtime graph topology as edge pairs."""
-    stages = runtime_stage_sequence()
+    stage_sequence = tuple(stages if stages is not None else runtime_stage_sequence())
+    if not stage_sequence:
+        raise ValueError("Runtime graph requires at least one stage")
+
     return (
-        (START, stages[0].value),
+        (START, stage_sequence[0].value),
         *(
             (from_stage.value, to_stage.value)
-            for from_stage, to_stage in zip(stages, stages[1:], strict=False)
+            for from_stage, to_stage in zip(
+                stage_sequence,
+                stage_sequence[1:],
+                strict=False,
+            )
         ),
-        (stages[-1].value, END),
+        (stage_sequence[-1].value, END),
     )
 
 
 def validate_runtime_node_handlers(
     node_handlers: RuntimeNodeHandlers,
+    *,
+    stages: Sequence[RuntimeStage] | None = None,
 ) -> None:
     """Raise when node handlers do not cover every runtime stage."""
-    expected_stages = set(runtime_stage_sequence())
+    expected_stages = set(stages if stages is not None else runtime_stage_sequence())
     provided_stages = set(node_handlers)
     missing_stages = expected_stages - provided_stages
-    extra_stages = provided_stages - expected_stages
+    extra_stages = provided_stages - expected_stages if stages is None else set()
 
     if missing_stages or extra_stages:
         missing = ", ".join(stage.value for stage in sorted(missing_stages))
@@ -88,9 +99,12 @@ def validate_runtime_node_handlers(
 
 def build_workflow_graph(
     node_handlers: RuntimeNodeHandlers,
+    *,
+    stages: Sequence[RuntimeStage] | None = None,
 ) -> CompiledWorkflowGraph:
     """Build and compile the deterministic workflow graph skeleton."""
-    validate_runtime_node_handlers(node_handlers)
+    stage_sequence = tuple(stages if stages is not None else runtime_stage_sequence())
+    validate_runtime_node_handlers(node_handlers, stages=stage_sequence)
 
     graph: StateGraph[
         RuntimeStatePayload,
@@ -98,13 +112,13 @@ def build_workflow_graph(
         RuntimeStatePayload,
         RuntimeStatePayload,
     ] = StateGraph(RuntimeStatePayload)
-    for stage in runtime_stage_sequence():
+    for stage in stage_sequence:
         graph.add_node(
             stage.value,
             cast(Any, _wrap_runtime_node_handler(node_handlers[stage])),
         )
 
-    for source, target in runtime_graph_topology():
+    for source, target in runtime_graph_topology(stage_sequence):
         graph.add_edge(source, target)
 
     return graph.compile()

@@ -412,6 +412,8 @@ runtime_state_to_workflow_state() converts runtime output back to WorkflowState
 runtime_stage_sequence()          runtime graph stage order
 runtime_graph_topology()          START/stage/END edge topology
 build_workflow_graph()            compiles injected handlers into a LangGraph graph
+create_deterministic_node_handlers() complete no-LLM handler map for the graph
+RuntimeService                   runs deterministic pre-approval graph execution
 ```
 
 The adapter preserves the existing `WorkflowState` envelope while adding
@@ -434,6 +436,24 @@ compilation. Handler injection keeps TASK 006.2 free of production node logic,
 workflow persistence, API route behavior, Agent calls, LLM calls, RAG,
 document indexing, event streaming, frontend behavior, migrations, and model
 changes.
+
+Deterministic runtime nodes provide one side-effect-free placeholder handler for
+each runtime stage. Each handler records the current stage, completed stage, and
+a small JSON-compatible placeholder output in `stage_outputs` and
+`outputs.stage_outputs`. The placeholders preserve existing workflow fields and
+do not change workflow status, call services, emit persisted events, perform
+retrieval or pricing, approve requests, generate customer-facing email, call
+LLMs or Agents, create API routes, or modify database models.
+
+`RuntimeService` orchestrates the deterministic pre-approval runtime path for a
+persisted workflow. It loads workflow state through `WorkflowService`, streams a
+LangGraph subgraph from planner through approval, transitions lifecycle status
+through `WorkflowService`, appends runtime and node events through
+`WorkflowEventService`, persists the updated `WorkflowState`, and stops at
+`WAITING_APPROVAL`. The service keeps transactions caller-owned and does not
+call `commit()`. It does not expose `/run`, implement `/resume`, execute
+email_preparation before approval, call LLMs or Agents, stream events to
+clients, create migrations, or modify database models.
 
 ## Docker
 
