@@ -2,10 +2,10 @@
 
 Next.js dashboard foundation for Enterprise Multi-Agent OS.
 
-This frontend is currently a SPEC-009 bootstrap only. It provides the project
-structure, TypeScript, Tailwind CSS, and shadcn/ui-compatible conventions for
-the future dashboard. It does not call backend APIs, implement authentication,
-render workflow business data, or connect to the workflow event WebSocket yet.
+This frontend currently provides the SPEC-009 foundation: project structure,
+TypeScript, Tailwind CSS, shadcn/ui-compatible conventions, typed backend API
+client helpers, and a local-development token session layer. Workflow business
+pages and WebSocket event UI are deferred to later tasks.
 
 ## Requirements
 
@@ -53,6 +53,7 @@ http://localhost:3000
 ```bash
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
 
@@ -66,10 +67,50 @@ Implemented in TASK 009.1:
 - shadcn/ui-compatible `components/ui` and `lib/utils.ts` structure
 - Static placeholder dashboard shell
 
+Implemented in TASK 009.2:
+
+- Runtime config helpers for `NEXT_PUBLIC_API_BASE_URL` and
+  `NEXT_PUBLIC_WS_BASE_URL`
+- Fetch-based typed API client
+- Auth API helpers for login, refresh, logout, and current user
+- Local-development MVP token storage helpers
+- Minimal `/login` page
+- Unit tests for URL construction, token attachment, error handling, auth
+  endpoint usage, and session storage helpers
+
 Deferred to later SPEC-009 tasks:
 
-- Auth/session logic
-- Backend API client
 - Workflow list/detail/create/run UI
 - WebSocket event timeline
 - Full dashboard navigation
+
+## Auth And API Client
+
+The API client lives under:
+
+```text
+lib/api/
+  client.ts
+  auth.ts
+  types.ts
+```
+
+The session helpers live in:
+
+```text
+lib/auth/session.ts
+```
+
+The MVP session stores access and refresh tokens in `localStorage` for local
+development only. Production auth hardening, server-side cookies, route guards,
+and refresh scheduling are deferred.
+
+The minimal login page is available at:
+
+```text
+/login
+```
+
+It calls the existing backend `POST /api/v1/auth/login` endpoint and stores the
+returned token pair. It does not navigate to or render workflow dashboard pages
+yet.

@@ -26,8 +26,8 @@ Planning files:
 
 Planned tasks:
 
-- `TASK 009.1 - Frontend Project Bootstrap` - Implemented, awaiting review
-- `TASK 009.2 - Frontend API Client and Auth Session`
+- `TASK 009.1 - Frontend Project Bootstrap` - Approved
+- `TASK 009.2 - Frontend API Client and Auth Session` - Implemented, awaiting review
 - `TASK 009.3 - Dashboard Layout and Navigation`
 - `TASK 009.4 - Workflow List and Detail Pages`
 - `TASK 009.5 - Workflow Create and Run Actions`
@@ -60,6 +60,39 @@ Behavior:
   WebSocket base URLs.
 - Does not call backend APIs, implement auth/session behavior, create workflow
   UI, run workflows, or open WebSocket connections.
+
+## TASK 009.2 Implementation State
+
+Deliverables:
+
+- `frontend/lib/config.ts`
+- `frontend/lib/api/client.ts`
+- `frontend/lib/api/auth.ts`
+- `frontend/lib/api/types.ts`
+- `frontend/lib/auth/session.ts`
+- `frontend/app/login/page.tsx`
+- `frontend/tests/api-client.test.ts`
+- `frontend/tests/session.test.ts`
+- `frontend/vitest.config.ts`
+- `frontend/README.md`
+
+Behavior:
+
+- Adds runtime config helpers for `NEXT_PUBLIC_API_BASE_URL` and
+  `NEXT_PUBLIC_WS_BASE_URL`.
+- Adds a fetch-based typed API client with bearer-token attachment,
+  query-parameter support, and typed safe non-2xx errors.
+- Adds auth helpers for existing backend endpoints:
+  `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, and
+  `GET /auth/me`.
+- Adds local-development MVP token storage helpers backed by `localStorage`.
+- Adds a minimal `/login` page that submits backend credentials, stores the
+  returned token pair, and shows bounded success/error states.
+- Adds focused Vitest coverage for API URL construction, token attachment,
+  error handling, auth endpoint usage, and session helper behavior.
+- Does not implement dashboard navigation, workflow list/detail/create/run UI,
+  WebSocket client/timeline behavior, backend changes, migrations, models,
+  Agents, LLM UI, RAG UI, or approval/resume UI.
 
 ## SPEC-009 Scope
 
@@ -117,3 +150,4 @@ browser smoke checks after the frontend project exists.
 - SPEC-008 final validation approved with Harness intake #64 and trace #75.
 - SPEC-009 planning recorded with Harness intake #65.
 - TASK 009.1 implementation recorded with Harness intake #66.
+- TASK 009.2 implementation recorded with Harness intake #67.
