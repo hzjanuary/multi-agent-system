@@ -3,23 +3,26 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict
 
-from app.api.v1.workflow_errors import workflow_http_exception
+from app.api.v1.workflow_errors import workflow_error_detail, workflow_http_exception
 from app.auth.rbac import RoleDependency, RoleName, require_roles
 from app.core.dependencies import (
     DbSessionDependency,
+    provide_runtime_service,
     provide_workflow_event_service,
     provide_workflow_service,
 )
 from app.models import User
 from app.models.enums import WorkflowStatus
+from app.runtime.service import RuntimeService, WorkflowRuntimePreconditionError
 from app.schemas.workflows_api import (
     WorkflowCreateRequest,
     WorkflowEventListResponse,
     WorkflowListResponse,
     WorkflowResponse,
+    WorkflowRunResponse,
     WorkflowStateUpdateRequest,
     WorkflowTransitionRequest,
 )
@@ -42,6 +45,10 @@ WorkflowServiceDependency = Annotated[
 WorkflowEventServiceDependency = Annotated[
     WorkflowEventService,
     Depends(provide_workflow_event_service),
+]
+RuntimeServiceDependency = Annotated[
+    RuntimeService,
+    Depends(provide_runtime_service),
 ]
 
 WORKFLOW_FULL_ACCESS_ROLES: tuple[RoleName, ...] = (
@@ -84,6 +91,7 @@ WORKFLOW_PLANNED_ENDPOINTS: tuple[str, ...] = (
     "POST /api/v1/workflows/{workflow_id}/transition",
     "PATCH /api/v1/workflows/{workflow_id}/state",
     "GET /api/v1/workflows/{workflow_id}/events",
+    "POST /api/v1/workflows/{workflow_id}/run",
 )
 
 
@@ -247,6 +255,39 @@ async def list_workflow_events(
     )
 
 
+@router.post(
+    "/{workflow_id}/run",
+    response_model=WorkflowRunResponse,
+    summary="Run workflow",
+)
+async def run_workflow(
+    workflow_id: UUID,
+    runtime_service: RuntimeServiceDependency,
+    session: DbSessionDependency,
+    current_user: WorkflowFullAccessDependency,
+) -> WorkflowRunResponse:
+    """Run one workflow through the deterministic runtime service."""
+    try:
+        result = await runtime_service.run_workflow(
+            workflow_id,
+            actor_type="user",
+            actor_id=current_user.id,
+        )
+    except WorkflowNotFoundError as error:
+        raise workflow_http_exception(error) from error
+    except WorkflowRuntimePreconditionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=workflow_error_detail(
+                code="workflow_runtime_precondition_failed",
+                message=str(error),
+            ),
+        ) from error
+
+    await session.commit()
+    return WorkflowRunResponse.from_runtime_result(result)
+
+
 @router.get(
     "/{workflow_id}",
     response_model=WorkflowResponse,
@@ -286,6 +327,7 @@ __all__ = [
     "WORKFLOW_FULL_ACCESS_ROLES",
     "WORKFLOW_PLANNED_ENDPOINTS",
     "WORKFLOW_READ_ROLES",
+    "RuntimeServiceDependency",
     "WorkflowCreateAccessDependency",
     "WorkflowEventServiceDependency",
     "WorkflowFullAccessDependency",

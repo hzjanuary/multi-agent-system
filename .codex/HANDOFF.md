@@ -13,7 +13,7 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-006 LangGraph Runtime - TASK 006.4 implemented, awaiting review
+- SPEC-006 LangGraph Runtime - TASK 006.5 implemented, awaiting review
 
 ## Current SPEC-006 Implementation State
 
@@ -28,6 +28,7 @@ Completed tasks:
 - `TASK 006.2 - LangGraph Dependency and Graph Skeleton`
 - `TASK 006.3 - Deterministic Runtime Nodes`
 - `TASK 006.4 - Runtime Service`
+- `TASK 006.5 - Run Workflow API Endpoint`
 
 TASK 006.1 deliverables:
 
@@ -129,6 +130,34 @@ TASK 006.4 behavior:
   retry scheduler, migrations, model changes, workflow API behavior changes,
   auth/RBAC changes, or procurement-specific business logic.
 
+TASK 006.5 deliverables:
+
+- `backend/app/core/dependencies.py`
+- `backend/app/api/v1/workflows.py`
+- `backend/app/schemas/workflows_api.py`
+- `backend/app/tests/test_workflow_api_runtime_run.py`
+- `backend/app/tests/test_workflow_api_router.py`
+- `backend/app/tests/test_workflow_api_create_get_list.py`
+- `backend/README.md`
+
+TASK 006.5 behavior:
+
+- Adds a request-scoped `RuntimeService` dependency composed from
+  `WorkflowService` and `WorkflowEventService`.
+- Adds `WorkflowRunResponse` as the direct API response model for runtime run
+  results.
+- Exposes `POST /api/v1/workflows/{workflow_id}/run` under the existing
+  workflow router.
+- Requires Admin or Manager RBAC through the existing full-access workflow
+  dependency.
+- Passes authenticated user actor metadata to `RuntimeService.run_workflow`.
+- Commits only at the API boundary after successful runtime service execution.
+- Maps missing workflows to `404` through the existing workflow error mapper
+  and maps runtime precondition failures to a safe `409` response.
+- Keeps `/resume`, streaming, real Agents, LLM calls, RAG, frontend behavior,
+  distributed workers, retry scheduling, email sending, approval decisioning,
+  migrations, model changes, and auth/RBAC policy changes out of scope.
+
 Overall SPEC-006 scope:
 
 - LangGraph-based workflow runtime foundation.
@@ -157,9 +186,9 @@ Explicit SPEC-006 deferrals:
 
 ## Next Task
 
-- Review `TASK 006.4 - Runtime Service`.
-- Then implement `TASK 006.5 - Run Workflow API Endpoint` only after TASK 006.4 is
-  approved.
+- Review `TASK 006.5 - Run Workflow API Endpoint`.
+- Then implement `TASK 006.6 - Runtime Events and Failure Handling Hardening`
+  only after TASK 006.5 is approved.
 
 ## Expected SPEC-006 Quality Gate
 
@@ -200,4 +229,5 @@ Explicit SPEC-006 deferrals:
 - TASK 006.1 implementation recorded and approved.
 - TASK 006.2 implementation recorded and approved.
 - TASK 006.3 implementation recorded and approved.
-- TASK 006.4 implementation should be recorded after current validation.
+- TASK 006.4 implementation recorded and approved.
+- TASK 006.5 implementation recorded with Harness intake #54 and trace #63.

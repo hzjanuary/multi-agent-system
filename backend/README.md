@@ -377,6 +377,8 @@ PATCH /api/v1/workflows/{workflow_id}/state
                                       Admin, Manager
 GET  /api/v1/workflows/{workflow_id}/events
                                       Admin, Manager, Sales, Legal, Finance, Viewer
+POST /api/v1/workflows/{workflow_id}/run
+                                      Admin, Manager
 GET  /api/v1/workflows/_meta           authenticated workflow readers
 ```
 
@@ -395,9 +397,11 @@ commits only after successful service execution. Workflow events read uses
 minimal `limit` and `offset` query parameters, maps missing workflows to `404`,
 and does not commit because it is a read-only route.
 
-The SPEC-007 workflow API slices implemented so far do not implement run/resume
-routes, audit query APIs, event streaming, LangGraph runtime execution, or
-Agent calls.
+The SPEC-007 workflow API slices use direct response models and keep workflow
+business logic inside services. Runtime execution is exposed separately by
+SPEC-006 through `POST /api/v1/workflows/{workflow_id}/run`. Resume routes,
+audit query APIs, event streaming, Agent calls, and real LLM-backed runtime
+behavior remain deferred.
 
 ## Runtime State Adapter
 
@@ -451,9 +455,17 @@ LangGraph subgraph from planner through approval, transitions lifecycle status
 through `WorkflowService`, appends runtime and node events through
 `WorkflowEventService`, persists the updated `WorkflowState`, and stops at
 `WAITING_APPROVAL`. The service keeps transactions caller-owned and does not
-call `commit()`. It does not expose `/run`, implement `/resume`, execute
-email_preparation before approval, call LLMs or Agents, stream events to
-clients, create migrations, or modify database models.
+call `commit()`. It does not implement `/resume`, execute email_preparation
+before approval, call LLMs or Agents, stream events to clients, create
+migrations, or modify database models.
+
+The workflow runtime API endpoint `POST /api/v1/workflows/{workflow_id}/run`
+uses `RuntimeService`, requires Admin or Manager access, passes the authenticated
+user as runtime actor metadata, commits only at the API boundary after
+successful service execution, and returns a direct `WorkflowRunResponse`. The
+deterministic runtime stops at `WAITING_APPROVAL`; `/resume`, event streaming,
+real LLM calls, Agent execution, email sending, and approval decisioning remain
+deferred.
 
 ## Docker
 

@@ -19,10 +19,12 @@ from app.api.v1.workflows import (
 )
 from app.auth.rbac import RoleName
 from app.core.dependencies import (
+    provide_runtime_service,
     provide_workflow_event_service,
     provide_workflow_service,
 )
 from app.main import create_app
+from app.runtime import RuntimeService
 from app.workflows.events import WorkflowEventService
 from app.workflows.service import WorkflowService
 
@@ -61,6 +63,7 @@ def test_create_app_registers_completed_spec_007_workflow_routes() -> None:
         "/api/v1/workflows/{workflow_id}/transition",
         "/api/v1/workflows/{workflow_id}/state",
         "/api/v1/workflows/{workflow_id}/events",
+        "/api/v1/workflows/{workflow_id}/run",
         "/api/v1/workflows/_meta",
     }
 
@@ -82,6 +85,7 @@ def test_workflow_openapi_metadata_for_completed_spec_007_routes() -> None:
         ),
         ("/api/v1/workflows/{workflow_id}/state", "patch", "Update workflow state"),
         ("/api/v1/workflows/{workflow_id}/events", "get", "List workflow events"),
+        ("/api/v1/workflows/{workflow_id}/run", "post", "Run workflow"),
     }
 
     for path, method, summary in expected_operations:
@@ -95,7 +99,6 @@ def test_deferred_workflow_operation_routes_are_not_registered_yet() -> None:
     route_paths = _route_paths(app.routes)
 
     deferred_paths = {
-        "/api/v1/workflows/{workflow_id}/run",
         "/api/v1/workflows/{workflow_id}/resume",
         "/api/v1/workflows/{workflow_id}/stream",
     }
@@ -110,6 +113,13 @@ def test_workflow_service_dependency_providers_return_services() -> None:
     assert isinstance(
         provide_workflow_event_service(session),
         WorkflowEventService,
+    )
+    assert isinstance(
+        provide_runtime_service(
+            provide_workflow_service(session),
+            provide_workflow_event_service(session),
+        ),
+        RuntimeService,
     )
 
 
