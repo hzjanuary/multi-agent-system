@@ -3,15 +3,31 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+    status,
+)
 from pydantic import BaseModel, ConfigDict
 
 from app.api.v1.workflow_errors import workflow_error_detail, workflow_http_exception
-from app.auth.rbac import RoleDependency, RoleName, require_roles
+from app.auth.rbac import (
+    RoleDependency,
+    RoleName,
+    get_user_role_names,
+    normalize_role_name,
+    require_roles,
+)
 from app.core.dependencies import (
     DbSessionDependency,
     provide_runtime_service,
     provide_workflow_event_service,
+    provide_workflow_event_subscriber,
     provide_workflow_service,
 )
 from app.models import User
@@ -26,6 +42,9 @@ from app.schemas.workflows_api import (
     WorkflowStateUpdateRequest,
     WorkflowTransitionRequest,
 )
+from app.services import AuthenticationError, AuthService
+from app.streaming import WorkflowEventStreamMessage, WorkflowEventSubscriber
+from app.streaming.schemas import workflow_event_to_stream_message
 from app.workflows.events import WorkflowEventService
 from app.workflows.exceptions import (
     InvalidWorkflowTransitionError,
@@ -45,6 +64,10 @@ WorkflowServiceDependency = Annotated[
 WorkflowEventServiceDependency = Annotated[
     WorkflowEventService,
     Depends(provide_workflow_event_service),
+]
+WorkflowEventSubscriberDependency = Annotated[
+    WorkflowEventSubscriber,
+    Depends(provide_workflow_event_subscriber),
 ]
 RuntimeServiceDependency = Annotated[
     RuntimeService,
@@ -82,6 +105,9 @@ WorkflowReadAccessDependency = Annotated[
     Depends(require_roles(*WORKFLOW_READ_ROLES)),
 ]
 
+WORKFLOW_STREAM_BACKLOG_LIMIT = 50
+WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE = status.WS_1008_POLICY_VIOLATION
+
 router = APIRouter(prefix="/workflows", tags=["workflows"])
 
 WORKFLOW_PLANNED_ENDPOINTS: tuple[str, ...] = (
@@ -92,6 +118,7 @@ WORKFLOW_PLANNED_ENDPOINTS: tuple[str, ...] = (
     "PATCH /api/v1/workflows/{workflow_id}/state",
     "GET /api/v1/workflows/{workflow_id}/events",
     "POST /api/v1/workflows/{workflow_id}/run",
+    "WS /api/v1/workflows/{workflow_id}/stream",
 )
 
 
@@ -288,6 +315,38 @@ async def run_workflow(
     return WorkflowRunResponse.from_runtime_result(result)
 
 
+@router.websocket("/{workflow_id}/stream")
+async def stream_workflow_events(
+    websocket: WebSocket,
+    workflow_id: UUID,
+    session: DbSessionDependency,
+    workflow_event_service: WorkflowEventServiceDependency,
+    subscriber: WorkflowEventSubscriberDependency,
+) -> None:
+    """Stream backlog and live workflow events over a WebSocket connection."""
+    await require_workflow_stream_access(websocket, session)
+    try:
+        backlog_messages = await _workflow_event_backlog_messages(
+            workflow_id,
+            workflow_event_service,
+        )
+    except WorkflowNotFoundError as error:
+        raise WebSocketException(
+            code=WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE,
+            reason="Workflow not found",
+        ) from error
+
+    await websocket.accept()
+    try:
+        for message in backlog_messages:
+            await send_workflow_stream_message(websocket, message)
+
+        async for message in subscriber.subscribe_workflow_events(workflow_id):
+            await send_workflow_stream_message(websocket, message)
+    except WebSocketDisconnect:
+        return
+
+
 @router.get(
     "/{workflow_id}",
     response_model=WorkflowResponse,
@@ -322,14 +381,83 @@ def require_workflow_read_access() -> RoleDependency:
     return require_roles(*WORKFLOW_READ_ROLES)
 
 
+async def require_workflow_stream_access(
+    websocket: WebSocket,
+    session: DbSessionDependency,
+) -> User:
+    """Authenticate and authorize a workflow stream WebSocket connection."""
+    token = _websocket_bearer_token(websocket)
+    if token is None:
+        raise WebSocketException(
+            code=WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE,
+            reason="Authentication required",
+        )
+
+    auth_service = AuthService(session)
+    try:
+        current_user = await auth_service.get_current_user(token)
+    except AuthenticationError as error:
+        raise WebSocketException(
+            code=WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE,
+            reason="Authentication required",
+        ) from error
+
+    allowed_role_names = {normalize_role_name(role) for role in WORKFLOW_READ_ROLES}
+    if get_user_role_names(current_user).isdisjoint(allowed_role_names):
+        raise WebSocketException(
+            code=WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE,
+            reason="Insufficient permissions",
+        )
+    return current_user
+
+
+async def send_workflow_stream_message(
+    websocket: WebSocket,
+    message: WorkflowEventStreamMessage,
+) -> None:
+    """Send one schema-safe workflow event stream message as JSON."""
+    await websocket.send_json(message.model_dump(mode="json", by_alias=True))
+
+
+async def _workflow_event_backlog_messages(
+    workflow_id: UUID,
+    workflow_event_service: WorkflowEventService,
+) -> list[WorkflowEventStreamMessage]:
+    events = await workflow_event_service.list_events_for_workflow(
+        workflow_id,
+        limit=WORKFLOW_STREAM_BACKLOG_LIMIT,
+        offset=0,
+    )
+    return [
+        workflow_event_to_stream_message(event, sequence=sequence)
+        for sequence, event in enumerate(events)
+    ]
+
+
+def _websocket_bearer_token(websocket: WebSocket) -> str | None:
+    authorization = websocket.headers.get("authorization")
+    if authorization is not None:
+        scheme, _, credentials = authorization.partition(" ")
+        if scheme.lower() == "bearer" and credentials:
+            return credentials
+
+    query_token = websocket.query_params.get("access_token")
+    if query_token:
+        return query_token
+
+    return None
+
+
 __all__ = [
     "WORKFLOW_CREATE_ROLES",
     "WORKFLOW_FULL_ACCESS_ROLES",
     "WORKFLOW_PLANNED_ENDPOINTS",
     "WORKFLOW_READ_ROLES",
+    "WORKFLOW_STREAM_BACKLOG_LIMIT",
     "RuntimeServiceDependency",
     "WorkflowCreateAccessDependency",
     "WorkflowEventServiceDependency",
+    "WorkflowEventSubscriberDependency",
     "WorkflowFullAccessDependency",
     "WorkflowReadAccessDependency",
     "WorkflowRouterMetadata",
@@ -337,5 +465,7 @@ __all__ = [
     "require_workflow_create_access",
     "require_workflow_full_access",
     "require_workflow_read_access",
+    "require_workflow_stream_access",
     "router",
+    "send_workflow_stream_message",
 ]

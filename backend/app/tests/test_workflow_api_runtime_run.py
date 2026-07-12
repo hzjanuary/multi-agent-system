@@ -261,13 +261,13 @@ async def test_run_route_does_not_commit_when_runtime_service_raises(
     assert call_order == ["run"]
 
 
-def test_resume_and_stream_routes_remain_deferred() -> None:
+def test_resume_route_remains_deferred_and_stream_route_is_registered() -> None:
     app = create_app()
     route_paths = route_paths_for(app.routes)
 
     assert "/api/v1/workflows/{workflow_id}/run" in route_paths
     assert "/api/v1/workflows/{workflow_id}/resume" not in route_paths
-    assert "/api/v1/workflows/{workflow_id}/stream" not in route_paths
+    assert "/api/v1/workflows/{workflow_id}/stream" in route_paths
 
 
 class FakeRuntimeService:

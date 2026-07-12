@@ -27,8 +27,8 @@ Planned tasks:
 
 - `TASK 008.1 - Event Stream Schemas and Publisher Contracts` - Approved
 - `TASK 008.2 - Redis Pub/Sub Event Publisher` - Approved
-- `TASK 008.3 - WorkflowEvent Publish Integration` - Implemented, awaiting review
-- `TASK 008.4 - WebSocket Stream Endpoint`
+- `TASK 008.3 - WorkflowEvent Publish Integration` - Approved
+- `TASK 008.4 - WebSocket Stream Endpoint` - Implemented, awaiting review
 - `TASK 008.5 - Stream Auth/RBAC and Recovery Tests`
 - `TASK 008.6 - Event Streaming Hardening and SPEC-008 Final Review`
 
@@ -116,6 +116,34 @@ TASK 008.3 behavior:
   `/resume`, real LLM token streaming, Agent thought streaming, RAG, and
   document indexing out of scope.
 
+TASK 008.4 deliverables:
+
+- `backend/app/api/v1/workflows.py`
+- `backend/app/core/dependencies.py`
+- `backend/app/tests/test_workflow_event_stream_websocket.py`
+- `backend/app/tests/test_workflow_api_router.py`
+- `backend/app/tests/test_workflow_api_create_get_list.py`
+- `backend/README.md`
+- `.codex/HANDOFF.md`
+
+TASK 008.4 behavior:
+
+- Adds `WS /api/v1/workflows/{workflow_id}/stream` under the existing workflow
+  API router.
+- Adds lazy `WorkflowEventSubscriber` dependency wiring backed by the Redis
+  subscriber factory and `REDIS_URL` settings.
+- Authenticates WebSocket clients using existing JWT/AuthService behavior from
+  an `Authorization: Bearer <token>` header or `access_token` query parameter.
+- Applies the existing workflow read/events role set: Admin, Manager, Sales,
+  Legal, Finance, and Viewer.
+- Verifies workflow existence by reading bounded persisted backlog events
+  through `WorkflowEventService.list_events_for_workflow()`.
+- Sends backlog events as sanitized `WorkflowEventStreamMessage` JSON DTOs,
+  then forwards live subscriber messages for the workflow.
+- Keeps the stream endpoint read/delivery-only: it does not append events, run
+  workflows, mutate workflow status, mutate runtime state, change `/run`
+  behavior, add SSE, add `/resume`, add migrations, or modify database models.
+
 Overall SPEC-008 scope:
 
 - `WorkflowEvent` remains the source of truth.
@@ -149,9 +177,9 @@ Explicit SPEC-008 deferrals:
 
 ## Next Task
 
-- Review `TASK 008.3 - WorkflowEvent Publish Integration`.
-- Then implement `TASK 008.4 - WebSocket Stream Endpoint` only after TASK 008.3
-  is approved.
+- Review `TASK 008.4 - WebSocket Stream Endpoint`.
+- Then implement `TASK 008.5 - Stream Auth/RBAC and Recovery Tests` only after
+  TASK 008.4 is approved.
 
 ## Expected SPEC-008 Quality Gate
 
@@ -199,3 +227,4 @@ Explicit SPEC-008 deferrals:
 - TASK 008.1 implementation recorded with Harness intake #58.
 - TASK 008.2 implementation recorded with Harness intake #59.
 - TASK 008.3 implementation recorded with Harness intake #60.
+- TASK 008.4 implementation recorded with Harness intake #61.

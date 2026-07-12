@@ -38,6 +38,7 @@ SPEC_007_WORKFLOW_ENDPOINTS = {
     "PATCH /api/v1/workflows/{workflow_id}/state",
     "GET /api/v1/workflows/{workflow_id}/events",
     "POST /api/v1/workflows/{workflow_id}/run",
+    "WS /api/v1/workflows/{workflow_id}/stream",
 }
 
 

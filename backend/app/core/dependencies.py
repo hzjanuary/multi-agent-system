@@ -11,8 +11,11 @@ from app.db import get_db_session
 from app.runtime.service import RuntimeService
 from app.streaming import (
     RedisWorkflowEventPublisher,
+    RedisWorkflowEventSubscriber,
     WorkflowEventPublisher,
+    WorkflowEventSubscriber,
     create_redis_workflow_event_publisher,
+    create_redis_workflow_event_subscriber,
 )
 from app.workflows.events import WorkflowEventService
 from app.workflows.service import WorkflowService
@@ -47,6 +50,18 @@ async def provide_workflow_event_publisher(
     finally:
         if isinstance(publisher, RedisWorkflowEventPublisher):
             await publisher.close()
+
+
+async def provide_workflow_event_subscriber(
+    settings: Annotated[Settings, Depends(provide_settings)],
+) -> AsyncIterator[WorkflowEventSubscriber]:
+    """Provide a request-scoped workflow event subscriber."""
+    subscriber = create_redis_workflow_event_subscriber(settings.redis_url)
+    try:
+        yield subscriber
+    finally:
+        if isinstance(subscriber, RedisWorkflowEventSubscriber):
+            await subscriber.close()
 
 
 def provide_workflow_event_service(

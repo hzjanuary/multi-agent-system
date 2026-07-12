@@ -64,6 +64,7 @@ def test_create_app_registers_completed_spec_007_workflow_routes() -> None:
         "/api/v1/workflows/{workflow_id}/state",
         "/api/v1/workflows/{workflow_id}/events",
         "/api/v1/workflows/{workflow_id}/run",
+        "/api/v1/workflows/{workflow_id}/stream",
         "/api/v1/workflows/_meta",
     }
 
@@ -100,7 +101,6 @@ def test_deferred_workflow_operation_routes_are_not_registered_yet() -> None:
 
     deferred_paths = {
         "/api/v1/workflows/{workflow_id}/resume",
-        "/api/v1/workflows/{workflow_id}/stream",
     }
 
     assert route_paths.isdisjoint(deferred_paths)

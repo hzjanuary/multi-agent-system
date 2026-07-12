@@ -503,10 +503,25 @@ not remove or invalidate persisted workflow events. FastAPI dependency wiring
 provides the Redis publisher lazily through settings without creating a global
 Redis client.
 
-The streaming layer does not add WebSocket or SSE routes, change
-`RuntimeService` business logic, change workflow API behavior, or modify
-database models. The WebSocket stream endpoint is deferred to a later SPEC-008
-task.
+The workflow event stream endpoint is mounted at:
+
+```text
+WS /api/v1/workflows/{workflow_id}/stream
+```
+
+The endpoint requires the same workflow read/event roles used by the REST event
+read endpoint. On connection it sends a bounded backlog of persisted
+`WorkflowEvent` records converted into safe `WorkflowEventStreamMessage` DTOs,
+then forwards live workflow-scoped messages from the configured subscriber. The
+stream endpoint does not append events, start or run workflows, mutate workflow
+status, mutate runtime state, or expose ORM/database internals. WebSocket
+clients may authenticate with an `Authorization: Bearer <token>` header or an
+`access_token` query parameter when headers are not practical.
+
+The streaming layer does not add SSE routes, change `RuntimeService` business
+logic, change `/run` behavior, or modify database models. `/resume`, frontend
+live UI, real LLM/Agent token streaming, RAG, and procurement-specific runtime
+logic remain deferred.
 
 ## Docker
 
