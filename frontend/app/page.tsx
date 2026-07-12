@@ -28,8 +28,8 @@ export default function HomePage() {
           <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
             <h2 className="text-xl font-semibold">Bootstrap status</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              The frontend shell is ready for later SPEC-009 tasks. Backend API
-              calls, login, workflow pages, and WebSocket clients are deferred.
+              The frontend shell is ready for SPEC-009 dashboard tasks. Backend
+              workflow data, run actions, and WebSocket clients are deferred.
             </p>
           </div>
           <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">

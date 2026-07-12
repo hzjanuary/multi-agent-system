@@ -27,8 +27,8 @@ Planning files:
 Planned tasks:
 
 - `TASK 009.1 - Frontend Project Bootstrap` - Approved
-- `TASK 009.2 - Frontend API Client and Auth Session` - Implemented, awaiting review
-- `TASK 009.3 - Dashboard Layout and Navigation`
+- `TASK 009.2 - Frontend API Client and Auth Session` - Approved
+- `TASK 009.3 - Dashboard Layout and Navigation` - Implemented, awaiting review
 - `TASK 009.4 - Workflow List and Detail Pages`
 - `TASK 009.5 - Workflow Create and Run Actions`
 - `TASK 009.6 - WebSocket Event Timeline`
@@ -94,6 +94,38 @@ Behavior:
   WebSocket client/timeline behavior, backend changes, migrations, models,
   Agents, LLM UI, RAG UI, or approval/resume UI.
 
+## TASK 009.3 Implementation State
+
+Deliverables:
+
+- `frontend/app/dashboard/page.tsx`
+- `frontend/app/workflows/page.tsx`
+- `frontend/app/workflows/new/page.tsx`
+- `frontend/app/events/page.tsx`
+- `frontend/components/layout/app-shell.tsx`
+- `frontend/components/layout/sidebar.tsx`
+- `frontend/components/layout/header.tsx`
+- `frontend/components/layout/placeholder-section.tsx`
+- `frontend/components/navigation/nav-link.tsx`
+- `frontend/tests/dashboard-layout.test.tsx`
+- `frontend/README.md`
+
+Behavior:
+
+- Adds an authenticated dashboard shell at `/dashboard`.
+- Adds navigation links for Dashboard, Workflows, Create Workflow, and Runtime
+  Events.
+- Adds placeholder routes for `/workflows`, `/workflows/new`, and `/events`
+  without backend workflow data calls.
+- Uses existing local session helpers to show a login-required state when no
+  access token is present.
+- Adds a local logout action that clears the MVP session.
+- Adds component smoke tests for shell rendering, navigation labels, and logout
+  session clearing.
+- Does not implement workflow list/detail data loading, workflow create/run
+  actions, WebSocket client/timeline behavior, backend changes, migrations,
+  models, Agents, LLM UI, RAG UI, or approval/resume UI.
+
 ## SPEC-009 Scope
 
 - Next.js frontend application.
@@ -123,9 +155,9 @@ Behavior:
 
 ## Next Task
 
-- Review SPEC-009 planning files.
-- Then implement `TASK 009.1 - Frontend Project Bootstrap` only after planning
-  is approved.
+- Review `TASK 009.3 - Dashboard Layout and Navigation`.
+- Then implement `TASK 009.4 - Workflow List and Detail Pages` only after
+  review approval.
 
 ## Expected SPEC-009 Planning Quality Gate
 
@@ -151,3 +183,4 @@ browser smoke checks after the frontend project exists.
 - SPEC-009 planning recorded with Harness intake #65.
 - TASK 009.1 implementation recorded with Harness intake #66.
 - TASK 009.2 implementation recorded with Harness intake #67.
+- TASK 009.3 implementation recorded with Harness intake #68.

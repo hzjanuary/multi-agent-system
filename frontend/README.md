@@ -4,8 +4,9 @@ Next.js dashboard foundation for Enterprise Multi-Agent OS.
 
 This frontend currently provides the SPEC-009 foundation: project structure,
 TypeScript, Tailwind CSS, shadcn/ui-compatible conventions, typed backend API
-client helpers, and a local-development token session layer. Workflow business
-pages and WebSocket event UI are deferred to later tasks.
+client helpers, a local-development token session layer, and the first
+authenticated dashboard shell. Workflow business pages and WebSocket event UI
+are deferred to later tasks.
 
 ## Requirements
 
@@ -78,11 +79,32 @@ Implemented in TASK 009.2:
 - Unit tests for URL construction, token attachment, error handling, auth
   endpoint usage, and session storage helpers
 
+Implemented in TASK 009.3:
+
+- Authenticated dashboard shell at `/dashboard`
+- Navigation links for Dashboard, Workflows, Create Workflow, and Runtime Events
+- Placeholder routes for `/workflows`, `/workflows/new`, and `/events`
+- Login-required dashboard state when no local access token exists
+- Local logout action that clears the MVP session
+- Component smoke tests for dashboard shell, navigation, and logout behavior
+
 Deferred to later SPEC-009 tasks:
 
 - Workflow list/detail/create/run UI
 - WebSocket event timeline
-- Full dashboard navigation
+
+## Dashboard Shell
+
+The dashboard shell is available at:
+
+```text
+/dashboard
+```
+
+It uses the MVP session token stored by `/login`. If no local access token is
+present, the dashboard shows a login-required state with a link back to
+`/login`. Current dashboard routes are placeholders only and do not call
+workflow APIs or open WebSocket connections.
 
 ## Auth And API Client
 
@@ -112,5 +134,5 @@ The minimal login page is available at:
 ```
 
 It calls the existing backend `POST /api/v1/auth/login` endpoint and stores the
-returned token pair. It does not navigate to or render workflow dashboard pages
-yet.
+returned token pair. Workflow data loading, create/run actions, and live event
+streaming are implemented in later tasks.
