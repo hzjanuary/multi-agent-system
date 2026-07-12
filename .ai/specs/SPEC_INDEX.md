@@ -1,6 +1,6 @@
 # SPEC INDEX
 
-## Sprint -1 — AI Development Framework
+## Sprint -1 - AI Development Framework
 
 - DONE: Project contract
 - DONE: Architecture contract
@@ -9,47 +9,50 @@
 - DONE: State contract
 - DONE: Dataset seed
 
-## Phase 1 — Infrastructure
+## Phase 1 - Infrastructure
 
 - SPEC-001 Bootstrap Backend
 - SPEC-002 Database Foundation
 - SPEC-003 Authentication and RBAC
 - SPEC-004 Storage Infrastructure
 
-## Phase 2 — Core Workflow
+## Phase 2 - Core Workflow
 
 - SPEC-005 Workflow State
 - SPEC-006 LangGraph Runtime
 - SPEC-007 Workflow API
 - SPEC-008 Event Streaming
 
-## Phase 3 — Agents
+## Phase 3 - Frontend Dashboard
 
-- SPEC-009 Planner Agent
-- SPEC-010 Retrieval Agent
-- SPEC-011 Calculator Tool
-- SPEC-012 Compliance Agent
-- SPEC-013 Validation Agent
-- SPEC-014 Email Agent
+- SPEC-009 Frontend Dashboard
 
-## Phase 4 — Frontend
+## Phase 4 - Agents
 
-- SPEC-015 Frontend Bootstrap
-- SPEC-016 Authentication UI
-- SPEC-017 Dashboard
-- SPEC-018 Workflow Detail
-- SPEC-019 Agent Monitor
-- SPEC-020 Approval Center
+- SPEC-010 Planner Agent
+- SPEC-011 Retrieval Agent
+- SPEC-012 Calculator Tool
+- SPEC-013 Compliance Agent
+- SPEC-014 Validation Agent
+- SPEC-015 Email Agent
+
+## Phase 5 - Expanded Frontend
+
+- SPEC-016 Frontend Bootstrap Follow-up
+- SPEC-017 Authentication UI Follow-up
+- SPEC-018 Dashboard Follow-up
+- SPEC-019 Workflow Detail Follow-up
+- SPEC-020 Agent Monitor
 - SPEC-021 Document Management
 
-## Phase 5 — Demo and Observability
+## Phase 6 - Demo and Observability
 
 - SPEC-022 Audit Log
 - SPEC-023 Analytics
 - SPEC-024 Demo Dataset Integration
 - SPEC-025 End-to-End Demo Flow
 
-## Phase 6 — Deployment
+## Phase 7 - Deployment
 
 - SPEC-026 Production Docker
 - SPEC-027 CI/CD
