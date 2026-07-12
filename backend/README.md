@@ -495,10 +495,18 @@ messages, ignores malformed payloads, and cleans up subscriptions on close.
 Factory helpers use `REDIS_URL` from settings, while tests inject fake Redis
 clients so unit tests do not require a live Redis service.
 
-The streaming layer does not add WebSocket or SSE routes, publish events from
-`WorkflowEventService`, change `RuntimeService`, change workflow API behavior,
-or modify database models. Workflow event publish integration and the WebSocket
-stream endpoint are deferred to later SPEC-008 tasks.
+`WorkflowEventService` accepts an optional `WorkflowEventPublisher`. When a
+publisher is configured, appended workflow events are flushed, converted from
+`WorkflowEventRead` into sanitized `WorkflowEventStreamMessage` DTOs, and
+published best-effort. Publish failures are logged with bounded metadata and do
+not remove or invalidate persisted workflow events. FastAPI dependency wiring
+provides the Redis publisher lazily through settings without creating a global
+Redis client.
+
+The streaming layer does not add WebSocket or SSE routes, change
+`RuntimeService` business logic, change workflow API behavior, or modify
+database models. The WebSocket stream endpoint is deferred to a later SPEC-008
+task.
 
 ## Docker
 

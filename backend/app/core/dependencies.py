@@ -9,6 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings, get_settings
 from app.db import get_db_session
 from app.runtime.service import RuntimeService
+from app.streaming import (
+    RedisWorkflowEventPublisher,
+    WorkflowEventPublisher,
+    create_redis_workflow_event_publisher,
+)
 from app.workflows.events import WorkflowEventService
 from app.workflows.service import WorkflowService
 
@@ -32,11 +37,27 @@ def provide_workflow_service(session: DbSessionDependency) -> WorkflowService:
     return WorkflowService(session)
 
 
+async def provide_workflow_event_publisher(
+    settings: Annotated[Settings, Depends(provide_settings)],
+) -> AsyncIterator[WorkflowEventPublisher]:
+    """Provide a request-scoped workflow event publisher."""
+    publisher = create_redis_workflow_event_publisher(settings.redis_url)
+    try:
+        yield publisher
+    finally:
+        if isinstance(publisher, RedisWorkflowEventPublisher):
+            await publisher.close()
+
+
 def provide_workflow_event_service(
     session: DbSessionDependency,
+    publisher: Annotated[
+        WorkflowEventPublisher | None,
+        Depends(provide_workflow_event_publisher),
+    ] = None,
 ) -> WorkflowEventService:
     """Provide workflow event service bound to the request session."""
-    return WorkflowEventService(session)
+    return WorkflowEventService(session, publisher=publisher)
 
 
 def provide_runtime_service(

@@ -3,23 +3,34 @@
 from typing import Any
 from uuid import UUID
 
+import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import WorkflowEvent
 from app.repositories.workflow_events import WorkflowEventRepository
 from app.repositories.workflows import WorkflowRepository
+from app.streaming.contracts import WorkflowEventPublisher
+from app.streaming.schemas import workflow_event_to_stream_message
 from app.workflows.audit import WorkflowAuditLogger
 from app.workflows.exceptions import WorkflowEventNotFoundError, WorkflowNotFoundError
 from app.workflows.schemas import WorkflowEventCreate, WorkflowEventRead
+
+logger = structlog.get_logger(__name__)
 
 
 class WorkflowEventService:
     """Workflow event use cases backed by workflow event repositories."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        *,
+        publisher: WorkflowEventPublisher | None = None,
+    ) -> None:
         self.workflow_repository = WorkflowRepository(session)
         self.workflow_event_repository = WorkflowEventRepository(session)
         self.workflow_audit_logger = WorkflowAuditLogger(session)
+        self.publisher = publisher
 
     async def append_event(self, event: WorkflowEventCreate) -> WorkflowEventRead:
         """Append an event for an existing workflow."""
@@ -48,7 +59,9 @@ class WorkflowEventService:
             agent_name=persisted_event.agent_name,
         )
         await self.workflow_event_repository.session.flush()
-        return self._event_to_read(persisted_event)
+        event_read = self._event_to_read(persisted_event)
+        await self._publish_event(event_read)
+        return event_read
 
     async def list_events_for_workflow(
         self,
@@ -98,3 +111,20 @@ class WorkflowEventService:
             "updated_at": event.updated_at,
         }
         return WorkflowEventRead.model_validate(payload)
+
+    async def _publish_event(self, event: WorkflowEventRead) -> None:
+        """Best-effort publish of a persisted workflow event stream message."""
+        if self.publisher is None:
+            return
+
+        try:
+            message = workflow_event_to_stream_message(event)
+            await self.publisher.publish_workflow_event(message)
+        except Exception as error:
+            logger.warning(
+                "workflow_event_publish_failed",
+                workflow_id=str(event.workflow_id),
+                event_id=str(event.event_id),
+                event_type=event.event_type,
+                error_type=type(error).__name__,
+            )

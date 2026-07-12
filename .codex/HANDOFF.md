@@ -26,8 +26,8 @@ Planning files:
 Planned tasks:
 
 - `TASK 008.1 - Event Stream Schemas and Publisher Contracts` - Approved
-- `TASK 008.2 - Redis Pub/Sub Event Publisher` - Implemented, awaiting review
-- `TASK 008.3 - WorkflowEvent Publish Integration`
+- `TASK 008.2 - Redis Pub/Sub Event Publisher` - Approved
+- `TASK 008.3 - WorkflowEvent Publish Integration` - Implemented, awaiting review
 - `TASK 008.4 - WebSocket Stream Endpoint`
 - `TASK 008.5 - Stream Auth/RBAC and Recovery Tests`
 - `TASK 008.6 - Event Streaming Hardening and SPEC-008 Final Review`
@@ -88,6 +88,34 @@ TASK 008.2 behavior:
   frontend, `/resume`, real LLM token streaming, Agent thought streaming, RAG,
   and document indexing out of scope.
 
+TASK 008.3 deliverables:
+
+- `backend/app/workflows/events.py`
+- `backend/app/core/dependencies.py`
+- `backend/app/tests/test_workflow_event_publish_integration.py`
+- `backend/README.md` publish integration notes
+- `.codex/HANDOFF.md` current-task update
+
+TASK 008.3 behavior:
+
+- Adds optional `WorkflowEventPublisher` injection to `WorkflowEventService`.
+- Keeps direct service construction unchanged when no publisher is supplied.
+- Converts persisted `WorkflowEventRead` values into sanitized
+  `WorkflowEventStreamMessage` DTOs with `workflow_event_to_stream_message()`.
+- Attempts publish only after the workflow event and event audit record have
+  been flushed.
+- Treats publish as best-effort delivery: publisher/conversion failures are
+  logged with bounded metadata and do not erase or invalidate persisted
+  workflow events.
+- Adds FastAPI dependency wiring that lazily creates a Redis workflow event
+  publisher from `REDIS_URL` and injects it into `WorkflowEventService`.
+- Verifies RuntimeService-emitted events publish through the injected
+  `WorkflowEventService` without changing RuntimeService business logic.
+- Keeps WebSocket/SSE endpoints, stream auth/RBAC, RuntimeService business
+  changes, `/run` behavior changes, migrations, model changes, frontend,
+  `/resume`, real LLM token streaming, Agent thought streaming, RAG, and
+  document indexing out of scope.
+
 Overall SPEC-008 scope:
 
 - `WorkflowEvent` remains the source of truth.
@@ -121,9 +149,9 @@ Explicit SPEC-008 deferrals:
 
 ## Next Task
 
-- Review `TASK 008.2 - Redis Pub/Sub Event Publisher`.
-- Then implement `TASK 008.3 - WorkflowEvent Publish Integration` only after
-  TASK 008.2 is approved.
+- Review `TASK 008.3 - WorkflowEvent Publish Integration`.
+- Then implement `TASK 008.4 - WebSocket Stream Endpoint` only after TASK 008.3
+  is approved.
 
 ## Expected SPEC-008 Quality Gate
 
@@ -170,3 +198,4 @@ Explicit SPEC-008 deferrals:
 - SPEC-008 planning recorded with Harness intake #57.
 - TASK 008.1 implementation recorded with Harness intake #58.
 - TASK 008.2 implementation recorded with Harness intake #59.
+- TASK 008.3 implementation recorded with Harness intake #60.
