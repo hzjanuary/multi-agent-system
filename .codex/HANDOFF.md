@@ -13,7 +13,7 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-006 LangGraph Runtime - TASK 006.5 implemented, awaiting review
+- SPEC-006 LangGraph Runtime - TASK 006.6 implemented, awaiting review
 
 ## Current SPEC-006 Implementation State
 
@@ -29,6 +29,7 @@ Completed tasks:
 - `TASK 006.3 - Deterministic Runtime Nodes`
 - `TASK 006.4 - Runtime Service`
 - `TASK 006.5 - Run Workflow API Endpoint`
+- `TASK 006.6 - Runtime Events and Failure Handling Hardening`
 
 TASK 006.1 deliverables:
 
@@ -158,6 +159,29 @@ TASK 006.5 behavior:
   distributed workers, retry scheduling, email sending, approval decisioning,
   migrations, model changes, and auth/RBAC policy changes out of scope.
 
+TASK 006.6 deliverables:
+
+- `backend/app/tests/test_runtime_service.py`
+- `backend/app/tests/test_workflow_api_runtime_run.py`
+
+TASK 006.6 behavior:
+
+- Strengthens RuntimeService event tests with exact runtime/node event ordering.
+- Verifies runtime started, node started, node completed, and waiting-for-
+  approval event payloads remain bounded and deterministic.
+- Verifies failed node/runtime event payloads persist safe metadata without raw
+  exception messages or full request/provider payloads.
+- Verifies persisted runtime error state stores safe code, message, failed
+  step, and bounded details.
+- Verifies `RuntimeService` does not call `commit()`.
+- Verifies `/run` commits only after `RuntimeService.run_workflow` returns.
+- Verifies `/run` does not commit when the runtime service raises an unexpected
+  exception.
+- Keeps `/resume`, streaming, WebSocket/SSE, real Agents, LLM calls, RAG,
+  frontend behavior, distributed workers, retry scheduling, email sending,
+  approval decisioning, migrations, model changes, auth/RBAC policy changes,
+  and new runtime endpoints out of scope.
+
 Overall SPEC-006 scope:
 
 - LangGraph-based workflow runtime foundation.
@@ -186,9 +210,9 @@ Explicit SPEC-006 deferrals:
 
 ## Next Task
 
-- Review `TASK 006.5 - Run Workflow API Endpoint`.
-- Then implement `TASK 006.6 - Runtime Events and Failure Handling Hardening`
-  only after TASK 006.5 is approved.
+- Review `TASK 006.6 - Runtime Events and Failure Handling Hardening`.
+- Then perform `TASK 006.7 - Runtime Tests and SPEC-006 Final Review` only
+  after TASK 006.6 is approved.
 
 ## Expected SPEC-006 Quality Gate
 
@@ -231,3 +255,4 @@ Explicit SPEC-006 deferrals:
 - TASK 006.3 implementation recorded and approved.
 - TASK 006.4 implementation recorded and approved.
 - TASK 006.5 implementation recorded with Harness intake #54 and trace #63.
+- TASK 006.6 implementation recorded with Harness intake #55 and trace #64.

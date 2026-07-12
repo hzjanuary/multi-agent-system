@@ -12,13 +12,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import create_access_token, hash_password
 from app.auth.rbac import RoleName
 from app.config import Settings, get_settings
-from app.core.dependencies import provide_db_session
+from app.core.dependencies import provide_db_session, provide_runtime_service
 from app.db import create_database_engine, create_session_factory
 from app.main import create_app
 from app.models import AuditLog, Role, User, Workflow
 from app.models.enums import WorkflowStatus
-from app.runtime import PRE_APPROVAL_RUNTIME_STAGES
-from app.workflows import WorkflowService, WorkflowState, WorkflowStateCreate
+from app.runtime import (
+    PRE_APPROVAL_RUNTIME_STAGES,
+    RuntimeStage,
+    RuntimeWorkflowResult,
+    RuntimeWorkflowState,
+)
+from app.workflows import (
+    WorkflowService,
+    WorkflowState,
+    WorkflowStateCreate,
+    WorkflowType,
+)
 
 TEST_EMAIL_PREFIX = "workflow-api-run"
 TEST_DOMAIN_PREFIX = "workflow-api-run-domain"
@@ -194,6 +204,63 @@ async def test_run_route_rejects_invalid_workflow_id(
     assert response.status_code == 422
 
 
+@pytest.mark.asyncio
+async def test_run_route_commits_only_after_runtime_service_returns(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.ADMIN])
+    workflow_id = uuid4()
+    call_order: list[str] = []
+    runtime_service = FakeRuntimeService(call_order=call_order)
+
+    async def record_commit() -> None:
+        call_order.append("commit")
+
+    monkeypatch.setattr(db_session, "commit", record_commit)
+
+    async with runtime_client(db_session, runtime_service) as client:
+        response = await client.post(
+            f"/api/v1/workflows/{workflow_id}/run",
+            headers=auth_headers(user),
+        )
+
+    assert response.status_code == 200
+    assert call_order == ["run", "commit"]
+    assert runtime_service.actor_type == "user"
+    assert runtime_service.actor_id == user.id
+    assert response.json()["workflow_id"] == str(workflow_id)
+
+
+@pytest.mark.asyncio
+async def test_run_route_does_not_commit_when_runtime_service_raises(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.MANAGER])
+    workflow_id = uuid4()
+    call_order: list[str] = []
+    runtime_service = FakeRuntimeService(
+        call_order=call_order,
+        error=RuntimeError("deterministic runtime failure"),
+    )
+
+    async def fail_commit() -> None:
+        call_order.append("commit")
+        raise AssertionError("Run workflow route committed after runtime exception")
+
+    monkeypatch.setattr(db_session, "commit", fail_commit)
+
+    async with runtime_client(db_session, runtime_service) as client:
+        with pytest.raises(RuntimeError, match="deterministic runtime failure"):
+            await client.post(
+                f"/api/v1/workflows/{workflow_id}/run",
+                headers=auth_headers(user),
+            )
+
+    assert call_order == ["run"]
+
+
 def test_resume_and_stream_routes_remain_deferred() -> None:
     app = create_app()
     route_paths = route_paths_for(app.routes)
@@ -201,6 +268,68 @@ def test_resume_and_stream_routes_remain_deferred() -> None:
     assert "/api/v1/workflows/{workflow_id}/run" in route_paths
     assert "/api/v1/workflows/{workflow_id}/resume" not in route_paths
     assert "/api/v1/workflows/{workflow_id}/stream" not in route_paths
+
+
+class FakeRuntimeService:
+    """Runtime service double for route transaction boundary tests."""
+
+    def __init__(
+        self,
+        *,
+        call_order: list[str],
+        error: Exception | None = None,
+    ) -> None:
+        self.call_order = call_order
+        self.error = error
+        self.actor_type: str | None = None
+        self.actor_id: UUID | None = None
+
+    async def run_workflow(
+        self,
+        workflow_id: UUID,
+        *,
+        actor_type: str | None = None,
+        actor_id: UUID | None = None,
+    ) -> RuntimeWorkflowResult:
+        self.call_order.append("run")
+        self.actor_type = actor_type
+        self.actor_id = actor_id
+        if self.error is not None:
+            raise self.error
+
+        return RuntimeWorkflowResult(
+            state=RuntimeWorkflowState(
+                workflow_id=str(workflow_id),
+                workflow_type=WorkflowType.PROCUREMENT_QUOTATION,
+                domain=f"{TEST_DOMAIN_PREFIX}-fake-runtime",
+                status=WorkflowStatus.WAITING_APPROVAL,
+                request={},
+                current_stage=RuntimeStage.APPROVAL,
+                completed_stages=PRE_APPROVAL_RUNTIME_STAGES,
+            ),
+            completed=False,
+            failed=False,
+            message="Workflow is waiting for approval.",
+        )
+
+
+def runtime_client(
+    session: AsyncSession,
+    runtime_service: FakeRuntimeService,
+) -> AsyncClient:
+    """Return an API client with a runtime service dependency override."""
+    app = create_app(Settings())
+
+    async def override_db_session() -> AsyncIterator[AsyncSession]:
+        yield session
+
+    def override_runtime_service() -> FakeRuntimeService:
+        return runtime_service
+
+    app.dependency_overrides[provide_db_session] = override_db_session
+    app.dependency_overrides[provide_runtime_service] = override_runtime_service
+    transport = ASGITransport(app=app)
+    return AsyncClient(transport=transport, base_url="http://testserver")
 
 
 async def create_user_with_roles(
