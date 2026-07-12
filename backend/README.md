@@ -467,6 +467,30 @@ deterministic runtime stops at `WAITING_APPROVAL`; `/resume`, event streaming,
 real LLM calls, Agent execution, email sending, and approval decisioning remain
 deferred.
 
+## Event Streaming Contracts
+
+Event streaming contracts for SPEC-008 live in `app/streaming`.
+
+```text
+WorkflowEventStreamMessage        typed workflow event stream DTO
+workflow_event_to_stream_message  converts WorkflowEventRead to stream DTO
+WorkflowEventPublisher            async publisher protocol
+WorkflowEventSubscriber           async subscriber protocol
+workflow_events_channel()         deterministic workflow-scoped channel helper
+```
+
+`WorkflowEventStreamMessage` is a direct Pydantic v2 message schema for future
+workflow stream delivery. It carries workflow id, event id, event type, status,
+stage, timestamps, sequence, message text, and a sanitized payload. Payload
+sanitization removes sensitive key names, bounds strings, lists, nesting depth,
+and object counts, and coerces non-JSON values into bounded strings.
+
+The streaming contracts are implementation-agnostic. They do not import Redis,
+open network connections, add WebSocket or SSE routes, publish events from
+`WorkflowEventService`, change `RuntimeService`, change workflow API behavior,
+or modify database models. Redis pub/sub, workflow event publish integration,
+and the WebSocket stream endpoint are deferred to later SPEC-008 tasks.
+
 ## Docker
 
 Build and run the backend plus Phase 1 infrastructure services from the

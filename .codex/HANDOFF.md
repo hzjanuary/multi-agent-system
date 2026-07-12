@@ -25,12 +25,41 @@ Planning files:
 
 Planned tasks:
 
-- `TASK 008.1 - Event Stream Schemas and Publisher Contracts`
+- `TASK 008.1 - Event Stream Schemas and Publisher Contracts` - Implemented,
+  awaiting review
 - `TASK 008.2 - Redis Pub/Sub Event Publisher`
 - `TASK 008.3 - WorkflowEvent Publish Integration`
 - `TASK 008.4 - WebSocket Stream Endpoint`
 - `TASK 008.5 - Stream Auth/RBAC and Recovery Tests`
 - `TASK 008.6 - Event Streaming Hardening and SPEC-008 Final Review`
+
+TASK 008.1 deliverables:
+
+- `backend/app/streaming/__init__.py`
+- `backend/app/streaming/schemas.py`
+- `backend/app/streaming/contracts.py`
+- `backend/app/tests/test_event_stream_schemas.py`
+- `backend/app/tests/test_event_stream_contracts.py`
+- `backend/README.md` streaming contract notes
+- `.codex/HANDOFF.md` current-task update
+
+TASK 008.1 behavior:
+
+- Adds `WorkflowEventStreamMessage`, a Pydantic v2 stream DTO for persisted
+  workflow event delivery.
+- Adds `workflow_event_to_stream_message()` to convert `WorkflowEventRead` into
+  a stream-safe DTO without exposing ORM objects.
+- Adds payload sanitization that removes sensitive key names, bounds strings,
+  lists, nesting depth, and object counts, and coerces non-JSON values into
+  bounded strings.
+- Adds implementation-agnostic async publisher/subscriber protocols:
+  `WorkflowEventPublisher` and `WorkflowEventSubscriber`.
+- Adds deterministic workflow-scoped channel helper
+  `workflow_events_channel()` using `workflow-events:{workflow_id}`.
+- Keeps Redis implementation, WebSocket/SSE endpoints, WorkflowEventService
+  publish integration, RuntimeService behavior changes, migrations, model
+  changes, auth/RBAC policy changes, frontend, `/resume`, real LLM token
+  streaming, Agent thought streaming, RAG, and document indexing out of scope.
 
 Overall SPEC-008 scope:
 
@@ -65,9 +94,9 @@ Explicit SPEC-008 deferrals:
 
 ## Next Task
 
-- Review SPEC-008 planning files.
-- Then implement `TASK 008.1 - Event Stream Schemas and Publisher Contracts`
-  only after planning is approved.
+- Review `TASK 008.1 - Event Stream Schemas and Publisher Contracts`.
+- Then implement `TASK 008.2 - Redis Pub/Sub Event Publisher` only after
+  TASK 008.1 is approved.
 
 ## Expected SPEC-008 Quality Gate
 
@@ -112,3 +141,4 @@ Explicit SPEC-008 deferrals:
 - TASK 006.6 implementation recorded with Harness intake #55 and trace #64.
 - TASK 006.7 final review recorded with Harness intake #56 and trace #65.
 - SPEC-008 planning recorded with Harness intake #57.
+- TASK 008.1 implementation recorded with Harness intake #58.
