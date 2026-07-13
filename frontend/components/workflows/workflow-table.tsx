@@ -14,7 +14,7 @@ export function WorkflowTable({ workflows }: WorkflowTableProps) {
         <h2 className="text-base font-semibold">No workflows yet</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           Workflow records from the backend will appear here after they are
-          created. Creation is implemented in a later task.
+          created from the Create Workflow page.
         </p>
       </div>
     );

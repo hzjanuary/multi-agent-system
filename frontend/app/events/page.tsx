@@ -5,15 +5,15 @@ export default function RuntimeEventsPage() {
   return (
     <AppShell
       title="Runtime Events"
-      description="Event stream viewer placeholder for persisted and live workflow updates."
+      description="Workflow-specific event timelines are available from each workflow detail page."
     >
       <PlaceholderSection
         eyebrow="Runtime Events"
-        title="Live timeline arrives in TASK 009.6"
-        description="No WebSocket connection is opened in this task. The route only reserves the event monitoring surface."
+        title="Open a workflow to watch its timeline"
+        description="Live event streams are scoped to individual workflows. Choose a workflow from the list, then use its detail page to view persisted backlog and WebSocket updates."
         items={[
-          "Persisted workflow event backlog",
-          "WS /api/v1/workflows/{workflow_id}/stream",
+          "Persisted event backlog",
+          "Live WebSocket updates",
           "Disconnected and reconnecting states",
         ]}
       />

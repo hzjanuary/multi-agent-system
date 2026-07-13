@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import { ApiClientError } from "@/lib/api/client";
@@ -86,7 +87,10 @@ export default function LoginPage() {
           ) : null}
           {isSignedIn ? (
             <p className="text-sm text-muted-foreground" role="status">
-              Signed in. Dashboard navigation is implemented in a later task.
+              Signed in.{" "}
+              <Link className="font-medium text-primary underline" href="/dashboard">
+                Open the dashboard.
+              </Link>
             </p>
           ) : null}
         </form>

@@ -28,8 +28,8 @@ export default function HomePage() {
           <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
             <h2 className="text-xl font-semibold">Bootstrap status</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              The frontend shell is ready for SPEC-009 dashboard tasks. Backend
-              workflow data, run actions, and WebSocket clients are deferred.
+              The SPEC-009 dashboard foundation is in place with workflow
+              browsing, creation, runtime actions, and live event monitoring.
             </p>
           </div>
           <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">

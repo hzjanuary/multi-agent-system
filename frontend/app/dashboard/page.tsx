@@ -11,11 +11,11 @@ export default function DashboardPage() {
         <PlaceholderSection
           eyebrow="Dashboard"
           title="Ready for workflow operations"
-          description="This shell is intentionally static for TASK 009.3. Workflow metrics, backend data, and runtime activity are added in later SPEC-009 tasks."
+          description="Use the navigation to create workflows, inspect backend workflow records, run deterministic runtime execution, and watch live event timelines."
           items={[
-            "Workflow list navigation",
-            "Create workflow entry point",
-            "Runtime event stream area",
+            "Workflow list and detail views",
+            "Procurement workflow creation",
+            "Runtime run action and live event stream",
           ]}
         />
         <section className="grid gap-4 md:grid-cols-3">
@@ -27,7 +27,8 @@ export default function DashboardPage() {
               >
                 <h2 className="text-sm font-semibold">{item}</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Placeholder section. No backend data is loaded in this task.
+                  Available through the workflow pages using the existing
+                  backend APIs.
                 </p>
               </div>
             ),

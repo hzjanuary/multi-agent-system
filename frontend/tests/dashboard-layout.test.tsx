@@ -30,6 +30,7 @@ describe("dashboard shell", () => {
 
   it("renders dashboard navigation for authenticated sessions", async () => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
+    window.history.pushState({}, "", "/dashboard");
 
     await render(<DashboardPage />);
 
@@ -38,6 +39,9 @@ describe("dashboard shell", () => {
     expect(document.body.textContent).toContain("Workflows");
     expect(document.body.textContent).toContain("Create Workflow");
     expect(document.body.textContent).toContain("Runtime Events");
+    expect(
+      document.querySelector('a[aria-current="page"]')?.textContent,
+    ).toBe("Dashboard");
   });
 
   it("clears the local session when signing out", async () => {
