@@ -18,6 +18,8 @@ class LLMSettings(BaseModel):
     runtime_enabled: bool = False
     timeout_seconds: int = Field(default=30, ge=1, le=300)
     max_retries: int = Field(default=2, ge=0, le=10)
+    fallback_enabled: bool = False
+    fallback_provider: LLMProvider = LLMProvider.FAKE
     groq_api_key: str = ""
     groq_model: str = ""
     openrouter_api_key: str = ""
@@ -59,6 +61,17 @@ class LLMSettings(BaseModel):
             LLMProvider.FAKE: self.model,
         }
         return provider_models[self.provider] or self.model
+
+    def model_for_provider(self, provider: LLMProvider) -> str:
+        """Return provider-specific model override or global model."""
+        provider_models = {
+            LLMProvider.GROQ: self.groq_model,
+            LLMProvider.OPENROUTER: self.openrouter_model,
+            LLMProvider.OLLAMA: self.ollama_model,
+            LLMProvider.GEMINI: self.gemini_model,
+            LLMProvider.FAKE: self.model,
+        }
+        return provider_models[provider] or self.model
 
     @property
     def requires_api_key(self) -> bool:

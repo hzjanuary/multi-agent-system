@@ -17,6 +17,17 @@ This demo uses existing backend, frontend, runtime, workflow, and streaming
 behavior. It does not add real LLM reasoning, RAG, approval continuation, email
 sending, or production seed management.
 
+For the board-stable demo, keep LLM runtime mode disabled:
+
+```text
+LLM_PROVIDER=fake
+LLM_RUNTIME_ENABLED=false
+```
+
+Optional real-provider local experimentation is documented separately in
+`docs/llm/LOCAL_LLM_DEMO.md`. Real provider responses may vary and are not
+required for the board walkthrough.
+
 ## Prerequisites
 
 - Docker Desktop is running.
@@ -274,7 +285,8 @@ Treat it as non-blocking if the frontend test command exits successfully.
 ## Known Limitations
 
 - No `/resume` endpoint or human approval continuation.
-- No real LLM provider behavior.
+- Real LLM provider behavior is optional local experimentation only; the
+  board-stable demo defaults to deterministic runtime mode.
 - No RAG or document upload/indexing UI.
 - No admin user-management UI.
 - No production deployment automation.

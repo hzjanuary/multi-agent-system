@@ -239,13 +239,27 @@ poetry run mypy app
 | `JWT_ALGORITHM` | JWT algorithm | `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token TTL | `30` |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token TTL | `7` |
-| `LLM_PROVIDER` | Active LLM provider | `ollama` |
+| `LLM_PROVIDER` | Active LLM provider | `fake` |
+| `LLM_RUNTIME_ENABLED` | Enables LLM-assisted runtime path | `false` |
+| `LLM_TIMEOUT_SECONDS` | LLM provider timeout | `30` |
+| `LLM_MAX_RETRIES` | LLM retry count for transient errors | `2` |
+| `LLM_FALLBACK_ENABLED` | Enables transient-error fallback | `false` |
+| `LLM_FALLBACK_PROVIDER` | Fallback provider | `fake` |
+| `LLM_MODEL` | Global LLM model fallback | |
 | `GROQ_API_KEY` | Groq API key | |
+| `GROQ_MODEL` | Groq model override | |
 | `OPENROUTER_API_KEY` | OpenRouter API key | |
+| `OPENROUTER_MODEL` | OpenRouter model override | |
 | `GEMINI_API_KEY` | Gemini API key | |
+| `GEMINI_MODEL` | Gemini model override | |
 | `OLLAMA_BASE_URL` | Ollama base URL | `http://localhost:11434` |
+| `OLLAMA_MODEL` | Ollama model override | |
 
 See `backend/.env.example` for the full list. Never commit real secrets.
+LLM provider setup and local demo guidance are documented in:
+
+- `docs/llm/PROVIDER_SETUP.md`
+- `docs/llm/LOCAL_LLM_DEMO.md`
 
 ---
 
@@ -394,6 +408,7 @@ The current board-ready local demo flow is documented in:
 
 - `docs/demo/DEMO_RUNBOOK.md`
 - `docs/demo/FRONTEND_SMOKE_FLOW.md`
+- `docs/llm/LOCAL_LLM_DEMO.md`
 
 Use the runbook for Docker startup, migrations, deterministic demo seeding,
 local-demo credentials, frontend walkthrough checkpoints, and troubleshooting.
@@ -414,21 +429,26 @@ local-demo credentials, frontend walkthrough checkpoints, and troubleshooting.
 - `POST /api/v1/workflows`
 - `GET /api/v1/workflows`
 - `GET /api/v1/workflows/{workflow_id}`
+- `POST /api/v1/workflows/{workflow_id}/transition`
+- `PATCH /api/v1/workflows/{workflow_id}/state`
+- `GET /api/v1/workflows/{workflow_id}/events`
 - `POST /api/v1/workflows/{workflow_id}/run`
-- `POST /api/v1/workflows/{workflow_id}/resume`
-- `POST /api/v1/workflows/{workflow_id}/cancel`
-
-### Approvals
-
-- `GET /api/v1/approvals/pending`
-- `POST /api/v1/approvals/{workflow_id}/approve`
-- `POST /api/v1/approvals/{workflow_id}/reject`
+- `GET /api/v1/workflows/_meta`
 
 ### Events
 
-- `GET /api/v1/workflows/{workflow_id}/events`
-- `GET /api/v1/workflows/{workflow_id}/state`
 - `WS /api/v1/workflows/{workflow_id}/stream`
+
+### Deferred Endpoints
+
+The following product-contract capabilities are not implemented yet:
+
+- workflow `/resume`
+- workflow cancellation route
+- approval center routes
+- human approval continuation
+- real LLM token streaming endpoints
+- provider-management or admin key-management endpoints
 
 ---
 

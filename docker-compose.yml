@@ -24,6 +24,8 @@ services:
       LLM_RUNTIME_ENABLED: "false"
       LLM_TIMEOUT_SECONDS: "30"
       LLM_MAX_RETRIES: "2"
+      LLM_FALLBACK_ENABLED: "false"
+      LLM_FALLBACK_PROVIDER: fake
       GROQ_API_KEY: ""
       GROQ_MODEL: ""
       OPENROUTER_API_KEY: ""

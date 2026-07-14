@@ -86,6 +86,11 @@ class Settings(BaseSettings):
         alias="LLM_TIMEOUT_SECONDS",
     )
     llm_max_retries: int = Field(default=2, ge=0, le=10, alias="LLM_MAX_RETRIES")
+    llm_fallback_enabled: bool = Field(default=False, alias="LLM_FALLBACK_ENABLED")
+    llm_fallback_provider: LLMProvider = Field(
+        default=LLMProvider.FAKE,
+        alias="LLM_FALLBACK_PROVIDER",
+    )
     groq_api_key: str = Field(default="", alias="GROQ_API_KEY")
     groq_model: str = Field(default="", alias="GROQ_MODEL")
     openrouter_api_key: str = Field(default="", alias="OPENROUTER_API_KEY")
@@ -116,6 +121,8 @@ class Settings(BaseSettings):
             runtime_enabled=self.llm_runtime_enabled,
             timeout_seconds=self.llm_timeout_seconds,
             max_retries=self.llm_max_retries,
+            fallback_enabled=self.llm_fallback_enabled,
+            fallback_provider=self.llm_fallback_provider,
             groq_api_key=self.groq_api_key,
             groq_model=self.groq_model,
             openrouter_api_key=self.openrouter_api_key,
@@ -140,7 +147,7 @@ class Settings(BaseSettings):
         """Normalize log level values loaded from environment variables."""
         return value.upper()
 
-    @field_validator("llm_provider", mode="before")
+    @field_validator("llm_provider", "llm_fallback_provider", mode="before")
     @classmethod
     def normalize_llm_provider(cls, value: str) -> str:
         """Normalize provider names loaded from environment variables."""

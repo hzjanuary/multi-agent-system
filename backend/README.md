@@ -147,11 +147,18 @@ Do not commit real API keys, database credentials, or object storage secrets.
 
 ### LLM Provider Configuration
 
-SPEC-011 adds provider-independent LLM contracts, settings, and isolated
-provider clients for fake, Groq, OpenRouter, Ollama, and Gemini. Provider
-clients live behind a common async interface and use injectable HTTP transport
-for mocked tests. SPEC-011 does not yet add prompt templates, runtime LLM
-behavior, or public provider-management APIs.
+Detailed provider setup and local demo guidance live in:
+
+- `../docs/llm/PROVIDER_SETUP.md`
+- `../docs/llm/LOCAL_LLM_DEMO.md`
+
+SPEC-011 adds provider-independent LLM contracts, settings, isolated provider
+clients, prompt templates, structured output validation, and a feature-flagged
+runtime adapter for fake, Groq, OpenRouter, Ollama, and Gemini. Provider clients
+live behind a common async interface and use injectable HTTP transport for
+mocked tests. SPEC-011 does not add public provider-management APIs, frontend
+provider settings, RAG, `/resume`, token streaming, migrations, or model
+changes.
 
 The safe default is offline/deterministic:
 
@@ -160,6 +167,8 @@ LLM_PROVIDER=fake
 LLM_RUNTIME_ENABLED=false
 LLM_TIMEOUT_SECONDS=30
 LLM_MAX_RETRIES=2
+LLM_FALLBACK_ENABLED=false
+LLM_FALLBACK_PROVIDER=fake
 ```
 
 Supported provider identifiers are:
@@ -172,10 +181,16 @@ ollama
 gemini
 ```
 
-Provider-specific environment variables are documented in `.env.example`:
+Provider-specific environment variables are documented in `.env.example` and in
+`../docs/llm/PROVIDER_SETUP.md`:
 
 ```text
 LLM_MODEL
+LLM_RUNTIME_ENABLED
+LLM_TIMEOUT_SECONDS
+LLM_MAX_RETRIES
+LLM_FALLBACK_ENABLED
+LLM_FALLBACK_PROVIDER
 GROQ_API_KEY
 GROQ_MODEL
 OPENROUTER_API_KEY
@@ -191,12 +206,46 @@ demo can run without real credentials. Real remote provider clients perform
 explicit readiness checks before use and fail safely when required keys are
 missing. Never commit real provider keys.
 
+`LLMService` provides the provider-independent completion API for later runtime
+integration. It selects the configured provider, applies bounded retries only
+for transient categories (`timeout`, `unavailable`, and `rate_limit`), and can
+optionally fallback to a configured provider. Fallback is disabled by default
+and does not hide configuration or authentication failures.
+
+Provider-independent procurement prompt templates and structured output schemas
+live in `app/llm/prompts`, `app/llm/structured_outputs.py`, and
+`app/llm/output_parser.py`. They build bounded JSON-mode `LLMChatRequest`
+objects for requirement extraction, supplier/pricing analysis, legal/compliance
+analysis, finance/risk analysis, and approval package preparation. Parser
+helpers validate returned JSON with Pydantic before any future runtime task can
+write output to workflow state. These modules do not call providers and are not
+wired into runtime execution yet.
+
+`LLM_RUNTIME_ENABLED=false` remains the default. When it is false, workflow
+runtime execution uses the existing deterministic LangGraph node handlers and
+does not call `LLMService`. When explicitly enabled, the runtime uses
+`LLMService` through a narrow runtime adapter, builds procurement prompt
+requests, validates structured output, and writes only bounded validated output
+into workflow state. The quotation stage still does not use LLM arithmetic; it
+records a deterministic skip marker. Runtime execution still stops at
+`WAITING_APPROVAL`, and `/resume` remains deferred.
+
 The fake provider is deterministic and requires no network. Groq and
 OpenRouter use non-streaming OpenAI-compatible chat completion request shapes;
 Ollama uses the local non-streaming `/api/chat` endpoint; Gemini uses the
 non-streaming `generateContent` REST shape. Runtime execution still uses the
-existing deterministic path until a later SPEC-011 task explicitly wires LLM
-runtime behavior behind the feature flag.
+existing deterministic path unless LLM runtime mode is explicitly enabled.
+
+For the board-ready demo, keep:
+
+```text
+LLM_PROVIDER=fake
+LLM_RUNTIME_ENABLED=false
+```
+
+Real-provider local experiments are opt-in. Configure keys through environment
+variables only, restart the backend after changing provider settings, and do
+not run live-provider smoke tests as part of the automated quality gate.
 
 ## Authentication Utilities
 
@@ -661,3 +710,4 @@ For the board-ready walkthrough and frontend smoke checklist, see:
 
 - `docs/demo/DEMO_RUNBOOK.md`
 - `docs/demo/FRONTEND_SMOKE_FLOW.md`
+- `docs/llm/LOCAL_LLM_DEMO.md`

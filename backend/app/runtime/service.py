@@ -6,12 +6,17 @@ from collections.abc import Sequence
 from typing import Any, cast
 from uuid import UUID
 
+from app.llm.contracts import LLMErrorCategory
+from app.llm.errors import LLMProviderError
+from app.llm.service import LLMService
+from app.llm.settings import LLMSettings
 from app.models.enums import WorkflowEventStatus, WorkflowStatus
 from app.runtime.graph import (
     RuntimeNodeHandlers,
     RuntimeStatePayload,
     build_workflow_graph,
 )
+from app.runtime.llm_adapter import LLMCompletionService, LLMRuntimeAdapter
 from app.runtime.nodes import create_deterministic_node_handlers
 from app.runtime.schemas import (
     RuntimeStage,
@@ -76,9 +81,27 @@ class RuntimeService:
         *,
         node_handlers: RuntimeNodeHandlers | None = None,
         stages: Sequence[RuntimeStage] = PRE_APPROVAL_RUNTIME_STAGES,
+        llm_settings: LLMSettings | None = None,
+        llm_service: LLMCompletionService | None = None,
     ) -> None:
         self.workflow_service = workflow_service
         self.workflow_event_service = workflow_event_service
+        self.llm_settings = llm_settings or LLMSettings()
+        self.llm_runtime_enabled = self.llm_settings.runtime_enabled
+        self.llm_service = (
+            llm_service
+            if llm_service is not None
+            else (
+                LLMService(settings=self.llm_settings)
+                if self.llm_runtime_enabled
+                else None
+            )
+        )
+        self.llm_adapter = (
+            LLMRuntimeAdapter(self.llm_service)
+            if self.llm_runtime_enabled and self.llm_service is not None
+            else None
+        )
         self.node_handlers = (
             dict(node_handlers)
             if node_handlers is not None
@@ -153,9 +176,14 @@ class RuntimeService:
                     actor_id=actor_id,
                     workflow_status=stage_status,
                     message=f"Runtime stage {stage.value} started.",
+                    payload=self._llm_stage_event_payload(stage),
                 )
 
-                runtime_payload = self._next_stage_payload(stream, stage)
+                runtime_payload = await self._execute_stage(
+                    stream,
+                    runtime_payload,
+                    stage,
+                )
                 runtime_payload = self._payload_with_status(
                     runtime_payload,
                     stage_status,
@@ -173,6 +201,7 @@ class RuntimeService:
                     workflow_status=stage_status,
                     message=f"Runtime stage {stage.value} completed.",
                     stage_output=stage_runtime_state.stage_outputs.get(stage),
+                    payload=self._llm_stage_event_payload(stage),
                 )
         except Exception as exc:
             await self._handle_runtime_failure(
@@ -235,6 +264,19 @@ class RuntimeService:
             return cast(RuntimeStatePayload, chunk)
         raise TypeError("Runtime graph stream yielded an invalid state payload")
 
+    async def _execute_stage(
+        self,
+        stream: Any,
+        runtime_payload: RuntimeStatePayload,
+        stage: RuntimeStage,
+    ) -> RuntimeStatePayload:
+        if self.llm_adapter is None:
+            return self._next_stage_payload(stream, stage)
+
+        runtime_state = RuntimeWorkflowState.model_validate(runtime_payload)
+        next_state = await self.llm_adapter.run_stage(runtime_state, stage)
+        return cast(RuntimeStatePayload, next_state.model_dump(mode="json"))
+
     def _payload_with_status(
         self,
         payload: RuntimeStatePayload,
@@ -268,7 +310,7 @@ class RuntimeService:
             actor_id=actor_id,
             workflow_status=workflow_state.status,
             message=f"Runtime stage {stage.value} failed.",
-            payload={"error_type": type(exc).__name__},
+            payload=self._safe_runtime_error_payload(exc),
         )
         await self._append_runtime_failed_event(
             workflow_id,
@@ -278,7 +320,7 @@ class RuntimeService:
             payload={
                 "failed_stage": stage.value,
                 "status": workflow_state.status.value,
-                "error_type": type(exc).__name__,
+                **self._safe_runtime_error_payload(exc),
             },
         )
 
@@ -298,7 +340,7 @@ class RuntimeService:
                     message=f"Runtime stage {stage.value} failed.",
                     failed_step=stage.value,
                     retryable=False,
-                    details={"error_type": type(exc).__name__},
+                    details=self._safe_runtime_error_payload(exc),
                 ),
             },
         )
@@ -414,12 +456,55 @@ class RuntimeService:
         )
 
     def _safe_stage_output(self, stage_output: dict[str, Any]) -> dict[str, Any]:
-        return {
+        safe_output = {
             "stage": stage_output.get("stage"),
             "status": stage_output.get("status"),
             "summary": stage_output.get("summary"),
             "placeholder": stage_output.get("placeholder"),
         }
+        for key in (
+            "llm_runtime_enabled",
+            "llm_skipped",
+            "llm_output_schema",
+            "llm_provider",
+            "llm_model",
+            "llm_request_id",
+            "llm_finish_reason",
+        ):
+            if key in stage_output:
+                safe_output[key] = stage_output[key]
+        return safe_output
+
+    def _llm_stage_event_payload(self, stage: RuntimeStage) -> dict[str, Any]:
+        if not self.llm_runtime_enabled:
+            return {}
+        return {
+            "llm_runtime_enabled": True,
+            "llm_stage_mode": (
+                "deterministic_no_llm"
+                if stage is RuntimeStage.QUOTATION
+                else "structured_prompt"
+            ),
+        }
+
+    def _safe_runtime_error_payload(self, exc: Exception) -> dict[str, Any]:
+        payload: dict[str, Any] = {"error_type": type(exc).__name__}
+        if isinstance(exc, LLMProviderError):
+            payload["llm_error_category"] = exc.category.value
+            if exc.provider is not None:
+                payload["llm_provider"] = exc.provider.value
+            if exc.request_id is not None:
+                payload["llm_request_id"] = exc.request_id
+        elif isinstance(exc.__cause__, LLMProviderError):
+            cause = exc.__cause__
+            payload["llm_error_category"] = cause.category.value
+            if cause.provider is not None:
+                payload["llm_provider"] = cause.provider.value
+            if cause.request_id is not None:
+                payload["llm_request_id"] = cause.request_id
+        if payload.get("llm_error_category") == LLMErrorCategory.INVALID_RESPONSE.value:
+            payload["retryable"] = False
+        return payload
 
 
 __all__ = [

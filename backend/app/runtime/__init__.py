@@ -11,6 +11,7 @@ from app.runtime.graph import (
     runtime_stage_sequence,
     validate_runtime_node_handlers,
 )
+from app.runtime.llm_adapter import LLMCompletionService, LLMRuntimeAdapter
 from app.runtime.nodes import (
     create_deterministic_node_handlers,
     run_approval_node,
@@ -46,6 +47,8 @@ __all__ = [
     "RUNTIME_STAGES",
     "RUNTIME_STAGE_STATUSES",
     "CompiledWorkflowGraph",
+    "LLMCompletionService",
+    "LLMRuntimeAdapter",
     "RuntimeGraphEdge",
     "RuntimeNodeHandler",
     "RuntimeNodeHandlers",

@@ -15,6 +15,8 @@ def test_default_llm_settings_are_no_key_safe() -> None:
     assert settings.llm_runtime_enabled is False
     assert settings.llm_timeout_seconds == 30
     assert settings.llm_max_retries == 2
+    assert settings.llm_fallback_enabled is False
+    assert settings.llm_fallback_provider is LLMProvider.FAKE
     assert settings.groq_api_key == ""
     assert settings.openrouter_api_key == ""
     assert settings.gemini_api_key == ""
@@ -30,6 +32,8 @@ def test_llm_settings_can_be_overridden_by_environment(
     monkeypatch.setenv("LLM_RUNTIME_ENABLED", "true")
     monkeypatch.setenv("LLM_TIMEOUT_SECONDS", "45")
     monkeypatch.setenv("LLM_MAX_RETRIES", "3")
+    monkeypatch.setenv("LLM_FALLBACK_ENABLED", "true")
+    monkeypatch.setenv("LLM_FALLBACK_PROVIDER", "fake")
     monkeypatch.setenv("GROQ_API_KEY", "demo-groq-key")
     monkeypatch.setenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     monkeypatch.setenv("OPENROUTER_API_KEY", "demo-openrouter-key")
@@ -46,7 +50,10 @@ def test_llm_settings_can_be_overridden_by_environment(
     assert settings.llm_runtime_enabled is True
     assert settings.llm_timeout_seconds == 45
     assert settings.llm_max_retries == 3
+    assert settings.llm_fallback_enabled is True
+    assert settings.llm_fallback_provider is LLMProvider.FAKE
     assert settings.llm_settings.selected_model == "llama-3.3-70b-versatile"
+    assert settings.llm_settings.fallback_enabled is True
     settings.llm_settings.require_provider_configuration()
 
 

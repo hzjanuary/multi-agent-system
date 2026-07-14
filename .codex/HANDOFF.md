@@ -14,31 +14,71 @@ Closed specs:
 - SPEC-008 Event Streaming - Approved / Closed
 - SPEC-009 Frontend Dashboard - Approved / Closed
 - SPEC-010 Demo Dataset Seeding and Demo Script - Approved / Closed
+- SPEC-011 LLM Provider Abstraction - Approved / Closed
 
 Current active spec:
 
-- SPEC-011 LLM Provider Abstraction - Planning
+- None. Recommended next spec: SPEC-012 Human Approval and Workflow Resume if
+  the next goal is completing the `WAITING_APPROVAL` lifecycle.
 
-## Current SPEC-011 Planning State
+## SPEC-011 Final Review State
 
-Planning files:
+Status:
 
-- `.ai/specs/SPEC-011-llm-provider-abstraction/spec.md`
-- `.ai/specs/SPEC-011-llm-provider-abstraction/tasks.md`
+- SPEC-011 approved and ready to close.
 
-Planned tasks:
+Evidence:
 
 - `TASK 011.1 - LLM Provider Contracts and Settings` - Approved
-- `TASK 011.2 - Provider Client Implementations with Mocked HTTP Tests` - Implemented / Pending Review
-- `TASK 011.3 - LLM Service Router, Fallbacks, and Error Handling` - Planned
-- `TASK 011.4 - Prompt Templates and Structured Output Schemas` - Planned
-- `TASK 011.5 - Runtime Integration Behind Feature Flag` - Planned
-- `TASK 011.6 - Provider Documentation and Local Demo Guide` - Planned
-- `TASK 011.7 - LLM Provider Hardening and SPEC-011 Final Review` - Planned
+- `TASK 011.2 - Provider Client Implementations with Mocked HTTP Tests` - Approved
+- `TASK 011.3 - LLM Service Router, Fallbacks, and Error Handling` - Approved
+- `TASK 011.4 - Prompt Templates and Structured Output Schemas` - Approved
+- `TASK 011.5 - Runtime Integration Behind Feature Flag` - Approved
+- `TASK 011.6 - Provider Documentation and Local Demo Guide` - Approved
+- `TASK 011.7 - LLM Provider Hardening and SPEC-011 Final Review` - Approved
 
-Scope:
+- Verified provider-independent contracts, settings, fake/Groq/OpenRouter/
+  Ollama/Gemini clients, mocked HTTP tests, service routing, retry/fallback
+  boundaries, prompt builders, structured output schemas, output parser,
+  feature-flagged runtime integration, and provider/local demo docs.
+- Confirmed safe defaults: `LLM_PROVIDER=fake`, `LLM_RUNTIME_ENABLED=false`,
+  no API keys required at settings load time, fallback disabled by default, and
+  deterministic runtime remains the default.
+- Confirmed runtime integration uses `LLMService`/interface boundaries only,
+  not provider clients, and still stops at `WAITING_APPROVAL`.
+- Confirmed no frontend behavior changes, workflow API contract changes,
+  migrations, database model changes, public provider-management endpoints,
+  admin key-management UI, RAG/document indexing, `/resume`, human approval
+  continuation, LLM token streaming, real API keys, provider SDKs, or
+  LangChain/LiteLLM additions were introduced by SPEC-011.
+- Hardened root README endpoint docs so deferred `/resume`, cancellation,
+  approvals, token streaming, and provider-management endpoints are not listed
+  as implemented routes.
 
-- Plan provider-independent LLM contracts for Groq, OpenRouter, Ollama,
+Validation:
+
+- `git status --short` completed.
+- `docker-compose config` passed.
+- `docker-compose build backend-test` passed.
+- `docker-compose run --rm backend-test pytest` passed: 489 passed, 1 skipped.
+- `docker-compose run --rm backend-test ruff check .` passed.
+- `docker-compose run --rm backend-test black --check .` passed.
+- `docker-compose run --rm backend-test mypy app` passed.
+- `docker-compose run --rm backend-test python -m app.demo.seed --help` passed.
+- `docker-compose run --rm backend-test python -m app.demo.seed --confirm-local-demo --dry-run --json` passed.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Focused LLM/runtime tests passed: 93 passed.
+
+Non-blocking notes:
+
+- Existing LangGraph pending deprecation warning remains non-blocking.
+- Existing Starlette TestClient deprecation warning remains non-blocking.
+- LF/CRLF warnings from `git diff --check` remain non-blocking when no
+  whitespace errors are reported.
+
+## SPEC-011 Scope
+
+- Provider-independent LLM contracts for Groq, OpenRouter, Ollama,
   Gemini, and a deterministic fake provider.
 - Preserve no-key local demo behavior and deterministic tests.
 - Keep runtime integration feature-flagged and behind an LLM service
@@ -121,6 +161,146 @@ Behavior:
 - Does not add provider SDKs, LLM service routing/fallbacks, prompt templates,
   runtime integration, API behavior, frontend behavior, migrations, or database
   model changes.
+
+## TASK 011.3 Implementation State
+
+Deliverables:
+
+- `backend/app/llm/factory.py`
+- `backend/app/llm/retry.py`
+- `backend/app/llm/service.py`
+- `backend/app/llm/__init__.py` updated
+- `backend/app/llm/settings.py` updated with fallback controls
+- `backend/app/config/settings.py` updated with fallback env vars
+- `backend/app/tests/test_llm_client_factory.py`
+- `backend/app/tests/test_llm_service.py`
+- `backend/app/tests/test_llm_settings.py` updated
+- `backend/.env.example` updated
+- `backend/README.md` updated with service/router notes
+- `docker-compose.yml` updated with safe fallback defaults
+
+Behavior:
+
+- Adds `LLMService` as the provider-independent async completion API for
+  future runtime nodes and Agents.
+- Adds `create_llm_client()` and `SettingsLLMClientFactory` to construct fake,
+  Groq, OpenRouter, Ollama, and Gemini clients from `LLMSettings` without
+  network calls or global clients.
+- Keeps default behavior fake/offline-safe.
+- Adds bounded retry handling based on `LLM_MAX_RETRIES`.
+- Retries only transient categories: timeout, unavailable, and rate limit.
+- Does not retry configuration, authentication, invalid response, safety,
+  invalid request, or cancellation failures.
+- Adds opt-in fallback controls:
+  `LLM_FALLBACK_ENABLED=false` and `LLM_FALLBACK_PROVIDER=fake`.
+- Fallback is disabled by default and does not hide configuration or
+  authentication failures.
+- Fallback responses include safe metadata showing fallback use, original
+  provider, and error category.
+- Does not add prompt templates, runtime integration, API behavior, frontend
+  behavior, provider SDKs, live network validation, migrations, or database
+  model changes.
+
+## TASK 011.4 Implementation State
+
+Deliverables:
+
+- `backend/app/llm/prompts/__init__.py`
+- `backend/app/llm/prompts/base.py`
+- `backend/app/llm/prompts/procurement.py`
+- `backend/app/llm/structured_outputs.py`
+- `backend/app/llm/output_parser.py`
+- `backend/app/llm/__init__.py` updated
+- `backend/app/tests/test_llm_prompts.py`
+- `backend/app/tests/test_llm_structured_outputs.py`
+- `backend/app/tests/test_llm_output_parser.py`
+- `backend/README.md` updated with prompt/schema/parser scope
+
+Behavior:
+
+- Adds provider-independent prompt builders for requirement extraction,
+  supplier/pricing analysis, legal/compliance analysis, finance/risk analysis,
+  and approval package preparation.
+- Prompt builders return bounded JSON-mode `LLMChatRequest` objects using the
+  existing LLM contracts and deterministic string rendering.
+- Prompt rendering redacts sensitive input keys, bounds request/context text,
+  uses low-temperature structured JSON mode, and does not read provider
+  environment secrets.
+- Adds Pydantic v2 structured output schemas for the five procurement prompt
+  areas plus bounded shared nested models for extracted items, findings, risks,
+  recommendations, and draft approval direction.
+- Adds deterministic structured output parser helpers that parse JSON or simple
+  fenced JSON from `LLMChatResponse.content`, validate through Pydantic, and
+  raise safe `invalid_response` `LLMProviderError` failures for malformed or
+  schema-invalid output.
+- Does not call `LLMService`, provider clients, runtime nodes, workflow APIs,
+  frontend code, RAG/document indexing, migrations, or database models.
+
+## TASK 011.5 Implementation State
+
+Deliverables:
+
+- `backend/app/runtime/llm_adapter.py`
+- `backend/app/runtime/service.py` updated for feature-flagged LLM path
+- `backend/app/runtime/__init__.py` updated with adapter exports
+- `backend/app/core/dependencies.py` updated to pass `LLMSettings` and create
+  `LLMService` only when `LLM_RUNTIME_ENABLED=true`
+- `backend/app/tests/test_runtime_llm_integration.py`
+- `backend/README.md` updated with runtime feature-flag behavior
+
+Behavior:
+
+- Keeps `LLM_RUNTIME_ENABLED=false` as the default deterministic runtime path.
+- When disabled, `RuntimeService` uses the existing deterministic LangGraph
+  graph and does not call `LLMService`.
+- When enabled, `RuntimeService` uses a provider-independent
+  `LLMRuntimeAdapter` through a narrow `LLMCompletionService` protocol.
+- LLM-enabled stage mapping:
+  - `planner` -> `RequirementExtractionOutput`
+  - `retrieval` -> `SupplierPricingAnalysisOutput`
+  - `quotation` -> deterministic no-LLM arithmetic skip marker
+  - `compliance` -> `LegalComplianceAnalysisOutput`
+  - `validation` -> `FinanceRiskAnalysisOutput`
+  - `approval` -> `ApprovalPackageOutput`
+- LLM-enabled stages build bounded procurement prompt requests, call
+  `LLMService.complete_json`, parse structured output with Pydantic, and write
+  only validated bounded output and safe provider metadata into runtime state.
+- Runtime events include safe LLM stage mode metadata and bounded stage output
+  summaries; raw prompts, raw provider payloads, API keys, hidden reasoning, and
+  raw LLM response content are not persisted.
+- Invalid structured output and provider errors are persisted through existing
+  runtime failure semantics with safe LLM error category metadata.
+- Existing `/run` endpoint shape and transaction boundary remain unchanged.
+- Runtime still stops at `WAITING_APPROVAL`; `/resume` remains deferred.
+- Does not add provider SDKs, live network tests, frontend behavior, API
+  contract changes, migrations, database model changes, RAG, or token
+  streaming.
+
+## TASK 011.6 Implementation State
+
+Deliverables:
+
+- `docs/llm/PROVIDER_SETUP.md`
+- `docs/llm/LOCAL_LLM_DEMO.md`
+- `backend/README.md` updated with provider documentation links and current
+  SPEC-011 scope.
+- `README.md` updated with current LLM safe defaults and documentation links.
+- `docs/demo/DEMO_RUNBOOK.md` updated with LLM demo-mode guidance.
+
+Behavior:
+
+- Documents safe defaults: `LLM_PROVIDER=fake` and
+  `LLM_RUNTIME_ENABLED=false`.
+- Documents all LLM provider environment variables, retry/fallback controls,
+  and provider-specific setup for Fake, Groq, OpenRouter, Ollama, and Gemini.
+- Documents that the board demo remains deterministic with no keys configured.
+- Documents optional real-provider local experimentation without requiring live
+  provider validation.
+- Documents runtime feature-flag behavior, structured-output validation,
+  provider error troubleshooting, security notes, and known limitations.
+- Does not add provider code, runtime behavior changes, workflow API changes,
+  frontend behavior changes, migrations, database model changes, provider SDKs,
+  LangChain/LiteLLM, or live external network calls.
 
 ## Current SPEC-010 Planning State
 

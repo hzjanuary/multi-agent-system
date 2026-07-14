@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
 from app.db import get_db_session
+from app.llm.service import LLMService
 from app.runtime.service import RuntimeService
 from app.streaming import (
     RedisWorkflowEventPublisher,
@@ -81,6 +82,16 @@ def provide_runtime_service(
         WorkflowEventService,
         Depends(provide_workflow_event_service),
     ],
+    settings: Annotated[Settings | None, Depends(provide_settings)] = None,
 ) -> RuntimeService:
     """Provide runtime orchestration service bound to workflow services."""
-    return RuntimeService(workflow_service, workflow_event_service)
+    llm_settings = (settings or provide_settings()).llm_settings
+    llm_service = (
+        LLMService(settings=llm_settings) if llm_settings.runtime_enabled else None
+    )
+    return RuntimeService(
+        workflow_service,
+        workflow_event_service,
+        llm_settings=llm_settings,
+        llm_service=llm_service,
+    )
