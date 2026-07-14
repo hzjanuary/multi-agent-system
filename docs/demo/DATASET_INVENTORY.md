@@ -35,7 +35,8 @@ LLM, or RAG behavior has been implemented.
 
 ## Demo User Contract
 
-Future seed tasks should create one local demo user for each existing RBAC role:
+TASK 010.2 provides an explicit local/demo seed helper for one user per
+existing RBAC role:
 
 | Role | Email | Password |
 | --- | --- | --- |
@@ -49,9 +50,16 @@ Future seed tasks should create one local demo user for each existing RBAC role:
 These credentials are local-demo only. They are intentionally obvious and must
 not be reused as production defaults.
 
-## Planned Workflow Seeds
+The helper lives in `backend/app/demo/user_seed.py` and exposes
+`seed_demo_roles_and_users(session)`. It uses existing `User` and `Role` models,
+hashes passwords through the existing Argon2 password utility, flushes changes,
+and leaves commit/rollback to the caller. It does not seed workflows or events,
+does not expose a public API, and does not run automatically.
 
-The contract defines three workflow examples for later implementation:
+## Demo Workflow Seeds
+
+TASK 010.3 provides an explicit local/demo seed helper for the three workflow
+examples defined by the contract:
 
 1. `rfq-001-clean-created` - clean workflow in `CREATED`, ready to run.
 2. `rfq-001-waiting-approval-history` - workflow already at
@@ -59,7 +67,14 @@ The contract defines three workflow examples for later implementation:
 3. `rfq-001-completed-conflict` - optional terminal workflow for demonstrating
    existing runtime precondition/conflict behavior.
 
-## Planned Event Seeds
+The helper lives in `backend/app/demo/workflow_seed.py` and exposes
+`seed_demo_workflows_and_events(session)`. It ensures demo users/roles through
+the TASK 010.2 helper, creates deterministic workflow IDs from the seed
+contract, stores demo idempotency keys in workflow metadata, flushes changes,
+and leaves commit/rollback to the caller. It does not run workflows, expose a
+public API, publish live events, or run automatically.
+
+## Demo Event Seeds
 
 The event history contract for `rfq-001-waiting-approval-history` includes:
 
@@ -72,6 +87,9 @@ The event history contract for `rfq-001-waiting-approval-history` includes:
 All event payloads must stay bounded and include `demo_reference: true` where
 they carry static demo references.
 
+TASK 010.3 persists these as deterministic `WorkflowEvent` records with stable
+event IDs and stable event timestamps so timeline readback order is repeatable.
+
 ## Idempotency Strategy
 
 Future seed tasks should use stable natural keys:
@@ -82,5 +100,4 @@ Future seed tasks should use stable natural keys:
 - `demo:event:{workflow_key}:{event_key}`
 
 `backend/app/demo/contracts.py` also exposes deterministic UUID helpers for
-future seed implementations that need stable UUIDs. TASK 010.1 does not insert
-or update database records.
+seed implementations that need stable UUIDs.

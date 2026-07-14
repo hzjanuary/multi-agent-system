@@ -27,10 +27,9 @@ Planning files:
 
 Planned tasks:
 
-- `TASK 010.1 - Demo Dataset Inventory and Seed Contract` - Implemented,
-  awaiting review
-- `TASK 010.2 - Demo User and Role Seeding`
-- `TASK 010.3 - Demo Workflow and Event Seeding`
+- `TASK 010.1 - Demo Dataset Inventory and Seed Contract` - Approved
+- `TASK 010.2 - Demo User and Role Seeding` - Approved
+- `TASK 010.3 - Demo Workflow and Event Seeding` - Implemented, awaiting review
 - `TASK 010.4 - Demo Seed CLI/Script`
 - `TASK 010.5 - Demo Runbook and Frontend Smoke Flow`
 - `TASK 010.6 - Demo Hardening and SPEC-010 Final Review`
@@ -65,6 +64,64 @@ Behavior:
 - Does not implement database seeding, seed CLI/script execution, auth/RBAC
   behavior changes, workflow/event persistence, backend API changes, frontend
   behavior changes, migrations, or database model changes.
+
+## TASK 010.2 Implementation State
+
+Deliverables:
+
+- `backend/app/demo/user_seed.py`
+- `backend/app/tests/test_demo_user_seed.py`
+- `docs/demo/DATASET_INVENTORY.md` updated with helper notes
+
+Behavior:
+
+- Adds explicit `seed_demo_roles_and_users(session)` helper for local/demo
+  roles and users only.
+- Uses existing `User` and `Role` SQLAlchemy models.
+- Uses existing Argon2 password utilities for password hashing and verification.
+- Seeds/reuses the six existing RBAC roles: Admin, Manager, Sales, Legal,
+  Finance, and Viewer.
+- Seeds/reuses one local-demo user per role from the TASK 010.1 contracts.
+- Flushes changes but does not commit; callers own transaction boundaries.
+- Idempotently reuses existing roles/users and avoids duplicate role
+  assignments.
+- Refreshes only safe local-demo user fields when needed: full name, active
+  state, superuser flag, and demo password hash.
+- Does not delete or modify non-demo users/roles.
+- Does not seed workflows, seed workflow events, expose a public API, implement
+  a seed CLI/script, change auth/RBAC policy, change backend/frontend behavior,
+  add migrations, or modify database models.
+
+## TASK 010.3 Implementation State
+
+Deliverables:
+
+- `backend/app/demo/workflow_seed.py`
+- `backend/app/tests/test_demo_workflow_seed.py`
+- `docs/demo/DATASET_INVENTORY.md` updated with workflow/event seed notes
+
+Behavior:
+
+- Adds explicit `seed_demo_workflows_and_events(session)` helper for local/demo
+  workflows and persisted workflow events only.
+- Ensures demo users/roles through the TASK 010.2 helper before assigning
+  workflow creator ownership to the Sales demo user.
+- Uses existing `Workflow` and `WorkflowEvent` SQLAlchemy models.
+- Uses existing `WorkflowState` and `WorkflowStateMetadata` schemas to validate
+  JSON-compatible state payloads before persistence.
+- Seeds/reuses the contract-defined deterministic RFQ-001 workflow examples:
+  `CREATED`, `WAITING_APPROVAL` with event history, and terminal `COMPLETED`.
+- Seeds/reuses deterministic workflow events for the waiting-approval history
+  workflow.
+- Uses stable UUIDv5 IDs from the TASK 010.1 contract for workflow/event
+  idempotency without adding model columns or migrations.
+- Stores demo idempotency keys and `demo_reference_only` markers in workflow
+  metadata/request payloads and event payloads.
+- Assigns deterministic event timestamps so event readback order is stable.
+- Flushes changes but does not commit; callers own transaction boundaries.
+- Does not call RuntimeService, run workflows, publish Redis events, expose a
+  public API, implement a seed CLI/script, change backend/frontend behavior,
+  add migrations, or modify database models.
 
 ## SPEC-010 Scope
 

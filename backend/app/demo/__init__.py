@@ -17,6 +17,11 @@ from app.demo.contracts import (
     DemoWorkflowEventDefinition,
     deterministic_demo_uuid,
 )
+from app.demo.user_seed import DemoUserSeedResult, seed_demo_roles_and_users
+from app.demo.workflow_seed import (
+    DemoWorkflowSeedResult,
+    seed_demo_workflows_and_events,
+)
 
 __all__ = [
     "DATASET_REFERENCES",
@@ -33,5 +38,9 @@ __all__ = [
     "DemoUserDefinition",
     "DemoWorkflowDefinition",
     "DemoWorkflowEventDefinition",
+    "DemoWorkflowSeedResult",
+    "DemoUserSeedResult",
     "deterministic_demo_uuid",
+    "seed_demo_roles_and_users",
+    "seed_demo_workflows_and_events",
 ]
