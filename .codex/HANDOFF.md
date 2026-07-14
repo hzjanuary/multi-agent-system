@@ -18,8 +18,76 @@ Closed specs:
 
 Current active spec:
 
-- None. Recommended next spec: SPEC-012 Human Approval and Workflow Resume if
-  the next goal is completing the `WAITING_APPROVAL` lifecycle.
+- SPEC-012 Human Approval and Workflow Resume - Active
+
+## Current SPEC-012 Planning State
+
+Planning files:
+
+- `.ai/specs/SPEC-012-human-approval-and-resume/spec.md`
+- `.ai/specs/SPEC-012-human-approval-and-resume/tasks.md`
+
+Planned tasks:
+
+- `TASK 012.1 - Approval Contracts, Lifecycle Rules, and Planning Fixtures` -
+  Implemented
+- `TASK 012.2 - Backend Approval Service and Audit/Event Persistence`
+- `TASK 012.3 - Approval and Resume API Endpoints with RBAC`
+- `TASK 012.4 - Runtime Resume Implementation`
+- `TASK 012.5 - Frontend Approval Panel and API Client`
+- `TASK 012.6 - Approval Timeline, Demo Runbook, and Seed Updates`
+- `TASK 012.7 - Human Approval Hardening and SPEC-012 Final Review`
+
+## TASK 012.1 Implementation State
+
+Deliverables:
+
+- `backend/app/approvals/__init__.py`
+- `backend/app/approvals/schemas.py`
+- `backend/app/approvals/lifecycle.py`
+- `backend/app/approvals/exceptions.py`
+- `backend/app/approvals/policies.py`
+- `backend/app/approvals/events.py`
+- `backend/app/tests/test_approval_contracts.py`
+- `backend/app/tests/test_approval_lifecycle.py`
+- `backend/app/tests/test_approval_policies.py`
+
+Behavior:
+
+- Adds provider-independent/domain approval contracts for
+  `approve`, `reject`, and `request_changes`.
+- Treats `approve` and `reject` as final approval decisions.
+- Treats `request_changes` as non-final, leaving the workflow in
+  `WAITING_APPROVAL` for a later final decision.
+- Adds bounded Pydantic v2 request, response, history, approval record, and
+  resume DTOs without modeling new database tables.
+- Adds pure lifecycle helpers that require approval decisions to occur only
+  from `WAITING_APPROVAL`, block terminal workflow approval mutation, reject
+  duplicate final decisions, and allow resume only after `APPROVED` with an
+  approving record.
+- Adds pure RBAC policy helpers using the existing `RoleName` enum: Admin and
+  Manager can approve/reject/request changes/resume; Sales, Legal, Finance,
+  and Viewer remain read-only for this slice.
+- Adds approval/resume event name constants for future WorkflowEvent
+  persistence and streaming.
+- Does not add an approval persistence service, API endpoints, runtime resume,
+  frontend behavior, migrations, model changes, auth/RBAC behavior changes, or
+  event publishing.
+
+Scope:
+
+- Complete the `WAITING_APPROVAL` lifecycle with approve/reject decisions,
+  persisted approval history, workflow events, audit evidence, and bounded
+  runtime resume after approval.
+- Prefer existing `Workflow.state_payload`, `WorkflowEvent`, and `AuditLog`
+  foundations before adding migrations or new models.
+- Preserve existing `/run` behavior and deterministic runtime defaults.
+- Keep LLM runtime behavior behind `LLM_RUNTIME_ENABLED`.
+- Use existing SPEC-008 WebSocket event streaming for approval/resume events.
+- Add frontend approval/resume UI only through later implementation tasks.
+- Defer full BPMN, configurable approval chains, email sending, digital
+  signatures, document upload, RAG/document grounding, admin approval-policy UI,
+  production notifications, provider-management UI, billing, and deployment.
 
 ## SPEC-011 Final Review State
 

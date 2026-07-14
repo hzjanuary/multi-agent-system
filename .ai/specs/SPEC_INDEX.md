@@ -31,10 +31,10 @@
 
 - SPEC-010 Demo Dataset Seeding and Demo Script
 
-## Phase 5 - LLM and Agents
+## Phase 5 - LLM, Approval, and Agents
 
 - SPEC-011 LLM Provider Abstraction
-- SPEC-012 Retrieval Agent
+- SPEC-012 Human Approval and Workflow Resume
 - SPEC-013 Calculator Tool
 - SPEC-014 Compliance Agent
 - SPEC-015 Validation Agent
