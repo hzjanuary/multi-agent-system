@@ -189,3 +189,17 @@ The minimal login page is available at:
 
 It calls the existing backend `POST /api/v1/auth/login` endpoint and stores the
 returned token pair.
+
+## Demo Runbook
+
+The SPEC-010 local demo runbook and manual frontend smoke flow are documented
+from the repository root:
+
+```text
+docs/demo/DEMO_RUNBOOK.md
+docs/demo/FRONTEND_SMOKE_FLOW.md
+```
+
+They cover Docker startup, migrations, the explicit demo seed command, local
+demo credentials, workflow list/detail/create/run checkpoints, live timeline
+checks, and troubleshooting.

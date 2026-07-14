@@ -104,14 +104,21 @@ async def test_seed_demo_roles_and_users_is_idempotent(
 async def test_seed_refreshes_existing_demo_user_safely(
     db_session: AsyncSession,
 ) -> None:
-    stale_user = User(
-        email="admin@example.test",
-        hashed_password=hash_password("old-demo-password"),
-        full_name="Old Demo Admin",
-        is_active=False,
-        is_superuser=True,
-    )
-    db_session.add(stale_user)
+    stale_user = await _user_by_email(db_session, "admin@example.test")
+    if stale_user is None:
+        stale_user = User(
+            email="admin@example.test",
+            hashed_password=hash_password("old-demo-password"),
+            full_name="Old Demo Admin",
+            is_active=False,
+            is_superuser=True,
+        )
+        db_session.add(stale_user)
+    else:
+        stale_user.hashed_password = hash_password("old-demo-password")
+        stale_user.full_name = "Old Demo Admin"
+        stale_user.is_active = False
+        stale_user.is_superuser = True
     await db_session.flush()
 
     result = await seed_demo_roles_and_users(db_session)

@@ -580,3 +580,31 @@ docker-compose run --rm backend-test mypy app
 The `backend` image installs only runtime dependencies. The `backend-test`
 service uses the Dockerfile `dev` target and installs development dependencies
 for validation.
+
+## Local Demo Seed
+
+SPEC-010 local demo data is seeded explicitly; it never runs on backend startup
+and is not exposed through an API endpoint. After applying migrations, run from
+the repository root:
+
+```bash
+docker-compose run --rm backend-test python -m app.demo.seed --confirm-local-demo
+```
+
+The command seeds demo roles/users plus deterministic RFQ-001 workflow examples
+and event backlog in one transaction. It commits once after all seed steps
+succeed and rolls back on failure. The seed is idempotent and local-demo only.
+
+To inspect behavior without persisting records:
+
+```bash
+docker-compose run --rm backend-test python -m app.demo.seed --dry-run
+```
+
+Demo credentials are documented in `docs/demo/DATASET_INVENTORY.md` and are not
+production defaults.
+
+For the board-ready walkthrough and frontend smoke checklist, see:
+
+- `docs/demo/DEMO_RUNBOOK.md`
+- `docs/demo/FRONTEND_SMOKE_FLOW.md`

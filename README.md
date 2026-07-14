@@ -388,6 +388,16 @@ Located in `datasets/`. Includes:
 4. RFQ-003: Facility maintenance (compliance/SLA logic)
 5. RFQ-002: Office furniture (multi-item, installation policy)
 
+### Local Demo Runbook
+
+The current board-ready local demo flow is documented in:
+
+- `docs/demo/DEMO_RUNBOOK.md`
+- `docs/demo/FRONTEND_SMOKE_FLOW.md`
+
+Use the runbook for Docker startup, migrations, deterministic demo seeding,
+local-demo credentials, frontend walkthrough checkpoints, and troubleshooting.
+
 ---
 
 ## API Endpoints

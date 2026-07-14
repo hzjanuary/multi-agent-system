@@ -104,18 +104,20 @@ async def test_workflow_service_lists_workflows_with_filters(
     db_session: AsyncSession,
 ) -> None:
     service = WorkflowService(db_session)
+    first_domain = f"it_equipment_test_{uuid4().hex}"
+    second_domain = f"software_subscription_test_{uuid4().hex}"
     first = await service.create_workflow(
-        build_workflow_state_create(domain="it_equipment"),
+        build_workflow_state_create(domain=first_domain),
     )
     second = await service.create_workflow(
-        build_workflow_state_create(domain="software_subscription"),
+        build_workflow_state_create(domain=second_domain),
     )
     await service.transition_workflow_status(
         UUID(second.workflow_id),
         WorkflowStatus.PLANNING,
     )
 
-    it_workflows = await service.list_workflows(domain="it_equipment")
+    it_workflows = await service.list_workflows(domain=first_domain)
     planning_workflows = await service.list_workflows(status=WorkflowStatus.PLANNING)
 
     assert {workflow.workflow_id for workflow in it_workflows} == {first.workflow_id}

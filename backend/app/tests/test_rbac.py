@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from fastapi import APIRouter, Depends, FastAPI
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import create_access_token, hash_password
@@ -87,13 +88,17 @@ async def create_user_with_roles(
     is_active: bool = True,
 ) -> User:
     """Create a test user with assigned roles."""
-    roles = [
-        Role(
-            name=role.value if isinstance(role, RoleName) else role,
-            description="RBAC test role",
-        )
-        for role in role_names
-    ]
+    roles: list[Role] = []
+    for role in role_names:
+        role_name = role.value if isinstance(role, RoleName) else role
+        existing_role = await session.scalar(select(Role).where(Role.name == role_name))
+        if existing_role is None:
+            existing_role = Role(
+                name=role_name,
+                description="RBAC test role",
+            )
+        roles.append(existing_role)
+
     user = User(
         email=unique_email(),
         hashed_password=hash_password("not-used-in-rbac-tests"),

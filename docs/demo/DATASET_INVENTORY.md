@@ -101,3 +101,26 @@ Future seed tasks should use stable natural keys:
 
 `backend/app/demo/contracts.py` also exposes deterministic UUID helpers for
 seed implementations that need stable UUIDs.
+
+## Demo Seed Command
+
+TASK 010.4 provides an explicit local/demo seed command:
+
+```bash
+docker-compose run --rm backend-test python -m app.demo.seed --confirm-local-demo
+```
+
+The command runs the demo user/role seed helper and the demo workflow/event
+seed helper in one transaction. It commits once after all seed steps succeed
+and rolls back on failure. It does not run on import, backend startup, or
+through any public API endpoint.
+
+For a non-persisting check, run:
+
+```bash
+docker-compose run --rm backend-test python -m app.demo.seed --dry-run
+```
+
+The mutating command requires `--confirm-local-demo` to make the local/demo-only
+scope explicit. It prints a bounded summary of created/reused roles, users,
+workflows, and events without printing password hashes.

@@ -13,10 +13,11 @@ Closed specs:
 - SPEC-007 Workflow API Endpoints - Approved / Closed
 - SPEC-008 Event Streaming - Approved / Closed
 - SPEC-009 Frontend Dashboard - Approved / Closed
+- SPEC-010 Demo Dataset Seeding and Demo Script - Approved / Closed
 
 Current active spec:
 
-- SPEC-010 Demo Dataset Seeding and Demo Script
+- None
 
 ## Current SPEC-010 Planning State
 
@@ -29,10 +30,10 @@ Planned tasks:
 
 - `TASK 010.1 - Demo Dataset Inventory and Seed Contract` - Approved
 - `TASK 010.2 - Demo User and Role Seeding` - Approved
-- `TASK 010.3 - Demo Workflow and Event Seeding` - Implemented, awaiting review
-- `TASK 010.4 - Demo Seed CLI/Script`
-- `TASK 010.5 - Demo Runbook and Frontend Smoke Flow`
-- `TASK 010.6 - Demo Hardening and SPEC-010 Final Review`
+- `TASK 010.3 - Demo Workflow and Event Seeding` - Approved
+- `TASK 010.4 - Demo Seed CLI/Script` - Approved
+- `TASK 010.5 - Demo Runbook and Frontend Smoke Flow` - Approved
+- `TASK 010.6 - Demo Hardening and SPEC-010 Final Review` - Approved
 
 ## TASK 010.1 Implementation State
 
@@ -122,6 +123,81 @@ Behavior:
 - Does not call RuntimeService, run workflows, publish Redis events, expose a
   public API, implement a seed CLI/script, change backend/frontend behavior,
   add migrations, or modify database models.
+
+## TASK 010.4 Implementation State
+
+Deliverables:
+
+- `backend/app/demo/seed.py`
+- `backend/app/tests/test_demo_seed_cli.py`
+- `backend/README.md` updated with the seed command
+- `docs/demo/DATASET_INVENTORY.md` updated with the seed command
+
+Behavior:
+
+- Adds explicit `python -m app.demo.seed --confirm-local-demo` CLI for local
+  demo seeding only.
+- Adds `run_demo_seed()` orchestration that runs
+  `seed_demo_roles_and_users(session)` and
+  `seed_demo_workflows_and_events(session)` inside one session/transaction.
+- Commits once after all seed steps succeed.
+- Rolls back if any seed step fails.
+- Supports `--dry-run` to execute seed steps and rollback instead of committing.
+- Supports `--json` for a bounded machine-readable summary.
+- Requires `--confirm-local-demo` for mutating execution.
+- Does not run on import, backend startup, or through a public API endpoint.
+- Does not add backend/frontend behavior changes, migrations, or model changes.
+
+## TASK 010.5 Implementation State
+
+Deliverables:
+
+- `docs/demo/DEMO_RUNBOOK.md`
+- `docs/demo/FRONTEND_SMOKE_FLOW.md`
+- `backend/README.md` updated with runbook links
+- `frontend/README.md` updated with runbook links
+- `README.md` updated with runbook links
+
+Behavior:
+
+- Documents the local board-ready demo purpose, prerequisites, backend setup,
+  migrations, seed command, frontend setup, demo credentials, seeded workflow
+  IDs, board walkthrough steps, expected checkpoints, and troubleshooting.
+- Documents a deterministic frontend smoke checklist for login, navigation,
+  workflow list/detail, persisted event backlog, live timeline, workflow
+  creation, runtime run, and RBAC denial behavior.
+- Documents known limitations: no `/resume`, no real LLM provider behavior, no
+  RAG/document upload UI, no admin user-management UI, no production deployment
+  automation, and no fake live events.
+- Does not add backend/frontend behavior changes, migrations, model changes,
+  seed data changes, runtime changes, or new dependencies.
+
+## TASK 010.6 Final Review State
+
+Status:
+
+- SPEC-010 approved and ready to close.
+
+Evidence:
+
+- Verified dataset inventory, contracts, demo credentials, deterministic keys,
+  deterministic UUIDs, user/role seed helper, workflow/event seed helper, seed
+  CLI, runbook, smoke flow, README links, and out-of-scope boundaries.
+- Hardened tests so the full backend suite passes after demo seed data has
+  already been committed to the local database.
+- Validation passed: `docker-compose config`, Postgres startup, Alembic
+  upgrade, `docker-compose build backend-test`, backend pytest, Ruff, Black,
+  MyPy, seed CLI help, two confirmed JSON seed runs, dry-run JSON seed run,
+  frontend install, lint, build, typecheck, tests, and `git diff --check`.
+
+Non-blocking notes:
+
+- Existing LangGraph pending deprecation warning remains non-blocking.
+- Existing Starlette TestClient deprecation warning remains non-blocking.
+- Existing frontend npm audit advisories remain a future dependency
+  maintenance item.
+- Optional live browser smoke was not run because no frontend dev server was
+  already listening; frontend build generated the documented routes.
 
 ## SPEC-010 Scope
 

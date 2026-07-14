@@ -48,8 +48,8 @@ async def test_seed_demo_workflows_and_events_creates_contract_records(
     workflows = await _demo_workflows(db_session)
     events = await _demo_events(db_session)
 
-    assert result.workflows_created == len(DEMO_WORKFLOWS)
-    assert result.events_created == len(DEMO_WORKFLOW_EVENTS)
+    assert result.workflows_created + result.workflows_reused == len(DEMO_WORKFLOWS)
+    assert result.events_created + result.events_reused == len(DEMO_WORKFLOW_EVENTS)
     assert {workflow.id for workflow in workflows} == {
         workflow.stable_workflow_id for workflow in DEMO_WORKFLOWS
     }
