@@ -35,10 +35,9 @@
 
 - SPEC-011 LLM Provider Abstraction
 - SPEC-012 Human Approval and Workflow Resume
-- SPEC-013 Calculator Tool
-- SPEC-014 Compliance Agent
-- SPEC-015 Validation Agent
-- SPEC-016 Email Agent
+- SPEC-013 RAG and Document Knowledge Base
+- Future agent/tool specs: Calculator Tool, Compliance Agent, Validation Agent,
+  and Email Agent should be assigned non-conflicting SPEC numbers when planned.
 
 ## Phase 6 - Expanded Frontend
 

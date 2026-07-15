@@ -19,9 +19,98 @@ Closed specs:
 
 Current active spec:
 
-- None. Recommended next planning target: SPEC-013 RAG and Document Knowledge
-  Base, or SPEC-013 Production Deployment and Observability if deployable demo
-  packaging is the next priority.
+- SPEC-013 RAG and Document Knowledge Base - TASK 013.1 in progress
+
+## Current SPEC-013 Planning State
+
+Planning files:
+
+- `.ai/specs/SPEC-013-rag-document-knowledge-base/spec.md`
+- `.ai/specs/SPEC-013-rag-document-knowledge-base/tasks.md`
+
+Planned tasks:
+
+- `TASK 013.1 - Knowledge Base Contracts and Chunking Rules`
+- `TASK 013.2 - Embedding Abstraction and Fake Embedding Provider`
+- `TASK 013.3 - Demo Document Ingestion CLI with MinIO/Qdrant Upsert`
+- `TASK 013.4 - Retrieval Service and Search API`
+- `TASK 013.5 - Runtime RAG Grounding Behind Feature Flag`
+- `TASK 013.6 - Frontend Evidence/Citations Panel and Demo Docs`
+- `TASK 013.7 - RAG Hardening and SPEC-013 Final Review`
+
+Scope:
+
+- Add a procurement knowledge base plan that uses existing SPEC-004 MinIO and
+  Qdrant provider foundations.
+- Define document/source metadata, chunk metadata, retrieval result DTOs, and
+  citation contracts before any implementation.
+- Keep embedding concerns separate from chat LLM concerns and use deterministic
+  fake embeddings for tests and no-key demos.
+- Plan explicit local/demo ingestion only; no backend startup auto-ingestion.
+- Keep runtime grounding behind `RAG_ENABLED=false` by default and preserve
+  current deterministic `/run`, approval, and `/resume` behavior.
+- Add frontend evidence/citation display only as a later bounded task, without
+  upload UI or full document-management UI.
+
+Deferrals:
+
+- Enterprise document permissions.
+- Production OCR.
+- Arbitrary frontend upload.
+- Large-scale ingestion pipelines.
+- Multi-tenant knowledge isolation beyond demo/domain metadata.
+- Admin document-management UI.
+- External SaaS document connectors.
+- Live web search.
+- Provider SDK additions.
+- Provider cost dashboard.
+- Production secret vault integration.
+- Token streaming or agent thought streaming.
+- Global response envelope rollout.
+- Migrations/models unless a later implementation task proves a document
+  catalog is necessary.
+
+Planning validation:
+
+- `git status --short` completed.
+- `docker-compose config` passed.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Harness intake recorded as #96.
+
+## TASK 013.1 Implementation State
+
+Deliverables:
+
+- `backend/app/knowledge/__init__.py`
+- `backend/app/knowledge/schemas.py`
+- `backend/app/knowledge/chunking.py`
+- `backend/app/knowledge/exceptions.py`
+- `backend/app/tests/test_knowledge_contracts.py`
+- `backend/app/tests/test_knowledge_chunking.py`
+- `backend/README.md` updated with knowledge contract scope
+
+Behavior:
+
+- Adds provider-independent Pydantic v2 contracts for knowledge document
+  source types, document metadata, source documents, chunk metadata, chunks,
+  citations, retrieval results, search requests/responses, chunking config, and
+  chunking results.
+- Covers document source types `policy`, `contract`, `pricing`,
+  `supplier_profile`, `rfq`, `guideline`, and `compliance_checklist`.
+- Enforces bounded text, titles, IDs, tags, citation excerpts, search `top_k`,
+  and JSON-compatible metadata. Metadata validators reject sensitive key names
+  such as secrets, tokens, API keys, raw prompts, raw provider payloads, and
+  chain-of-thought markers.
+- Adds deterministic text normalization, SHA-256 content checksums, stable
+  chunk IDs, and character-based chunking with overlap and paragraph-boundary
+  preference.
+- Adds focused unit tests for source types, DTO validation, metadata safety,
+  citation/search bounds, config validation, deterministic hashing/chunk IDs,
+  ordering, overlap, no empty chunks, and chunk size bounds.
+- Does not implement embeddings, Qdrant calls, MinIO calls, ingestion CLI,
+  retrieval/search API, runtime RAG grounding, frontend behavior, migrations,
+  database models, provider SDKs, tokenizer/OCR/PDF dependencies, or live
+  external calls.
 
 ## Current SPEC-012 Planning State
 

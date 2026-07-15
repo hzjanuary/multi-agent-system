@@ -411,6 +411,26 @@ errors. The provider does not implement document management APIs, document
 metadata persistence, indexing, RAG, Retrieval Agent logic, generated files,
 email attachments, LangGraph, agents, or frontend behavior.
 
+## Knowledge Base Contracts
+
+SPEC-013 starts the RAG/document knowledge base with provider-independent
+contracts and deterministic chunking helpers only:
+
+```text
+app/knowledge/schemas.py    document, chunk, citation, retrieval, and search DTOs
+app/knowledge/chunking.py   text normalization, SHA-256 hashing, and chunk IDs
+```
+
+The current knowledge package is pure Python/Pydantic. It validates bounded
+document metadata, chunk metadata, citation excerpts, retrieval result metadata,
+and search filters. Chunking is deterministic, character-based, and preserves
+paragraph boundaries where practical while producing stable SHA-256 checksums
+and chunk IDs.
+
+This slice does not implement embeddings, Qdrant upserts, MinIO storage,
+ingestion commands, retrieval APIs, runtime RAG grounding, frontend evidence
+panels, migrations, or database models.
+
 ## Workflow State Foundation
 
 Workflow state schemas and lifecycle metadata live in `app/workflows`.
