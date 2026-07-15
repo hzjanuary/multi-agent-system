@@ -19,7 +19,7 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-013 RAG and Document Knowledge Base - TASK 013.1 in progress
+- SPEC-013 RAG and Document Knowledge Base - TASK 013.2 in progress
 
 ## Current SPEC-013 Planning State
 
@@ -111,6 +111,45 @@ Behavior:
   retrieval/search API, runtime RAG grounding, frontend behavior, migrations,
   database models, provider SDKs, tokenizer/OCR/PDF dependencies, or live
   external calls.
+
+## TASK 013.2 Implementation State
+
+Deliverables:
+
+- `backend/app/knowledge/embeddings.py`
+- `backend/app/knowledge/__init__.py` updated
+- `backend/app/knowledge/exceptions.py` updated
+- `backend/app/config/settings.py` updated with safe embedding env wiring
+- `backend/.env.example` updated with embedding env defaults
+- `backend/app/tests/test_knowledge_embeddings.py`
+- `backend/app/tests/test_knowledge_embedding_settings.py`
+- `backend/README.md` updated with embedding scope
+
+Behavior:
+
+- Adds provider-independent embedding contracts separate from chat LLM
+  contracts: provider enum, error categories, settings, input/request/result,
+  batch result, vector metadata, model capabilities, async client protocol,
+  service, and factory.
+- Adds deterministic `FakeEmbeddingClient` only. It normalizes text, expands
+  SHA-256 digests into bounded float vectors, preserves batch order, and makes
+  no network calls.
+- Adds safe defaults: `EMBEDDING_PROVIDER=fake`,
+  `EMBEDDING_MODEL=fake-hash-embedding`, `EMBEDDING_DIMENSIONS=64`, and
+  `EMBEDDING_BATCH_SIZE=32`.
+- Embedding settings load without API keys and are exposed through
+  `Settings.embedding_settings`.
+- Reuses TASK 013.1 metadata safety validation so embedding metadata remains
+  JSON-compatible and rejects sensitive keys such as secrets, tokens, API keys,
+  raw prompts, raw provider payloads, and chain-of-thought markers.
+- Adds tests for settings defaults/overrides, bounds, contracts, deterministic
+  vectors, configured dimensions, batch order, repeated batch calls, blank and
+  oversized input rejection, vector value bounds, and default factory/service
+  behavior.
+- Does not implement real embedding providers, call `LLMService`, call chat
+  provider clients, call Qdrant or MinIO, add ingestion CLI, add retrieval/API,
+  change runtime/frontend behavior, add migrations/models, add provider SDKs,
+  or make external calls.
 
 ## Current SPEC-012 Planning State
 

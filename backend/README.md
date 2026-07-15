@@ -431,6 +431,25 @@ This slice does not implement embeddings, Qdrant upserts, MinIO storage,
 ingestion commands, retrieval APIs, runtime RAG grounding, frontend evidence
 panels, migrations, or database models.
 
+TASK 013.2 adds the first embedding abstraction under `app/knowledge`:
+
+```text
+app/knowledge/embeddings.py  embedding contracts, fake client, service, factory
+```
+
+Embedding settings are offline-safe by default:
+
+```text
+EMBEDDING_PROVIDER=fake
+EMBEDDING_MODEL=fake-hash-embedding
+EMBEDDING_DIMENSIONS=64
+EMBEDDING_BATCH_SIZE=32
+```
+
+The fake embedding provider is deterministic, hash-based, requires no API keys,
+does not call `LLMService`, and does not call Qdrant or MinIO. It exists for
+future ingestion/retrieval tests and no-key local demos only.
+
 ## Workflow State Foundation
 
 Workflow state schemas and lifecycle metadata live in `app/workflows`.

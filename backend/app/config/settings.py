@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.knowledge.embeddings import EmbeddingProviderName, EmbeddingSettings
 from app.llm import LLMProvider, LLMSettings
 
 
@@ -103,6 +104,27 @@ class Settings(BaseSettings):
     )
     ollama_model: str = Field(default="", alias="OLLAMA_MODEL")
 
+    embedding_provider: EmbeddingProviderName = Field(
+        default=EmbeddingProviderName.FAKE,
+        alias="EMBEDDING_PROVIDER",
+    )
+    embedding_model: str = Field(
+        default="fake-hash-embedding",
+        alias="EMBEDDING_MODEL",
+    )
+    embedding_dimensions: int = Field(
+        default=64,
+        ge=1,
+        le=4096,
+        alias="EMBEDDING_DIMENSIONS",
+    )
+    embedding_batch_size: int = Field(
+        default=32,
+        ge=1,
+        le=256,
+        alias="EMBEDDING_BATCH_SIZE",
+    )
+
     @property
     def backend_cors_origins(self) -> tuple[str, ...]:
         """Return configured CORS origins as an immutable tuple."""
@@ -133,6 +155,16 @@ class Settings(BaseSettings):
             gemini_model=self.gemini_model,
         )
 
+    @property
+    def embedding_settings(self) -> EmbeddingSettings:
+        """Return embedding-specific settings as a typed configuration object."""
+        return EmbeddingSettings(
+            provider=self.embedding_provider,
+            model=self.embedding_model,
+            dimensions=self.embedding_dimensions,
+            batch_size=self.embedding_batch_size,
+        )
+
     @field_validator("api_v1_prefix")
     @classmethod
     def validate_api_prefix(cls, value: str) -> str:
@@ -151,6 +183,12 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_llm_provider(cls, value: str) -> str:
         """Normalize provider names loaded from environment variables."""
+        return value.lower()
+
+    @field_validator("embedding_provider", mode="before")
+    @classmethod
+    def normalize_embedding_provider(cls, value: str) -> str:
+        """Normalize embedding provider names loaded from environment variables."""
         return value.lower()
 
 
