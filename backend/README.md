@@ -156,9 +156,9 @@ SPEC-011 adds provider-independent LLM contracts, settings, isolated provider
 clients, prompt templates, structured output validation, and a feature-flagged
 runtime adapter for fake, Groq, OpenRouter, Ollama, and Gemini. Provider clients
 live behind a common async interface and use injectable HTTP transport for
-mocked tests. SPEC-011 does not add public provider-management APIs, frontend
-provider settings, RAG, `/resume`, token streaming, migrations, or model
-changes.
+mocked tests. SPEC-011 itself does not add public provider-management APIs,
+frontend provider settings, RAG, token streaming, migrations, or model changes.
+The human approval `/resume` path is documented separately under SPEC-012.
 
 The safe default is offline/deterministic:
 

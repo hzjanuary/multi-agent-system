@@ -15,10 +15,13 @@ Closed specs:
 - SPEC-009 Frontend Dashboard - Approved / Closed
 - SPEC-010 Demo Dataset Seeding and Demo Script - Approved / Closed
 - SPEC-011 LLM Provider Abstraction - Approved / Closed
+- SPEC-012 Human Approval and Workflow Resume - Approved / Closed
 
 Current active spec:
 
-- SPEC-012 Human Approval and Workflow Resume - Active
+- None. Recommended next planning target: SPEC-013 RAG and Document Knowledge
+  Base, or SPEC-013 Production Deployment and Observability if deployable demo
+  packaging is the next priority.
 
 ## Current SPEC-012 Planning State
 
@@ -38,7 +41,8 @@ Planned tasks:
 - `TASK 012.5 - Frontend Approval Panel and API Client` - Implemented
 - `TASK 012.6 - Approval Timeline, Demo Runbook, and Seed Updates` -
   Implemented
-- `TASK 012.7 - Human Approval Hardening and SPEC-012 Final Review`
+- `TASK 012.7 - Human Approval Hardening and SPEC-012 Final Review` -
+  Implemented
 
 ## TASK 012.1 Implementation State
 
@@ -269,6 +273,92 @@ Behavior:
   workflow API behavior, frontend behavior, migrations, database models, new
   statuses, email sending, RAG/document upload, provider-management UI, token
   streaming, fake live events, or production seed behavior.
+
+## TASK 012.7 Final Review State
+
+Status:
+
+- SPEC-012 approved and ready to close.
+
+Evidence:
+
+- Verified approval contracts for `approve`, `reject`, `request_changes`,
+  bounded approval records/history, typed resume request/response, rejection
+  comment validation, and JSON-safe metadata.
+- Verified lifecycle helpers allow approval decisions only from
+  `WAITING_APPROVAL`, block terminal and duplicate final decisions, keep
+  `request_changes` non-final, and require `APPROVED` plus a final approve
+  record for resume.
+- Verified RBAC policy helpers use existing roles: Admin/Manager can approve,
+  reject, request changes, and resume; Sales/Legal/Finance/Viewer cannot submit
+  approval or resume mutations in this slice.
+- Verified `ApprovalService` stores `approval_history` and `approval_state`
+  through existing workflow state payload, persists WorkflowEvent records and
+  audit evidence, flushes without service-level commit, and adds no migrations,
+  tables, model fields, or workflow statuses.
+- Verified workflow API endpoints:
+  `POST /api/v1/workflows/{workflow_id}/approval`,
+  `GET /api/v1/workflows/{workflow_id}/approval/history`, and
+  `POST /api/v1/workflows/{workflow_id}/resume`; existing `/run` remains
+  stable.
+- Verified `RuntimeService.resume_workflow_after_approval()` is bounded to the
+  post-approval email-preparation continuation, requires approval, transitions
+  through `APPROVED -> GENERATING_EMAIL -> COMPLETED`, persists resume events,
+  does not send real email, and does not add arbitrary graph jump/resume.
+- Verified frontend approval/resume client functions, detail page approval
+  panel, approval history, explicit `/resume` action, error handling, and that
+  resume does not call `/run`.
+- Verified demo seed data preserves the primary live `WAITING_APPROVAL`
+  workflow and includes deterministic approved, completed-resumed, and rejected
+  approval examples with deterministic event history.
+- Hardened stale documentation copy in `backend/README.md` and
+  `docs/llm/LOCAL_LLM_DEMO.md` so `/resume` is no longer described as deferred
+  after SPEC-012.
+
+Validation:
+
+- `git status --short` completed.
+- `docker-compose config` passed.
+- `docker-compose up -d postgres redis qdrant minio` passed.
+- `docker-compose run --rm backend-test alembic upgrade head` passed.
+- `docker-compose build backend-test` passed.
+- `docker-compose run --rm backend-test pytest` passed: 579 passed, 1 skipped.
+- `docker-compose run --rm backend-test ruff check .` passed.
+- `docker-compose run --rm backend-test black --check .` passed.
+- `docker-compose run --rm backend-test mypy app` passed.
+- `docker-compose run --rm backend-test python -m app.demo.seed --help`
+  passed.
+- Two confirmed seed runs passed and reused existing data:
+  6 workflows reused, 14 events reused, 0 created.
+- `docker-compose run --rm backend-test python -m app.demo.seed
+  --confirm-local-demo --dry-run --json` passed with `committed:false`.
+- `cd frontend && npm install` passed.
+- `cd frontend && npm run lint` passed.
+- `cd frontend && npm run build` passed.
+- `cd frontend && npm run typecheck` passed.
+- `cd frontend && npm test` passed: 43 passed.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Focused approval/runtime/demo backend tests passed: 111 passed, 1 skipped.
+- Focused frontend approval test passed: 9 passed.
+
+Non-blocking notes:
+
+- Existing LangGraph pending deprecation warning remains non-blocking.
+- Existing Starlette TestClient deprecation warning remains non-blocking.
+- Existing frontend npm audit advisories remain a future dependency
+  maintenance item.
+- Existing Vite CJS deprecation warning remains non-blocking.
+- LF/CRLF warnings from `git diff --check` remain non-blocking when no
+  whitespace errors are reported.
+
+Out-of-scope confirmation:
+
+- No new migrations, database models/tables, workflow statuses, email sending,
+  RAG/document upload, admin approval-policy UI, provider-management UI,
+  production secret vault, token streaming, agent thought streaming, fake
+  streamed events, global response envelope, deployment automation,
+  billing/cost dashboard, production seed behavior, live provider smoke tests,
+  or real API keys/secrets were added.
 
 Scope:
 

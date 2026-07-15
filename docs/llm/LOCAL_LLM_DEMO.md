@@ -67,8 +67,8 @@ LLM_RUNTIME_ENABLED=true
 5. Run a `CREATED` workflow through the existing `/run` path from the frontend.
 
 The `/run` API contract remains the same. Runtime still stops at
-`WAITING_APPROVAL`. Approval continuation, `/resume`, and customer-facing email
-generation remain deferred.
+`WAITING_APPROVAL`. Human approval and explicit `/resume` continuation are
+handled by SPEC-012, while customer-facing email sending remains deferred.
 
 ## Example Local Configurations
 
