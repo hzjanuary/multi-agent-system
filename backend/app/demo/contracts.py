@@ -10,6 +10,13 @@ from uuid import UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.approvals.events import (
+    APPROVAL_APPROVED_EVENT,
+    APPROVAL_CHANGES_REQUESTED_EVENT,
+    APPROVAL_REJECTED_EVENT,
+    WORKFLOW_RESUME_REQUESTED_EVENT,
+    WORKFLOW_RESUMED_EVENT,
+)
 from app.auth.rbac import RoleName
 from app.models.enums import WorkflowEventStatus, WorkflowStatus
 from app.workflows.schemas import WorkflowType
@@ -332,7 +339,55 @@ DEMO_WORKFLOWS: tuple[DemoWorkflowDefinition, ...] = (
         expected_contract_id="CON-2026-ACME-IT",
         expected_output_key="RFQ-001",
         seed_event_history=True,
-        notes="Backlog/timeline demo using static reference outputs only.",
+        notes=(
+            "Live approval walkthrough workflow; no final approval is seeded so "
+            "Manager/Admin can approve it during the demo."
+        ),
+    ),
+    DemoWorkflowDefinition(
+        key="rfq-001-approved-ready-to-resume",
+        title="RFQ-001 workflow approved and ready to resume",
+        domain="it_equipment",
+        initial_status=WorkflowStatus.APPROVED,
+        rfq_id="RFQ-001",
+        customer_id="CUST-001",
+        request_text=RFQ_001_TEXT,
+        product_ids=("IT-LAP-001",),
+        expected_contract_id="CON-2026-ACME-IT",
+        expected_output_key="RFQ-001",
+        seed_event_history=True,
+        notes=(
+            "Approved workflow with final approval history; ready for explicit "
+            "resume."
+        ),
+    ),
+    DemoWorkflowDefinition(
+        key="rfq-001-completed-resumed-history",
+        title="RFQ-001 workflow completed after approval resume",
+        domain="it_equipment",
+        initial_status=WorkflowStatus.COMPLETED,
+        rfq_id="RFQ-001",
+        customer_id="CUST-001",
+        request_text=RFQ_001_TEXT,
+        product_ids=("IT-LAP-001",),
+        expected_contract_id="CON-2026-ACME-IT",
+        expected_output_key="RFQ-001",
+        seed_event_history=True,
+        notes="Read-only example with request-changes, approval, and resume history.",
+    ),
+    DemoWorkflowDefinition(
+        key="rfq-001-rejected-history",
+        title="RFQ-001 workflow rejected after approval review",
+        domain="it_equipment",
+        initial_status=WorkflowStatus.REJECTED,
+        rfq_id="RFQ-001",
+        customer_id="CUST-001",
+        request_text=RFQ_001_TEXT,
+        product_ids=("IT-LAP-001",),
+        expected_contract_id="CON-2026-ACME-IT",
+        expected_output_key="RFQ-001",
+        seed_event_history=True,
+        notes="Read-only rejected approval history example.",
     ),
     DemoWorkflowDefinition(
         key="rfq-001-completed-conflict",
@@ -408,6 +463,130 @@ DEMO_WORKFLOW_EVENTS: tuple[DemoWorkflowEventDefinition, ...] = (
         payload={
             "stage": "approval",
             "workflow_status": WorkflowStatus.WAITING_APPROVAL.value,
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="approved-ready-waiting-approval",
+        workflow_key="rfq-001-approved-ready-to-resume",
+        event_type="workflow.runtime.waiting_for_approval",
+        status=WorkflowEventStatus.COMPLETED,
+        message="Demo workflow reached approval before the seeded approval decision.",
+        payload={
+            "stage": "approval",
+            "workflow_status": WorkflowStatus.WAITING_APPROVAL.value,
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="approved-ready-approval-approved",
+        workflow_key="rfq-001-approved-ready-to-resume",
+        event_type=APPROVAL_APPROVED_EVENT,
+        status=WorkflowEventStatus.COMPLETED,
+        message="Demo workflow was approved and is ready to resume.",
+        payload={
+            "decision": "approve",
+            "actor_email": "manager@example.test",
+            "previous_status": WorkflowStatus.WAITING_APPROVAL.value,
+            "next_status": WorkflowStatus.APPROVED.value,
+            "can_resume": True,
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="completed-history-approval-changes-requested",
+        workflow_key="rfq-001-completed-resumed-history",
+        event_type=APPROVAL_CHANGES_REQUESTED_EVENT,
+        status=WorkflowEventStatus.COMPLETED,
+        message="Demo manager requested changes before final approval.",
+        payload={
+            "decision": "request_changes",
+            "actor_email": "manager@example.test",
+            "previous_status": WorkflowStatus.WAITING_APPROVAL.value,
+            "next_status": WorkflowStatus.WAITING_APPROVAL.value,
+            "can_resume": False,
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="completed-history-approval-approved",
+        workflow_key="rfq-001-completed-resumed-history",
+        event_type=APPROVAL_APPROVED_EVENT,
+        status=WorkflowEventStatus.COMPLETED,
+        message="Demo workflow was approved for post-approval continuation.",
+        payload={
+            "decision": "approve",
+            "actor_email": "manager@example.test",
+            "previous_status": WorkflowStatus.WAITING_APPROVAL.value,
+            "next_status": WorkflowStatus.APPROVED.value,
+            "can_resume": True,
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="completed-history-resume-requested",
+        workflow_key="rfq-001-completed-resumed-history",
+        event_type=WORKFLOW_RESUME_REQUESTED_EVENT,
+        status=WorkflowEventStatus.STARTED,
+        message="Demo workflow resume was requested after approval.",
+        payload={
+            "workflow_status": WorkflowStatus.APPROVED.value,
+            "request_id": "demo-resume-completed",
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="completed-history-email-preparation-started",
+        workflow_key="rfq-001-completed-resumed-history",
+        event_type="workflow.node.started",
+        status=WorkflowEventStatus.STARTED,
+        agent_name="email_preparation",
+        message="Demo email preparation stage started.",
+        payload={
+            "stage": "email_preparation",
+            "workflow_status": WorkflowStatus.GENERATING_EMAIL.value,
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="completed-history-email-preparation-completed",
+        workflow_key="rfq-001-completed-resumed-history",
+        event_type="workflow.node.completed",
+        status=WorkflowEventStatus.COMPLETED,
+        agent_name="email_preparation",
+        message="Demo email preparation stage completed without sending email.",
+        payload={
+            "stage": "email_preparation",
+            "workflow_status": WorkflowStatus.GENERATING_EMAIL.value,
+            "email_sent": False,
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="completed-history-workflow-resumed",
+        workflow_key="rfq-001-completed-resumed-history",
+        event_type=WORKFLOW_RESUMED_EVENT,
+        status=WorkflowEventStatus.COMPLETED,
+        message="Demo workflow resume completed.",
+        payload={
+            "workflow_status": WorkflowStatus.COMPLETED.value,
+            "request_id": "demo-resume-completed",
+            "completed_stages": "email_preparation",
+            "demo_reference": True,
+        },
+    ),
+    DemoWorkflowEventDefinition(
+        key="rejected-history-approval-rejected",
+        workflow_key="rfq-001-rejected-history",
+        event_type=APPROVAL_REJECTED_EVENT,
+        status=WorkflowEventStatus.COMPLETED,
+        message="Demo workflow was rejected during approval review.",
+        payload={
+            "decision": "reject",
+            "actor_email": "manager@example.test",
+            "previous_status": WorkflowStatus.WAITING_APPROVAL.value,
+            "next_status": WorkflowStatus.REJECTED.value,
+            "can_resume": False,
             "demo_reference": True,
         },
     ),

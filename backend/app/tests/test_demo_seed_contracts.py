@@ -5,6 +5,13 @@ from uuid import UUID
 
 import pytest
 
+from app.approvals import (
+    APPROVAL_APPROVED_EVENT,
+    APPROVAL_CHANGES_REQUESTED_EVENT,
+    APPROVAL_REJECTED_EVENT,
+    WORKFLOW_RESUME_REQUESTED_EVENT,
+    WORKFLOW_RESUMED_EVENT,
+)
 from app.auth.rbac import RoleName
 from app.demo import (
     DATASET_REFERENCES,
@@ -87,6 +94,17 @@ def test_demo_workflow_definitions_have_required_demo_shapes() -> None:
         workflow_by_key["rfq-001-waiting-approval-history"].initial_status
         is WorkflowStatus.WAITING_APPROVAL
     )
+    assert (
+        workflow_by_key["rfq-001-approved-ready-to-resume"].initial_status
+        is WorkflowStatus.APPROVED
+    )
+    assert (
+        workflow_by_key["rfq-001-completed-resumed-history"].initial_status
+        is WorkflowStatus.COMPLETED
+    )
+    assert workflow_by_key["rfq-001-rejected-history"].initial_status is (
+        WorkflowStatus.REJECTED
+    )
     assert workflow_by_key["rfq-001-completed-conflict"].initial_status is (
         WorkflowStatus.COMPLETED
     )
@@ -102,12 +120,21 @@ def test_demo_workflow_definitions_have_required_demo_shapes() -> None:
 
 def test_demo_event_definitions_reference_seeded_workflow() -> None:
     workflow_keys = {workflow.key for workflow in DEMO_WORKFLOWS}
+    approval_event_types = {
+        APPROVAL_APPROVED_EVENT,
+        APPROVAL_CHANGES_REQUESTED_EVENT,
+        APPROVAL_REJECTED_EVENT,
+        WORKFLOW_RESUME_REQUESTED_EVENT,
+        WORKFLOW_RESUMED_EVENT,
+    }
 
     for event in DEMO_WORKFLOW_EVENTS:
         assert event.workflow_key in workflow_keys
-        assert event.workflow_key == "rfq-001-waiting-approval-history"
         assert event.payload["demo_reference"] is True
         assert event.idempotency_key.startswith("demo:event:")
+
+    event_types = {event.event_type for event in DEMO_WORKFLOW_EVENTS}
+    assert approval_event_types <= event_types
 
 
 def test_dataset_references_are_declared_and_exist_when_available() -> None:

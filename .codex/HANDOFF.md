@@ -36,7 +36,8 @@ Planned tasks:
 - `TASK 012.3 - Approval and Resume API Endpoints with RBAC` - Implemented
 - `TASK 012.4 - Runtime Resume Implementation` - Implemented
 - `TASK 012.5 - Frontend Approval Panel and API Client` - Implemented
-- `TASK 012.6 - Approval Timeline, Demo Runbook, and Seed Updates`
+- `TASK 012.6 - Approval Timeline, Demo Runbook, and Seed Updates` -
+  Implemented
 - `TASK 012.7 - Human Approval Hardening and SPEC-012 Final Review`
 
 ## TASK 012.1 Implementation State
@@ -226,6 +227,48 @@ Behavior:
 - Does not modify backend/runtime behavior, auth/RBAC policy, demo seeds,
   runbook docs, WebSocket protocol, frontend framework dependencies, or
   existing `/run` behavior.
+
+## TASK 012.6 Implementation State
+
+Deliverables:
+
+- `backend/app/demo/contracts.py` updated
+- `backend/app/demo/workflow_seed.py` updated
+- `backend/app/tests/test_demo_seed_contracts.py` updated
+- `backend/app/tests/test_demo_workflow_seed.py` updated
+- `docs/demo/DATASET_INVENTORY.md` updated
+- `docs/demo/DEMO_RUNBOOK.md` updated
+- `docs/demo/FRONTEND_SMOKE_FLOW.md` updated
+- `README.md` updated
+- `docs/llm/LOCAL_LLM_DEMO.md` updated for stale limitation copy
+- `docs/llm/PROVIDER_SETUP.md` updated for stale limitation copy
+
+Behavior:
+
+- Preserves `rfq-001-waiting-approval-history` as the primary
+  `WAITING_APPROVAL` workflow with no final seeded approval decision so
+  Manager/Admin can approve it live.
+- Adds deterministic approval/resume seed examples:
+  `rfq-001-approved-ready-to-resume`,
+  `rfq-001-completed-resumed-history`, and `rfq-001-rejected-history`.
+- Stores seeded approval history through the same `approval_history` and
+  `approval_state` payload keys used by `ApprovalService`.
+- Builds seeded approval history records with `ApprovalRecord`, bounded demo
+  metadata, the seeded Manager as actor, and deterministic UUIDv5 decision ids.
+- Adds persisted approval/resume timeline events using existing event
+  constants: `workflow.approval.approved`,
+  `workflow.approval.rejected`, `workflow.approval.changes_requested`,
+  `workflow.resume_requested`, and `workflow.resumed`.
+- Adds completed resume metadata under `runtime_context.resume_state` and an
+  email-preparation preview that explicitly does not send email.
+- Updates demo runbook and frontend smoke flow to cover request changes,
+  approval, explicit `/resume`, approval history, approval/resume timeline
+  events, and approval RBAC checks.
+- Keeps seed CLI behavior explicit, local-demo-only, and idempotent.
+- Does not modify backend approval service behavior, runtime resume behavior,
+  workflow API behavior, frontend behavior, migrations, database models, new
+  statuses, email sending, RAG/document upload, provider-management UI, token
+  streaming, fake live events, or production seed behavior.
 
 Scope:
 

@@ -433,6 +433,9 @@ local-demo credentials, frontend walkthrough checkpoints, and troubleshooting.
 - `PATCH /api/v1/workflows/{workflow_id}/state`
 - `GET /api/v1/workflows/{workflow_id}/events`
 - `POST /api/v1/workflows/{workflow_id}/run`
+- `POST /api/v1/workflows/{workflow_id}/approval`
+- `GET /api/v1/workflows/{workflow_id}/approval/history`
+- `POST /api/v1/workflows/{workflow_id}/resume`
 - `GET /api/v1/workflows/_meta`
 
 ### Events
@@ -443,10 +446,8 @@ local-demo credentials, frontend walkthrough checkpoints, and troubleshooting.
 
 The following product-contract capabilities are not implemented yet:
 
-- workflow `/resume`
 - workflow cancellation route
 - approval center routes
-- human approval continuation
 - real LLM token streaming endpoints
 - provider-management or admin key-management endpoints
 

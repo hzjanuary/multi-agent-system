@@ -15,14 +15,19 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.approvals import APPROVAL_HISTORY_KEY, APPROVAL_STATE_KEY
+from app.approvals.schemas import ApprovalDecisionType, ApprovalRecord
+from app.auth.rbac import RoleName
 from app.demo.contracts import (
     DEMO_SEED_CONTRACT,
     DemoSeedContract,
     DemoWorkflowDefinition,
     DemoWorkflowEventDefinition,
+    deterministic_demo_uuid,
 )
 from app.demo.user_seed import seed_demo_roles_and_users
 from app.models import User, Workflow, WorkflowEvent
+from app.models.enums import WorkflowStatus
 from app.workflows.schemas import (
     WorkflowState,
     WorkflowStateMetadata,
@@ -60,6 +65,7 @@ async def seed_demo_workflows_and_events(
     """
     await seed_demo_roles_and_users(session, contract=contract)
     creator = await _get_demo_creator(session)
+    approval_actor = await _get_demo_approval_actor(session)
 
     workflows_created = 0
     workflows_reused = 0
@@ -77,6 +83,7 @@ async def seed_demo_workflows_and_events(
         state_payload = _workflow_state_payload(
             workflow_definition,
             created_by_id=creator.id,
+            approval_actor_id=approval_actor.id,
         )
 
         if workflow is None:
@@ -166,6 +173,15 @@ async def _get_demo_creator(session: AsyncSession) -> User:
     return user
 
 
+async def _get_demo_approval_actor(session: AsyncSession) -> User:
+    statement = select(User).where(User.email == "manager@example.test")
+    result = await session.scalars(statement)
+    user = result.one_or_none()
+    if user is None:
+        raise ValueError("manager demo user was not seeded")
+    return user
+
+
 async def _get_workflow(session: AsyncSession, workflow_id: UUID) -> Workflow | None:
     return await session.get(Workflow, workflow_id)
 
@@ -194,6 +210,7 @@ def _workflow_state_payload(
     workflow_definition: DemoWorkflowDefinition,
     *,
     created_by_id: UUID,
+    approval_actor_id: UUID,
 ) -> dict[str, Any]:
     state = WorkflowState(
         workflow_id=str(workflow_definition.stable_workflow_id),
@@ -226,13 +243,16 @@ def _workflow_state_payload(
         quotation=_quotation_payload(workflow_definition),
         compliance=_stage_payload(workflow_definition, "compliance"),
         validation=_stage_payload(workflow_definition, "validation"),
-        approval=_approval_payload(workflow_definition),
+        approval=_approval_payload(
+            workflow_definition,
+            approval_actor_id=approval_actor_id,
+        ),
+        email=_email_payload(workflow_definition),
         current_step=_current_step(workflow_definition),
-        runtime_context={
-            "demo_seed": True,
-            "demo_reference_only": True,
-            "expected_contract_id": workflow_definition.expected_contract_id,
-        },
+        runtime_context=_runtime_context_payload(
+            workflow_definition,
+            approval_actor_id=approval_actor_id,
+        ),
         outputs={
             "demo_reference_only": True,
             "expected_output_key": workflow_definition.expected_output_key,
@@ -274,7 +294,7 @@ def _stage_payload(
     workflow_definition: DemoWorkflowDefinition,
     stage: str,
 ) -> dict[str, object]:
-    if workflow_definition.initial_status.value in {"CREATED", "COMPLETED"}:
+    if workflow_definition.initial_status.value == "CREATED":
         return {"demo_reference_only": True}
     return {
         "stage": stage,
@@ -301,14 +321,175 @@ def _quotation_payload(
 
 def _approval_payload(
     workflow_definition: DemoWorkflowDefinition,
+    *,
+    approval_actor_id: UUID,
 ) -> dict[str, object]:
-    if workflow_definition.initial_status.value == "WAITING_APPROVAL":
-        return {
-            "status": "waiting_approval",
-            "summary": "Demo workflow is waiting for manager approval.",
+    records = _approval_records(
+        workflow_definition,
+        approval_actor_id=approval_actor_id,
+    )
+    latest_record = records[-1] if records else None
+    can_resume = workflow_definition.initial_status is WorkflowStatus.APPROVED and any(
+        record.decision is ApprovalDecisionType.APPROVE for record in records
+    )
+    payload: dict[str, object] = {
+        "demo_reference_only": True,
+        APPROVAL_HISTORY_KEY: [record.model_dump(mode="json") for record in records],
+        APPROVAL_STATE_KEY: {
+            "has_final_decision": latest_record is not None
+            and latest_record.decision
+            in (ApprovalDecisionType.APPROVE, ApprovalDecisionType.REJECT),
+            "can_resume": can_resume,
+        },
+    }
+    if latest_record is not None:
+        approval_state = payload[APPROVAL_STATE_KEY]
+        if isinstance(approval_state, dict):
+            approval_state.update(
+                {
+                    "latest_decision": latest_record.decision.value,
+                    "latest_decision_id": str(latest_record.decision_id),
+                    "latest_decided_at": latest_record.decided_at.isoformat(),
+                },
+            )
+    else:
+        payload.update(
+            {
+                "status": (
+                    "waiting_approval"
+                    if workflow_definition.initial_status
+                    is WorkflowStatus.WAITING_APPROVAL
+                    else "not_requested"
+                ),
+                "summary": (
+                    "Demo workflow is waiting for manager approval."
+                    if workflow_definition.initial_status
+                    is WorkflowStatus.WAITING_APPROVAL
+                    else "Demo workflow has no approval decision history."
+                ),
+            },
+        )
+    return payload
+
+
+def _approval_records(
+    workflow_definition: DemoWorkflowDefinition,
+    *,
+    approval_actor_id: UUID,
+) -> tuple[ApprovalRecord, ...]:
+    if workflow_definition.key == "rfq-001-approved-ready-to-resume":
+        return (
+            _approval_record(
+                workflow_definition,
+                approval_actor_id=approval_actor_id,
+                decision=ApprovalDecisionType.APPROVE,
+                index=1,
+                comment="Approved for post-approval continuation.",
+                next_status=WorkflowStatus.APPROVED,
+                request_id="demo-approval-ready",
+            ),
+        )
+    if workflow_definition.key == "rfq-001-completed-resumed-history":
+        return (
+            _approval_record(
+                workflow_definition,
+                approval_actor_id=approval_actor_id,
+                decision=ApprovalDecisionType.REQUEST_CHANGES,
+                index=1,
+                comment="Please confirm warranty coverage before final approval.",
+                next_status=WorkflowStatus.WAITING_APPROVAL,
+                request_id="demo-request-changes",
+            ),
+            _approval_record(
+                workflow_definition,
+                approval_actor_id=approval_actor_id,
+                decision=ApprovalDecisionType.APPROVE,
+                index=2,
+                comment="Revision accepted. Approved for customer response.",
+                next_status=WorkflowStatus.APPROVED,
+                request_id="demo-approval-completed",
+            ),
+        )
+    if workflow_definition.key == "rfq-001-rejected-history":
+        return (
+            _approval_record(
+                workflow_definition,
+                approval_actor_id=approval_actor_id,
+                decision=ApprovalDecisionType.REJECT,
+                index=1,
+                comment="Rejected because compliance evidence is incomplete.",
+                next_status=WorkflowStatus.REJECTED,
+                request_id="demo-approval-rejected",
+            ),
+        )
+    return ()
+
+
+def _approval_record(
+    workflow_definition: DemoWorkflowDefinition,
+    *,
+    approval_actor_id: UUID,
+    decision: ApprovalDecisionType,
+    index: int,
+    comment: str,
+    next_status: WorkflowStatus,
+    request_id: str,
+) -> ApprovalRecord:
+    return ApprovalRecord(
+        decision_id=deterministic_demo_uuid(
+            f"demo:approval:{workflow_definition.key}:{index}:{decision.value}",
+        ),
+        workflow_id=workflow_definition.stable_workflow_id,
+        decision=decision,
+        actor_id=approval_actor_id,
+        actor_email="manager@example.test",
+        actor_roles=(RoleName.MANAGER.value,),
+        comment=comment,
+        decided_at=DEMO_EVENT_BASE_TIME + timedelta(minutes=10 + index),
+        previous_status=WorkflowStatus.WAITING_APPROVAL,
+        next_status=next_status,
+        request_id=request_id,
+        metadata={
+            "demo_seed": True,
             "demo_reference_only": True,
+            "seed_key": workflow_definition.key,
+        },
+    )
+
+
+def _email_payload(
+    workflow_definition: DemoWorkflowDefinition,
+) -> dict[str, object]:
+    if workflow_definition.key != "rfq-001-completed-resumed-history":
+        return {"demo_reference_only": True}
+    return {
+        "stage": "email_preparation",
+        "status": "completed",
+        "subject": "Quotation for RFQ-001",
+        "email_sent": False,
+        "summary": "Demo email preview was prepared after approval resume.",
+        "demo_reference_only": True,
+    }
+
+
+def _runtime_context_payload(
+    workflow_definition: DemoWorkflowDefinition,
+    *,
+    approval_actor_id: UUID,
+) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "demo_seed": True,
+        "demo_reference_only": True,
+        "expected_contract_id": workflow_definition.expected_contract_id,
+    }
+    if workflow_definition.key == "rfq-001-completed-resumed-history":
+        payload["resume_state"] = {
+            "resumed": True,
+            "resumed_by": str(approval_actor_id),
+            "request_id": "demo-resume-completed",
+            "completed_stages": ["email_preparation"],
         }
-    return {"demo_reference_only": True}
+    return payload
 
 
 def _current_step(workflow_definition: DemoWorkflowDefinition) -> str | None:
@@ -316,6 +497,8 @@ def _current_step(workflow_definition: DemoWorkflowDefinition) -> str | None:
     if status == "CREATED":
         return "created"
     if status == "WAITING_APPROVAL":
+        return "approval"
+    if status in {"APPROVED", "REJECTED"}:
         return "approval"
     if status == "COMPLETED":
         return "completed"

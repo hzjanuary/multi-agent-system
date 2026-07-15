@@ -202,9 +202,9 @@ transient failures and does not hide missing-key or authentication errors.
 - No RAG or document indexing through LLM providers yet.
 - No frontend provider-management UI.
 - No admin API key management.
-- No `/resume` or human approval continuation.
+- No LLM-backed approval continuation; human approval/resume uses the
+  deterministic SPEC-012 workflow path.
 - No LLM token streaming to the frontend.
 - No provider cost dashboard.
 - No production secret vault integration.
 - No real-provider smoke tests are part of the automated validation gate.
-

@@ -41,7 +41,9 @@ token is present.
 | `/workflows/new` | Procurement workflow create form renders after login shell loads. |
 | `/workflows/example-workflow-id` | Detail route renders an understandable not-found or load-error state after login. |
 | `/workflows/dc5e7963-c2a4-5ad6-8f70-0741431597f0` | Seeded created workflow detail renders after login. |
-| `/workflows/b0111d45-aff5-5b86-9ffd-9417704c9bab` | Seeded waiting-approval workflow renders with event backlog and timeline. |
+| `/workflows/b0111d45-aff5-5b86-9ffd-9417704c9bab` | Seeded waiting-approval workflow renders with approval panel, empty approval history, event backlog, and timeline. |
+| `/workflows/e1771f90-a85e-5684-98d1-7dd0458a4e89` | Seeded approved workflow renders with approval history and resume action. |
+| `/workflows/6b99fd38-1ecf-5213-8d69-43abcca20856` | Seeded completed workflow renders approval/resume event history read-only. |
 
 ## Manual Smoke Checklist
 
@@ -79,6 +81,43 @@ token is present.
 - Confirm persisted event backlog includes runtime/stage events.
 - Confirm event payload previews are bounded and readable.
 
+### Approval Panel And History
+
+- On `/workflows/b0111d45-aff5-5b86-9ffd-9417704c9bab`, confirm the approval
+  panel is visible.
+- Confirm Approve, Reject, and Request changes buttons are visible.
+- Select Reject without a comment and confirm the frontend shows that rejections
+  require a comment.
+- Optional non-final branch: select Request changes with a short comment and
+  confirm approval history records the decision while the workflow remains
+  `WAITING_APPROVAL`.
+- Select Approve with a bounded comment.
+- Confirm the workflow refreshes to `APPROVED`.
+- Confirm approval history shows the final decision, actor, comment, previous
+  status, next status, and decided timestamp.
+- Confirm duplicate or invalid-state approval attempts show a readable 409
+  conflict message.
+- Sign in as `viewer@example.test` or another non-approval role and confirm a
+  forbidden approval action shows an understandable 403 message. Backend RBAC
+  remains authoritative.
+
+### Resume Flow
+
+- After approving the waiting workflow, confirm the Resume workflow action is
+  visible.
+- Select Resume workflow.
+- Confirm the frontend calls `POST /api/v1/workflows/{workflow_id}/resume`; it
+  must not call `/run` for resume.
+- Confirm the workflow refreshes to `COMPLETED`.
+- Confirm workflow detail, persisted events, and approval history refresh after
+  resume.
+- Confirm a completed/already-resumed workflow shows a readable 409 conflict if
+  resume is attempted again.
+- Open `/workflows/e1771f90-a85e-5684-98d1-7dd0458a4e89` to smoke a seeded
+  resume-ready workflow without changing the primary live walkthrough workflow.
+- Open `/workflows/6b99fd38-1ecf-5213-8d69-43abcca20856` to verify read-only
+  completed approval/resume history.
+
 ### Live Timeline
 
 - On the workflow detail page, confirm the timeline shows one of:
@@ -90,6 +129,10 @@ token is present.
   live messages.
 - Use the Reconnect button to verify manual reconnect behavior.
 - Confirm malformed or missing events are not displayed as fake data.
+- Confirm approval and resume events appear from persisted backend events after
+  refresh. Live WebSocket streaming remains the existing SPEC-008 behavior.
+- Confirm no fake streamed events are created when Redis or WebSocket delivery
+  is unavailable.
 
 ### Create Workflow
 
@@ -137,6 +180,10 @@ Capture these for final presentation if screenshots are needed:
 - Timeline connection state on the workflow detail page.
 - `/workflows/new` create form filled with RFQ-001-style data.
 - Runtime result panel after selecting `Run workflow`.
+- Approval panel on a `WAITING_APPROVAL` workflow.
+- Approval history after approve or request changes.
+- Resume action and completed state after explicit resume.
+- Timeline showing approval/resume events.
 - RBAC denial message from a role that cannot run workflows.
 
 ## Auth And Session Expectations
@@ -151,7 +198,6 @@ Capture these for final presentation if screenshots are needed:
 
 ## Known Limitations
 
-- No `/resume` approval continuation yet.
 - No real LLM provider behavior yet.
 - No RAG or document upload/indexing UI yet.
 - No admin user-management UI yet.

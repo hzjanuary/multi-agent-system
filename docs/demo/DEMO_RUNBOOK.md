@@ -9,13 +9,15 @@ demo. It demonstrates the current implemented product path:
 - View deterministic seeded workflows.
 - Create a procurement quotation workflow.
 - Run the deterministic runtime.
+- Submit human approval decisions.
+- Resume approved workflows through the explicit `/resume` path.
 - Inspect persisted workflow events.
 - Watch the workflow detail live event timeline.
 - Show RBAC behavior through existing backend permissions.
 
 This demo uses existing backend, frontend, runtime, workflow, and streaming
-behavior. It does not add real LLM reasoning, RAG, approval continuation, email
-sending, or production seed management.
+behavior. It does not add real LLM reasoning, RAG, email sending, or production
+seed management.
 
 For the board-stable demo, keep LLM runtime mode disabled:
 
@@ -108,6 +110,9 @@ Routes to use during the demo:
 - `/workflows/new`
 - `/workflows/dc5e7963-c2a4-5ad6-8f70-0741431597f0`
 - `/workflows/b0111d45-aff5-5b86-9ffd-9417704c9bab`
+- `/workflows/e1771f90-a85e-5684-98d1-7dd0458a4e89`
+- `/workflows/6b99fd38-1ecf-5213-8d69-43abcca20856`
+- `/workflows/a14f5f3d-b4e0-5397-ad81-7f97913090d1`
 - `/workflows/548e9b1b-4e35-5036-8604-fccbf9a12932`
 
 ## Demo Credentials
@@ -137,7 +142,10 @@ The seed command creates deterministic RFQ-001 workflow examples:
 | Key | Stable workflow ID | Expected status | Demo use |
 | --- | --- | --- | --- |
 | `rfq-001-clean-created` | `dc5e7963-c2a4-5ad6-8f70-0741431597f0` | `CREATED` | Primary workflow ready to run |
-| `rfq-001-waiting-approval-history` | `b0111d45-aff5-5b86-9ffd-9417704c9bab` | `WAITING_APPROVAL` | Detail page and event backlog demo |
+| `rfq-001-waiting-approval-history` | `b0111d45-aff5-5b86-9ffd-9417704c9bab` | `WAITING_APPROVAL` | Live approval walkthrough with no final seeded decision |
+| `rfq-001-approved-ready-to-resume` | `e1771f90-a85e-5684-98d1-7dd0458a4e89` | `APPROVED` | Resume-ready workflow with final approval history |
+| `rfq-001-completed-resumed-history` | `6b99fd38-1ecf-5213-8d69-43abcca20856` | `COMPLETED` | Read-only approval and resume timeline history |
+| `rfq-001-rejected-history` | `a14f5f3d-b4e0-5397-ad81-7f97913090d1` | `REJECTED` | Read-only rejection history |
 | `rfq-001-completed-conflict` | `548e9b1b-4e35-5036-8604-fccbf9a12932` | `COMPLETED` | Optional run conflict/precondition demo |
 
 The primary RFQ-001 reference data is:
@@ -149,8 +157,10 @@ The primary RFQ-001 reference data is:
 - Contract: `CON-2026-ACME-IT`
 - Static expected total: `47628 USD`
 
-The deterministic runtime stops at `WAITING_APPROVAL`; approval continuation and
-`/resume` are deferred.
+The deterministic `/run` path stops at `WAITING_APPROVAL`. Human approval is
+explicit. After a Manager/Admin approves a waiting workflow, the separate
+`/resume` path continues the bounded post-approval email-preparation stage and
+reaches `COMPLETED` without sending real email.
 
 ## Board Walkthrough
 
@@ -165,8 +175,29 @@ The deterministic runtime stops at `WAITING_APPROVAL`; approval continuation and
    `/workflows/b0111d45-aff5-5b86-9ffd-9417704c9bab`.
 8. Show workflow status, request/state details, persisted event backlog, and
    live event timeline connection state.
-9. Open `/workflows/new`.
-10. Create a new procurement quotation workflow with:
+9. Show that approval history is empty and the approval panel is available.
+10. Optional branch: select `Request changes` with a short comment. Confirm the
+    workflow remains `WAITING_APPROVAL` and the history shows a non-final
+    changes-requested decision.
+11. Select `Approve` with a comment such as:
+
+```text
+Approved for customer response after warranty review.
+```
+
+12. Confirm the workflow becomes `APPROVED`, approval history shows the final
+    decision, and the event timeline includes the approval event.
+13. Select `Resume workflow`.
+14. Confirm the workflow reaches `COMPLETED`, the runtime result says the
+    resume completed, and the timeline includes resume-requested,
+    email-preparation, and resumed events. No real email is sent.
+15. Optional read-only history: open
+    `/workflows/6b99fd38-1ecf-5213-8d69-43abcca20856` to show a completed
+    approval/resume history, or
+    `/workflows/a14f5f3d-b4e0-5397-ad81-7f97913090d1` to show a rejected
+    workflow.
+16. Open `/workflows/new`.
+17. Create a new procurement quotation workflow with:
 
 ```text
 Domain: it_equipment
@@ -176,16 +207,19 @@ Items JSON: [{"name":"Standard business laptop","quantity":50}]
 Metadata JSON: {"tags":{"source":"board-demo"},"attributes":{}}
 ```
 
-11. Open the created workflow detail page from the success link.
-12. Select `Run workflow`.
-13. Confirm the runtime result shows `WAITING_APPROVAL` behavior and completed
+18. Open the created workflow detail page from the success link.
+19. Select `Run workflow`.
+20. Confirm the runtime result shows `WAITING_APPROVAL` behavior and completed
     stages up to approval.
-14. Confirm the detail page refreshes persisted events and the live timeline
+21. Confirm the detail page refreshes persisted events and the live timeline
     remains visible.
-15. Optional RBAC checkpoint: sign out, sign in as `sales@example.test`, open a
+22. Optional RBAC checkpoint: sign out, sign in as `sales@example.test`, open a
     workflow detail page, and run the workflow. The backend should reject the
     run action with a clear 403-style message because Sales can create/read but
     cannot run workflows.
+23. Optional approval RBAC checkpoint: sign in as `viewer@example.test`, open
+    the waiting-approval workflow, and try an approval action. The backend
+    should reject the decision with an understandable forbidden message.
 
 ## Expected Checkpoints
 
@@ -195,12 +229,17 @@ Metadata JSON: {"tags":{"source":"board-demo"},"attributes":{}}
 - Seeded workflow detail loads by stable workflow ID.
 - Event backlog is visible for the waiting-approval workflow.
 - Timeline shows a clear connection state.
+- Approval panel is visible for a `WAITING_APPROVAL` workflow.
+- `request_changes` records a non-final approval history entry.
+- Approval changes the workflow to `APPROVED`.
+- Resume changes the workflow to `COMPLETED`.
+- Approval and resume events appear in the persisted timeline after refresh.
 - Create workflow succeeds through the backend API.
 - Run workflow succeeds for Manager/Admin and reaches the expected
   `WAITING_APPROVAL` behavior.
 - A denied RBAC action shows an understandable error.
-- No screen claims that real LLM reasoning, RAG, approval continuation, or email
-  sending is implemented.
+- No screen claims that real LLM reasoning, RAG, or email sending is
+  implemented.
 
 ## Troubleshooting
 
@@ -271,6 +310,14 @@ docker-compose logs redis
 The persisted event backlog still comes from Postgres, but live WebSocket
 delivery depends on Redis pub/sub.
 
+### Approval Or Resume Returns 409
+
+Refresh the workflow detail page and check the current workflow status. Approval
+decisions are accepted only from `WAITING_APPROVAL`. Resume is accepted only
+after a final approve decision leaves the workflow in `APPROVED`. Rejected,
+completed, request-changes-only, and already-resumed workflows should return
+clear conflict messages.
+
 ### npm Audit Warnings
 
 `npm install` may report package audit notices. Treat them as package-manager
@@ -284,7 +331,6 @@ Treat it as non-blocking if the frontend test command exits successfully.
 
 ## Known Limitations
 
-- No `/resume` endpoint or human approval continuation.
 - Real LLM provider behavior is optional local experimentation only; the
   board-stable demo defaults to deterministic runtime mode.
 - No RAG or document upload/indexing UI.

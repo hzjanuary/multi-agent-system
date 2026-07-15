@@ -197,8 +197,8 @@ changes.
 - No RAG or document indexing.
 - No frontend provider-management UI.
 - No admin key management.
-- No `/resume` or human approval continuation.
+- No LLM-backed approval continuation; human approval/resume uses the
+  deterministic SPEC-012 workflow path.
 - No LLM token streaming to frontend.
 - No provider cost dashboard.
 - No production secret vault integration.
-

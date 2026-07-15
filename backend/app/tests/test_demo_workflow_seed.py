@@ -8,6 +8,16 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.approvals import (
+    APPROVAL_APPROVED_EVENT,
+    APPROVAL_CHANGES_REQUESTED_EVENT,
+    APPROVAL_HISTORY_KEY,
+    APPROVAL_REJECTED_EVENT,
+    APPROVAL_STATE_KEY,
+    WORKFLOW_RESUME_REQUESTED_EVENT,
+    WORKFLOW_RESUMED_EVENT,
+)
+from app.approvals.schemas import ApprovalDecisionType, ApprovalRecord
 from app.config import get_settings
 from app.db import create_database_engine, create_session_factory
 from app.demo import (
@@ -103,6 +113,14 @@ async def test_seeded_workflows_are_readable_through_workflow_service(
         seeded_by_key["rfq-001-waiting-approval-history"].status
         is WorkflowStatus.WAITING_APPROVAL
     )
+    assert (
+        seeded_by_key["rfq-001-approved-ready-to-resume"].status
+        is WorkflowStatus.APPROVED
+    )
+    assert (
+        seeded_by_key["rfq-001-completed-resumed-history"].status
+        is WorkflowStatus.COMPLETED
+    )
 
 
 @pytest.mark.asyncio
@@ -121,13 +139,130 @@ async def test_seeded_event_backlog_is_readable_and_ordered(
         history_workflow.stable_workflow_id,
     )
 
-    assert [event.event_id for event in events] == [
-        event.stable_event_id for event in DEMO_WORKFLOW_EVENTS
+    expected_event_ids = [
+        event.stable_event_id
+        for event in DEMO_WORKFLOW_EVENTS
+        if event.workflow_key == history_workflow.key
     ]
+    assert [event.event_id for event in events] == expected_event_ids
     assert events[0].event_type == "workflow.runtime.started"
     assert events[0].status is WorkflowEventStatus.STARTED
     assert events[-1].event_type == "workflow.runtime.waiting_for_approval"
     assert all(event.payload["demo_reference_only"] is True for event in events)
+
+
+@pytest.mark.asyncio
+async def test_seeded_approval_examples_match_approval_contracts(
+    db_session: AsyncSession,
+) -> None:
+    await seed_demo_workflows_and_events(db_session)
+    workflows_by_key = {
+        definition.key: await db_session.get(Workflow, definition.stable_workflow_id)
+        for definition in DEMO_WORKFLOWS
+    }
+
+    waiting = workflows_by_key["rfq-001-waiting-approval-history"]
+    approved = workflows_by_key["rfq-001-approved-ready-to-resume"]
+    completed = workflows_by_key["rfq-001-completed-resumed-history"]
+    rejected = workflows_by_key["rfq-001-rejected-history"]
+
+    assert waiting is not None
+    waiting_state = WorkflowState.model_validate(waiting.state_payload)
+    assert waiting_state.status is WorkflowStatus.WAITING_APPROVAL
+    assert waiting_state.approval[APPROVAL_HISTORY_KEY] == []
+    assert waiting_state.approval[APPROVAL_STATE_KEY]["can_resume"] is False
+
+    assert approved is not None
+    approved_state = WorkflowState.model_validate(approved.state_payload)
+    approved_records = _approval_records(approved_state)
+    assert approved_state.status is WorkflowStatus.APPROVED
+    assert [record.decision for record in approved_records] == [
+        ApprovalDecisionType.APPROVE,
+    ]
+    assert approved_state.approval[APPROVAL_STATE_KEY]["can_resume"] is True
+
+    assert completed is not None
+    completed_state = WorkflowState.model_validate(completed.state_payload)
+    completed_records = _approval_records(completed_state)
+    assert completed_state.status is WorkflowStatus.COMPLETED
+    assert [record.decision for record in completed_records] == [
+        ApprovalDecisionType.REQUEST_CHANGES,
+        ApprovalDecisionType.APPROVE,
+    ]
+    assert completed_state.runtime_context["resume_state"] == {
+        "resumed": True,
+        "resumed_by": str(completed_records[-1].actor_id),
+        "request_id": "demo-resume-completed",
+        "completed_stages": ["email_preparation"],
+    }
+    assert completed_state.email["email_sent"] is False
+
+    assert rejected is not None
+    rejected_state = WorkflowState.model_validate(rejected.state_payload)
+    rejected_records = _approval_records(rejected_state)
+    assert rejected_state.status is WorkflowStatus.REJECTED
+    assert [record.decision for record in rejected_records] == [
+        ApprovalDecisionType.REJECT,
+    ]
+    assert rejected_state.approval[APPROVAL_STATE_KEY]["can_resume"] is False
+
+
+@pytest.mark.asyncio
+async def test_seeded_approval_resume_events_use_known_constants(
+    db_session: AsyncSession,
+) -> None:
+    await seed_demo_workflows_and_events(db_session)
+    events = await _demo_events(db_session)
+    events_by_workflow_key: dict[str, list[WorkflowEvent]] = {}
+    workflow_key_by_id = {
+        definition.stable_workflow_id: definition.key for definition in DEMO_WORKFLOWS
+    }
+    for event in events:
+        workflow_key = workflow_key_by_id[event.workflow_id]
+        events_by_workflow_key.setdefault(workflow_key, []).append(event)
+
+    approved_events = events_by_workflow_key["rfq-001-approved-ready-to-resume"]
+    assert [event.event_type for event in approved_events] == [
+        "workflow.runtime.waiting_for_approval",
+        APPROVAL_APPROVED_EVENT,
+    ]
+
+    completed_events = events_by_workflow_key["rfq-001-completed-resumed-history"]
+    assert [event.event_type for event in completed_events] == [
+        APPROVAL_CHANGES_REQUESTED_EVENT,
+        APPROVAL_APPROVED_EVENT,
+        WORKFLOW_RESUME_REQUESTED_EVENT,
+        "workflow.node.started",
+        "workflow.node.completed",
+        WORKFLOW_RESUMED_EVENT,
+    ]
+    assert completed_events[-2].payload["email_sent"] is False
+
+    rejected_events = events_by_workflow_key["rfq-001-rejected-history"]
+    assert [event.event_type for event in rejected_events] == [
+        APPROVAL_REJECTED_EVENT,
+    ]
+
+
+@pytest.mark.asyncio
+async def test_seeded_approval_resume_payloads_do_not_include_secrets(
+    db_session: AsyncSession,
+) -> None:
+    await seed_demo_workflows_and_events(db_session)
+    workflows = await _demo_workflows(db_session)
+    events = await _demo_events(db_session)
+    combined_payload_text = " ".join(
+        [
+            *(str(workflow.state_payload) for workflow in workflows),
+            *(str(event.payload) for event in events),
+        ],
+    ).lower()
+
+    assert "api_key" not in combined_payload_text
+    assert "authorization" not in combined_payload_text
+    assert "password" not in combined_payload_text
+    assert "provider_payload" not in combined_payload_text
+    assert "raw_prompt" not in combined_payload_text
 
 
 @pytest.mark.asyncio
@@ -242,3 +377,9 @@ async def _demo_event_count(session: AsyncSession) -> int:
     )
     assert count is not None
     return count
+
+
+def _approval_records(state: WorkflowState) -> list[ApprovalRecord]:
+    raw_records = state.approval.get(APPROVAL_HISTORY_KEY, [])
+    assert isinstance(raw_records, list)
+    return [ApprovalRecord.model_validate(record) for record in raw_records]

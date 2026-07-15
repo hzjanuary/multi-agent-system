@@ -58,13 +58,20 @@ does not expose a public API, and does not run automatically.
 
 ## Demo Workflow Seeds
 
-TASK 010.3 provides an explicit local/demo seed helper for the three workflow
-examples defined by the contract:
+TASK 010.3 and SPEC-012 provide an explicit local/demo seed helper for the
+workflow examples defined by the contract:
 
 1. `rfq-001-clean-created` - clean workflow in `CREATED`, ready to run.
 2. `rfq-001-waiting-approval-history` - workflow already at
-   `WAITING_APPROVAL` with representative persisted event history.
-3. `rfq-001-completed-conflict` - optional terminal workflow for demonstrating
+   `WAITING_APPROVAL` with representative persisted event history and no final
+   approval decision, so Manager/Admin can approve it live.
+3. `rfq-001-approved-ready-to-resume` - workflow in `APPROVED` with a final
+   approval record and `approval_state.can_resume=true` for explicit resume.
+4. `rfq-001-completed-resumed-history` - workflow in `COMPLETED` with
+   request-changes, approval, email-preparation, and resume event history.
+5. `rfq-001-rejected-history` - workflow in `REJECTED` with read-only approval
+   rejection history.
+6. `rfq-001-completed-conflict` - optional terminal workflow for demonstrating
    existing runtime precondition/conflict behavior.
 
 The helper lives in `backend/app/demo/workflow_seed.py` and exposes
@@ -83,6 +90,16 @@ The event history contract for `rfq-001-waiting-approval-history` includes:
 - `workflow.node.completed` for retrieval
 - `workflow.node.completed` for quotation
 - `workflow.runtime.waiting_for_approval`
+
+Additional SPEC-012 demo examples include persisted approval and resume events:
+
+- `workflow.approval.approved`
+- `workflow.approval.rejected`
+- `workflow.approval.changes_requested`
+- `workflow.resume_requested`
+- `workflow.node.started` for `email_preparation`
+- `workflow.node.completed` for `email_preparation`
+- `workflow.resumed`
 
 All event payloads must stay bounded and include `demo_reference: true` where
 they carry static demo references.
