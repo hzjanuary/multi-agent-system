@@ -29,3 +29,15 @@ class KnowledgeIngestionError(KnowledgeBaseError):
 
 class KnowledgeIngestionConfigurationError(KnowledgeIngestionError):
     """Raised when demo knowledge ingestion is not configured safely."""
+
+
+class KnowledgeRetrievalError(KnowledgeBaseError):
+    """Base class for knowledge retrieval errors."""
+
+
+class KnowledgeRetrievalUnavailableError(KnowledgeRetrievalError):
+    """Raised when embedding or vector search providers are unavailable."""
+
+
+class KnowledgeDocumentNotFoundError(KnowledgeRetrievalError):
+    """Raised when a requested knowledge document is not in the catalog."""

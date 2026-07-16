@@ -19,7 +19,7 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-013 RAG and Document Knowledge Base - TASK 013.3 in progress
+- SPEC-013 RAG and Document Knowledge Base - TASK 013.4 implemented / pending review
 
 ## Current SPEC-013 Planning State
 
@@ -190,6 +190,49 @@ Behavior:
 - Does not implement retrieval/search APIs, runtime RAG grounding, frontend
   citation panels, upload UI, migrations, database models, real embedding
   providers, provider SDKs, or backend startup auto-ingestion.
+
+## TASK 013.4 Implementation State
+
+Deliverables:
+
+- `backend/app/knowledge/retrieval.py`
+- `backend/app/api/v1/knowledge.py`
+- `backend/app/api/v1/__init__.py` updated
+- `backend/app/main.py` updated
+- `backend/app/core/dependencies.py` updated
+- `backend/app/knowledge/schemas.py` updated with catalog response DTOs
+- `backend/app/knowledge/exceptions.py` updated
+- `backend/app/tests/test_knowledge_retrieval.py`
+- `backend/app/tests/test_knowledge_api.py`
+- `backend/app/tests/test_knowledge_contracts.py` updated
+- `backend/README.md` updated
+- `docs/demo/DATASET_INVENTORY.md` updated
+- `docs/demo/DEMO_RUNBOOK.md` updated
+
+Behavior:
+
+- Adds provider-independent `KnowledgeRetrievalService` that embeds search
+  queries through `EmbeddingService`, searches Qdrant through the existing
+  `VectorStore` abstraction, and normalizes vector payloads into bounded
+  `KnowledgeRetrievalResult` and `KnowledgeCitation` DTOs.
+- Adds authenticated read-only API routes:
+  `POST /api/v1/knowledge/search`,
+  `GET /api/v1/knowledge/documents`, and
+  `GET /api/v1/knowledge/documents/{document_id}`.
+- Uses the same baseline read roles as workflow reads: Admin, Manager, Sales,
+  Legal, Finance, and Viewer.
+- Returns empty search results when the configured knowledge collection is not
+  present yet, so local API reads remain safe before ingestion.
+- Applies native exact-match vector filters for single source type/document id
+  and domain; multi-value filters and minimum-score checks are applied safely
+  in the retrieval service.
+- Catalog endpoints return deterministic demo document metadata and bounded
+  previews only; full source documents remain in object storage/demo contracts.
+- Maps missing documents to 404 and retrieval provider failures to safe 503
+  responses.
+- Does not implement runtime RAG grounding, frontend citation panels, upload
+  UI, migrations, database models, real embedding providers, chat LLM calls,
+  workflow event publishing, or backend startup auto-ingestion.
 
 ## Current SPEC-012 Planning State
 

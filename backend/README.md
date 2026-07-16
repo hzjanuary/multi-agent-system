@@ -469,9 +469,24 @@ To inspect the ingestion plan without writing to MinIO or Qdrant:
 docker-compose run --rm backend-test python -m app.knowledge.ingest_demo --confirm-local-demo --dry-run --json
 ```
 
-This slice does not implement retrieval/search APIs, runtime RAG grounding,
-frontend evidence panels, migrations, database models, upload UI, or real
-embedding providers.
+TASK 013.4 adds authenticated read-only knowledge retrieval APIs:
+
+```text
+POST /api/v1/knowledge/search
+GET  /api/v1/knowledge/documents
+GET  /api/v1/knowledge/documents/{document_id}
+```
+
+Search embeds the query through the configured embedding service, uses the
+default fake embedding provider in local/test settings, queries Qdrant through
+the existing `VectorStore` abstraction, and returns bounded
+`KnowledgeSearchResponse` results with safe citation metadata. The document
+catalog endpoints return deterministic demo document metadata and bounded
+previews without exposing full unbounded source content.
+
+This slice does not implement runtime RAG grounding, frontend evidence panels,
+migrations, database models, upload UI, real embedding providers, or chat LLM
+calls.
 
 ## Workflow State Foundation
 

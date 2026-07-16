@@ -81,8 +81,9 @@ docker-compose run --rm backend-test python -m app.knowledge.ingest_demo --confi
 
 The knowledge ingestion command is explicit and local-demo only. It chunks
 deterministic demo procurement documents, stores source text in MinIO, and
-upserts fake-embedded chunk vectors into Qdrant. Retrieval/search APIs and
-frontend citation panels are still later SPEC-013 tasks.
+upserts fake-embedded chunk vectors into Qdrant. Authenticated read-only
+knowledge search/catalog APIs are available under `/api/v1/knowledge`; runtime
+RAG grounding and frontend citation panels are still later SPEC-013 tasks.
 
 Start the backend service after migrations and seeding:
 
@@ -252,8 +253,9 @@ Metadata JSON: {"tags":{"source":"board-demo"},"attributes":{}}
 - A denied RBAC action shows an understandable error.
 - No screen claims that real LLM reasoning, RAG, or email sending is
   implemented.
-- Demo knowledge documents can be ingested into MinIO/Qdrant, but retrieval
-  grounding is not yet wired into runtime or frontend views.
+- Demo knowledge documents can be ingested into MinIO/Qdrant and searched
+  through authenticated backend knowledge APIs, but retrieval grounding is not
+  yet wired into runtime or frontend views.
 
 ## Troubleshooting
 
@@ -370,8 +372,8 @@ Treat it as non-blocking if the frontend test command exits successfully.
 
 - Real LLM provider behavior is optional local experimentation only; the
   board-stable demo defaults to deterministic runtime mode.
-- RAG retrieval/runtime/frontend citation display are not wired yet. TASK 013.3
-  only adds explicit local-demo document ingestion into MinIO and Qdrant.
+- Runtime RAG grounding and frontend citation display are not wired yet. TASK
+  013.4 adds backend knowledge search/catalog APIs only.
 - No document upload/indexing UI.
 - No admin user-management UI.
 - No production deployment automation.

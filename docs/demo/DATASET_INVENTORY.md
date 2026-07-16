@@ -183,5 +183,19 @@ Rerunning the confirmed ingestion command is safe: object keys and vector point
 IDs are deterministic, so MinIO objects are overwritten/reused and Qdrant points
 are upserted without duplicate chunks.
 
-TASK 013.3 does not implement retrieval/search APIs, runtime RAG grounding,
-frontend evidence panels, upload UI, migrations, or database models.
+TASK 013.4 adds read-only authenticated knowledge APIs for the ingested demo
+knowledge:
+
+```text
+POST /api/v1/knowledge/search
+GET  /api/v1/knowledge/documents
+GET  /api/v1/knowledge/documents/{document_id}
+```
+
+Search uses the configured embedding service, which defaults to deterministic
+fake embeddings for local/demo use, and queries Qdrant through the existing
+vector store abstraction. Results include bounded chunk text and citation
+metadata only; raw embeddings and raw vector payloads are not API responses.
+
+Runtime RAG grounding, frontend evidence panels, upload UI, migrations, and
+database models remain deferred to later SPEC-013 tasks.

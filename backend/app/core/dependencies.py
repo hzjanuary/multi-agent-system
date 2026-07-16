@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
 from app.db import get_db_session
+from app.knowledge.embeddings import create_embedding_service
+from app.knowledge.ingestion import DEFAULT_KNOWLEDGE_COLLECTION_NAME
 from app.llm.service import LLMService
 from app.runtime.service import RuntimeService
 from app.streaming import (
@@ -18,11 +20,13 @@ from app.streaming import (
     create_redis_workflow_event_publisher,
     create_redis_workflow_event_subscriber,
 )
+from app.vectorstore import QdrantVectorStore, create_qdrant_vector_store
 from app.workflows.events import WorkflowEventService
 from app.workflows.service import WorkflowService
 
 if TYPE_CHECKING:
     from app.approvals.service import ApprovalService
+    from app.knowledge.retrieval import KnowledgeRetrievalService
 
 
 def provide_settings() -> Settings:
@@ -116,3 +120,22 @@ def provide_runtime_service(
         llm_settings=llm_settings,
         llm_service=llm_service,
     )
+
+
+async def provide_knowledge_retrieval_service(
+    settings: Annotated[Settings, Depends(provide_settings)],
+) -> AsyncIterator["KnowledgeRetrievalService"]:
+    """Provide request-scoped knowledge retrieval service dependencies."""
+    from app.knowledge.retrieval import KnowledgeRetrievalService
+
+    vector_store = create_qdrant_vector_store(settings.qdrant_url)
+    embedding_service = create_embedding_service(settings.embedding_settings)
+    try:
+        yield KnowledgeRetrievalService(
+            vector_store=vector_store,
+            embedding_service=embedding_service,
+            collection_name=DEFAULT_KNOWLEDGE_COLLECTION_NAME,
+        )
+    finally:
+        if isinstance(vector_store, QdrantVectorStore):
+            await vector_store.close()

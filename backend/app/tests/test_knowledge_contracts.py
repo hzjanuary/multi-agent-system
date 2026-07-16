@@ -13,6 +13,9 @@ from app.knowledge.schemas import (
     KnowledgeChunkMetadata,
     KnowledgeCitation,
     KnowledgeDocument,
+    KnowledgeDocumentCatalogItem,
+    KnowledgeDocumentDetailResponse,
+    KnowledgeDocumentListResponse,
     KnowledgeDocumentMetadata,
     KnowledgeDocumentSourceType,
     KnowledgeRetrievalResult,
@@ -195,3 +198,23 @@ def test_search_request_rejects_invalid_bounds() -> None:
 
     with pytest.raises(ValidationError):
         KnowledgeSearchRequest(query="   ")
+
+
+def test_document_catalog_responses_are_metadata_only_and_bounded() -> None:
+    item = KnowledgeDocumentCatalogItem.from_metadata(_document_metadata())
+    list_response = KnowledgeDocumentListResponse(documents=(item,), count=1)
+    detail_response = KnowledgeDocumentDetailResponse(
+        document=item,
+        content_preview="Discount policy preview.",
+    )
+
+    assert list_response.documents == (item,)
+    assert detail_response.document.document_id == "policy-001"
+    assert "content" not in item.model_dump()
+
+
+def test_document_catalog_count_must_match_returned_documents() -> None:
+    item = KnowledgeDocumentCatalogItem.from_metadata(_document_metadata())
+
+    with pytest.raises(ValidationError):
+        KnowledgeDocumentListResponse(documents=(item,), count=2)

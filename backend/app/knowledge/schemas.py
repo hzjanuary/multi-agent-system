@@ -348,6 +348,112 @@ class KnowledgeSearchResponse(BaseModel):
         return tuple(value) if isinstance(value, list) else value
 
 
+class KnowledgeDocumentCatalogItem(BaseModel):
+    """Bounded document catalog metadata for knowledge read APIs."""
+
+    model_config = ConfigDict(frozen=True)
+
+    document_id: str = Field(min_length=1, max_length=MAX_IDENTIFIER_LENGTH)
+    title: str = Field(min_length=1, max_length=MAX_TITLE_LENGTH)
+    source_type: KnowledgeDocumentSourceType
+    domain: str = Field(min_length=1, max_length=MAX_DOMAIN_LENGTH)
+    version: str | None = Field(
+        default=None, min_length=1, max_length=MAX_VERSION_LENGTH
+    )
+    effective_date: date | None = None
+    owner_team: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=MAX_OWNER_TEAM_LENGTH,
+    )
+    object_storage_key: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=MAX_STORAGE_KEY_LENGTH,
+    )
+    checksum: str | None = Field(
+        default=None, min_length=1, max_length=MAX_CHECKSUM_LENGTH
+    )
+    content_type: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=MAX_CONTENT_TYPE_LENGTH,
+    )
+    dataset_path: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=MAX_DATASET_PATH_LENGTH,
+    )
+    tags: tuple[str, ...] = Field(default_factory=tuple, max_length=MAX_TAGS)
+    attributes: dict[str, Any] = Field(default_factory=dict)
+
+    @classmethod
+    def from_metadata(
+        cls,
+        metadata: KnowledgeDocumentMetadata,
+    ) -> KnowledgeDocumentCatalogItem:
+        """Build a catalog item from safe document metadata."""
+        return cls.model_validate(metadata.model_dump())
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def coerce_tags(
+        cls, value: tuple[str, ...] | list[str]
+    ) -> tuple[str, ...] | list[str]:
+        """Accept list input while storing tags immutably."""
+        return tuple(value) if isinstance(value, list) else value
+
+    @field_validator("attributes")
+    @classmethod
+    def validate_attributes(cls, value: dict[str, Any]) -> dict[str, Any]:
+        """Ensure catalog attributes remain safe JSON-compatible metadata."""
+        return validate_json_metadata(value, "attributes")
+
+
+class KnowledgeDocumentListResponse(BaseModel):
+    """Read-only knowledge document catalog response."""
+
+    model_config = ConfigDict(frozen=True)
+
+    documents: tuple[KnowledgeDocumentCatalogItem, ...] = Field(
+        default_factory=tuple,
+        max_length=MAX_RESULTS,
+    )
+    count: int = Field(ge=0)
+
+    @field_validator("documents", mode="before")
+    @classmethod
+    def coerce_documents(
+        cls,
+        value: (
+            tuple[KnowledgeDocumentCatalogItem, ...]
+            | list[KnowledgeDocumentCatalogItem]
+        ),
+    ) -> tuple[KnowledgeDocumentCatalogItem, ...] | list[KnowledgeDocumentCatalogItem]:
+        """Accept list input while storing documents immutably."""
+        return tuple(value) if isinstance(value, list) else value
+
+    @model_validator(mode="after")
+    def validate_count(self) -> KnowledgeDocumentListResponse:
+        """Keep count aligned with returned bounded catalog items."""
+        if self.count != len(self.documents):
+            raise ValueError("count must match number of documents")
+        return self
+
+
+class KnowledgeDocumentDetailResponse(BaseModel):
+    """Read-only document detail response with optional bounded preview."""
+
+    model_config = ConfigDict(frozen=True)
+
+    document: KnowledgeDocumentCatalogItem
+    content_preview: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=MAX_CITATION_EXCERPT_CHARS,
+    )
+
+
 class ChunkingConfig(BaseModel):
     """Deterministic character-based chunking configuration."""
 
