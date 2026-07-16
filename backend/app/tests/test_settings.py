@@ -15,6 +15,11 @@ def test_settings_load_default_development_values() -> None:
     assert settings.api_v1_prefix == "/api/v1"
     assert settings.backend_cors_origins == ("http://localhost:3000",)
     assert settings.log_level == "INFO"
+    assert settings.log_format == "json"
+    assert settings.log_redaction_enabled is True
+    assert settings.metrics_enabled is True
+    assert settings.metrics_route_enabled is True
+    assert settings.metrics_max_path_label_length == 120
     assert settings.jwt_secret_key == "development-only-change-me-32-bytes-minimum"
     assert settings.jwt_algorithm == "HS256"
     assert settings.access_token_expire_minutes == 30
@@ -40,6 +45,11 @@ def test_settings_can_be_overridden_by_environment(
         "https://app.example.com, https://admin.example.com",
     )
     monkeypatch.setenv("LOG_LEVEL", "debug")
+    monkeypatch.setenv("LOG_FORMAT", "TEXT")
+    monkeypatch.setenv("LOG_REDACTION_ENABLED", "false")
+    monkeypatch.setenv("METRICS_ENABLED", "false")
+    monkeypatch.setenv("METRICS_ROUTE_ENABLED", "false")
+    monkeypatch.setenv("METRICS_MAX_PATH_LABEL_LENGTH", "240")
     monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://user:pass@db:5432/app")
     monkeypatch.setenv("REDIS_URL", "redis://redis:6379/1")
     monkeypatch.setenv("QDRANT_URL", "http://qdrant:6333")
@@ -77,6 +87,11 @@ def test_settings_can_be_overridden_by_environment(
         "https://admin.example.com",
     )
     assert settings.log_level == "DEBUG"
+    assert settings.log_format == "text"
+    assert settings.log_redaction_enabled is False
+    assert settings.metrics_enabled is False
+    assert settings.metrics_route_enabled is False
+    assert settings.metrics_max_path_label_length == 240
     assert settings.database_url == "postgresql+asyncpg://user:pass@db:5432/app"
     assert settings.redis_url == "redis://redis:6379/1"
     assert settings.qdrant_url == "http://qdrant:6333"
@@ -112,3 +127,10 @@ def test_testing_environment_can_be_configured(monkeypatch: pytest.MonkeyPatch) 
 
     assert settings.app_env is AppEnvironment.TESTING
     assert settings.debug is False
+
+
+def test_metrics_path_label_length_is_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("METRICS_MAX_PATH_LABEL_LENGTH", "5")
+
+    with pytest.raises(ValueError, match="METRICS_MAX_PATH_LABEL_LENGTH"):
+        Settings()

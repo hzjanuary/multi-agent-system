@@ -19,9 +19,40 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-014 Production Deployment and Observability - TASK 014.3 implemented / pending review
+- SPEC-014 Production Deployment and Observability - TASK 014.4 implemented / pending review
+
+## Current TASK 014.4 Implementation State
+
+Implemented:
+
+- Added vendor-neutral observability helpers for recursive redaction and
+  bounded log/metrics payload values.
+- Hardened structlog configuration with `LOG_FORMAT`,
+  `LOG_REDACTION_ENABLED`, and JSON redaction defaults.
+- Wired request logging to preserve request IDs, avoid headers/bodies, and
+  record bounded HTTP request metrics.
+- Added in-process metrics collection with low-cardinality labels and safe
+  request duration summaries.
+- Added authenticated `GET /api/v1/observability/metrics` for Admin and
+  Manager users.
+- Added observability/metrics settings and production-demo env/Compose wiring.
+- Added tests for recursive redaction, JSON logging, request log safety,
+  metrics aggregation, metrics endpoint auth/RBAC, and settings bounds.
+
+Scope boundaries preserved:
+
+- No telemetry vendor SDK, OpenTelemetry exporter, Prometheus dependency,
+  frontend behavior, workflow API contract change, knowledge API contract
+  change, health/live/ready contract change, migrations, database models,
+  provider SDK, CI workflow, deployment smoke script, production email,
+  Kubernetes/Terraform, cloud resource, real secret, token streaming, or
+  agent-thought streaming was added.
 
 ## Current TASK 014.3 Implementation State
+
+Status:
+
+- Approved.
 
 Implemented:
 
@@ -37,10 +68,10 @@ Implemented:
 
 Scope boundaries preserved:
 
-- No observability/metrics implementation, CI workflow, startup seeding,
-  knowledge ingestion, migration startup behavior, runtime workflow behavior,
-  workflow API behavior, knowledge API behavior, frontend behavior, migrations,
-  database models, cloud resources, or real secrets were added.
+- No CI workflow, startup seeding, knowledge ingestion, migration startup
+  behavior, runtime workflow behavior, workflow API behavior, knowledge API
+  behavior, frontend behavior, migrations, database models, cloud resources, or
+  real secrets were added.
 
 ## Current TASK 014.2 Implementation State
 

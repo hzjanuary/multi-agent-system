@@ -807,11 +807,30 @@ dependency diagnostics.
 - If `X-Request-ID` is provided, the same value is reused.
 - If `X-Request-ID` is missing, a UUID request ID is generated.
 - Every response includes `X-Request-ID`.
-- `RequestLoggingMiddleware` emits JSON-compatible request logs with
+- `RequestLoggingMiddleware` emits structured request logs with
   `request_id`, `method`, `path`, `status_code`, and `duration_ms`.
+- `LOG_FORMAT=json` is the default. `LOG_FORMAT=text` is available for local
+  debugging.
+- `LOG_REDACTION_ENABLED=true` masks sensitive operational fields such as
+  authorization headers, cookies, passwords, secrets, tokens, API keys, raw
+  provider payloads, raw prompts, raw documents, embeddings, and
+  chain-of-thought markers.
+- Request logs do not include request bodies, response bodies, authorization
+  headers, cookies, raw provider payloads, raw prompts, raw documents, or raw
+  embeddings.
+- `METRICS_ENABLED=true` records bounded in-process HTTP request metrics with
+  low-cardinality labels: method, route/path label, and status class.
+- `GET /api/v1/observability/metrics` returns safe JSON metrics for Admin and
+  Manager users only. It does not expose environment variables, headers,
+  request bodies, raw embeddings, provider payloads, prompts, or secrets.
 - CORS origins are loaded from `BACKEND_CORS_ORIGINS`.
 - GZip response compression is enabled.
 - The global exception handler returns the standard JSON error envelope.
+
+The metrics foundation is vendor-neutral. It does not add Prometheus,
+OpenTelemetry, telemetry exporters, provider cost dashboards, token streaming,
+or agent-thought streaming. Real deployments should still protect operational
+metrics at the network/reverse-proxy layer.
 
 ## Test And Check
 

@@ -4,9 +4,9 @@ SPEC-014 separates environment configuration into three profiles: `local-demo`,
 `ci-test`, and `production-demo`. The goal is to keep the board demo
 reproducible while making production-demo configuration explicit and safe.
 
-This is documentation and template guidance only. It does not add Docker
-Compose production profiles, CI workflows, readiness checks, secret vaults, or
-cloud resources.
+This document describes environment profiles for the current Docker Compose
+production-demo, readiness, and observability foundations. CI workflows, secret
+vaults, and cloud resources are not implemented yet.
 
 ## Profiles
 
@@ -105,6 +105,11 @@ Application and API:
 - `DEBUG`
 - `API_V1_PREFIX`
 - `LOG_LEVEL`
+- `LOG_FORMAT`
+- `LOG_REDACTION_ENABLED`
+- `METRICS_ENABLED`
+- `METRICS_ROUTE_ENABLED`
+- `METRICS_MAX_PATH_LABEL_LENGTH`
 
 Core infrastructure:
 
@@ -166,6 +171,19 @@ Readiness:
 
 - `READINESS_TIMEOUT_SECONDS`
 
+Observability defaults:
+
+- `LOG_FORMAT=json`
+- `LOG_REDACTION_ENABLED=true`
+- `METRICS_ENABLED=true`
+- `METRICS_ROUTE_ENABLED=true`
+- `METRICS_MAX_PATH_LABEL_LENGTH=120`
+
+Operational metrics are in-process and safe for production-demo visibility.
+They are not a replacement for an external telemetry backend and do not include
+Prometheus, OpenTelemetry exporters, cost dashboards, token streaming, or
+agent-thought streaming.
+
 Only document variables supported by the current settings module here. Trusted
 host allowlists, production secret vault settings, and deployment-specific
 reverse proxy settings are deferred until the implementation tasks that add
@@ -217,6 +235,10 @@ Before running a production-demo deployment:
 - Use `/health` and `/live` for process checks.
 - Use `/ready` for bounded dependency checks against Postgres, Redis, Qdrant,
   and MinIO/object storage.
+- Protect `GET /api/v1/observability/metrics` with authenticated Admin/Manager
+  access plus deployment network controls.
+- Keep log redaction enabled unless debugging in a controlled local-only
+  environment.
 
 ## Optional RAG-Enabled Demo
 

@@ -44,6 +44,19 @@ class Settings(BaseSettings):
         default="INFO",
         alias="LOG_LEVEL",
     )
+    log_format: Literal["json", "text"] = Field(default="json", alias="LOG_FORMAT")
+    log_redaction_enabled: bool = Field(
+        default=True,
+        alias="LOG_REDACTION_ENABLED",
+    )
+    metrics_enabled: bool = Field(default=True, alias="METRICS_ENABLED")
+    metrics_route_enabled: bool = Field(default=True, alias="METRICS_ROUTE_ENABLED")
+    metrics_max_path_label_length: int = Field(
+        default=120,
+        ge=20,
+        le=500,
+        alias="METRICS_MAX_PATH_LABEL_LENGTH",
+    )
 
     database_url: str = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/enterprise_os",
@@ -204,6 +217,12 @@ class Settings(BaseSettings):
     def normalize_log_level(cls, value: str) -> str:
         """Normalize log level values loaded from environment variables."""
         return value.upper()
+
+    @field_validator("log_format", mode="before")
+    @classmethod
+    def normalize_log_format(cls, value: str) -> str:
+        """Normalize log format values loaded from environment variables."""
+        return value.lower()
 
     @field_validator("llm_provider", "llm_fallback_provider", mode="before")
     @classmethod

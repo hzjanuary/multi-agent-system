@@ -228,6 +228,10 @@ poetry run mypy app
 |---|---|---|
 | `APP_ENV` | Environment mode | `development` |
 | `DEBUG` | Debug mode | `true` |
+| `LOG_FORMAT` | Backend log renderer (`json` or `text`) | `json` |
+| `LOG_REDACTION_ENABLED` | Masks secrets and raw payloads in operational logs | `true` |
+| `METRICS_ENABLED` | Enables bounded in-process backend metrics | `true` |
+| `METRICS_ROUTE_ENABLED` | Enables authenticated metrics endpoint | `true` |
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://postgres:postgres@localhost:5432/enterprise_os` |
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379/0` |
 | `QDRANT_URL` | Qdrant URL | `http://localhost:6333` |
@@ -287,6 +291,7 @@ GET /       Service metadata and endpoint links
 GET /health Overall application health
 GET /ready  Dependency readiness check
 GET /live   Liveness status
+GET /api/v1/observability/metrics  Admin/Manager operational metrics
 ```
 
 ### Authentication

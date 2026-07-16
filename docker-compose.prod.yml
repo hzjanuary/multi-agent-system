@@ -20,6 +20,11 @@ services:
       API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      LOG_REDACTION_ENABLED: ${LOG_REDACTION_ENABLED:-true}
+      METRICS_ENABLED: ${METRICS_ENABLED:-true}
+      METRICS_ROUTE_ENABLED: ${METRICS_ROUTE_ENABLED:-true}
+      METRICS_MAX_PATH_LABEL_LENGTH: ${METRICS_MAX_PATH_LABEL_LENGTH:-120}
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://enterprise_os:change-me-in-production@postgres:5432/enterprise_os}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
