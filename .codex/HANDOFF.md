@@ -19,7 +19,60 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-013 RAG and Document Knowledge Base - TASK 013.7 final review approved / ready to close
+- SPEC-014 Production Deployment and Observability - planning complete / pending review
+
+## Current SPEC-014 Planning State
+
+Planning files:
+
+- `.ai/specs/SPEC-014-production-deployment-observability/spec.md`
+- `.ai/specs/SPEC-014-production-deployment-observability/tasks.md`
+
+Scope:
+
+- Plan a bounded Docker Compose production-demo deployment target for backend,
+  frontend, Postgres, Redis, Qdrant, and MinIO.
+- Separate local demo, production demo, and CI/test environment strategies.
+- Keep secrets injected through environment variables only; do not commit real
+  provider keys, JWT secrets, database passwords, or object storage credentials.
+- Keep local deterministic demo behavior intact: fake LLM provider,
+  `LLM_RUNTIME_ENABLED=false`, fake embeddings, and `RAG_ENABLED=false` remain
+  safe defaults.
+- Plan backend readiness checks for critical dependencies while keeping
+  optional LLM providers out of default readiness failure criteria.
+- Plan frontend production build/container strategy and runtime API/WS URL
+  configuration.
+- Plan structured observability, redaction, metrics foundations, CI quality
+  gates, deployment smoke scripts, and runbook documentation.
+
+Deferrals:
+
+- Kubernetes.
+- Cloud-provider-specific Terraform.
+- Production secret vault integration.
+- Autoscaling.
+- Billing/cost dashboards.
+- Provider-management UI.
+- Token streaming or agent thought streaming.
+- Enterprise SSO.
+- Production email sending.
+- Multi-tenant isolation.
+- Real secrets or real customer data.
+- Global response envelope rollout.
+
+Planning validation:
+
+- `git status --short` completed and shows only SPEC-014 planning docs, SPEC
+  index, and handoff changes.
+- `docker-compose config` passed.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Harness intake recorded as #104.
+
+## SPEC-013 Closure State
+
+Status:
+
+- SPEC-013 approved and ready to close after TASK 013.7 final review.
 
 ## Current SPEC-013 Planning State
 

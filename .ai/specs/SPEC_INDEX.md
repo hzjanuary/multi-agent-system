@@ -36,6 +36,7 @@
 - SPEC-011 LLM Provider Abstraction
 - SPEC-012 Human Approval and Workflow Resume
 - SPEC-013 RAG and Document Knowledge Base
+- SPEC-014 Production Deployment and Observability
 - Future agent/tool specs: Calculator Tool, Compliance Agent, Validation Agent,
   and Email Agent should be assigned non-conflicting SPEC numbers when planned.
 
@@ -56,6 +57,9 @@
 
 ## Phase 8 - Deployment
 
+- Older deployment placeholders remain broad future buckets. SPEC-014 is the
+  active bounded deployment/observability planning slice for the current
+  graduation demo path.
 - SPEC-026 Production Docker
 - SPEC-027 CI/CD
 - SPEC-028 Deployment Guide
