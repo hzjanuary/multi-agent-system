@@ -16,10 +16,45 @@ Closed specs:
 - SPEC-010 Demo Dataset Seeding and Demo Script - Approved / Closed
 - SPEC-011 LLM Provider Abstraction - Approved / Closed
 - SPEC-012 Human Approval and Workflow Resume - Approved / Closed
+- SPEC-013 RAG and Document Knowledge Base - Approved / Closed
 
 Current active spec:
 
-- SPEC-014 Production Deployment and Observability - TASK 014.5 implemented / pending review
+- SPEC-014 Production Deployment and Observability - TASK 014.6 implemented / pending review
+
+## Current TASK 014.6 Implementation State
+
+Implemented:
+
+- Added `docs/deployment/RUNBOOK.md` as the production-demo operator runbook.
+- Added `docs/deployment/DEMO_PACKAGE.md` for board-demo packaging and
+  walkthrough evidence.
+- Added `docs/deployment/SMOKE_CHECKS.md` for automated and manual smoke
+  checks.
+- Added `docs/deployment/BACKUP_RESTORE.md` for honest backup, restore, and
+  rollback basics.
+- Added `docs/deployment/TROUBLESHOOTING.md` for common production-demo and
+  board-demo failures.
+- Updated deployment, demo, root, backend, frontend, and scripts docs with
+  concise cross-links.
+
+Scope boundaries preserved:
+
+- No backend behavior, frontend behavior, runtime behavior, API contract,
+  Docker/Compose behavior, CI workflow behavior, migration, database model,
+  deployment automation, backup automation, rollback automation, cloud
+  resource, Kubernetes/Terraform resource, real secret, provider key,
+  production email behavior, startup seed, startup knowledge ingestion, or
+  global response envelope was added.
+
+Validation:
+
+- `git status --short` reviewed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- Git Bash `scripts/ci/compose-gate.sh` passed.
+- Git Bash `scripts/deployment/smoke-prod-demo.sh --help` passed.
+- `git diff --check` passed with line-ending warnings only.
 
 ## Current TASK 014.5 Implementation State
 

@@ -21,6 +21,10 @@ This demo uses existing backend, frontend, runtime, workflow, knowledge, and
 streaming behavior. It does not add real LLM reasoning, email sending, upload
 UI, admin document management, or production seed management.
 
+For the production-demo package, use `docs/deployment/RUNBOOK.md` and
+`docs/deployment/DEMO_PACKAGE.md`. This local demo runbook remains the detailed
+workflow walkthrough and troubleshooting reference.
+
 For the board-stable demo, keep LLM runtime mode disabled:
 
 ```text

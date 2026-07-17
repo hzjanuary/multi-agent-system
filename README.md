@@ -429,6 +429,17 @@ The current board-ready local demo flow is documented in:
 Use the runbook for Docker startup, migrations, deterministic demo seeding,
 local-demo credentials, frontend walkthrough checkpoints, and troubleshooting.
 
+Production-demo packaging and operator docs are documented in:
+
+- `docs/deployment/RUNBOOK.md`
+- `docs/deployment/DEMO_PACKAGE.md`
+- `docs/deployment/SMOKE_CHECKS.md`
+- `docs/deployment/TROUBLESHOOTING.md`
+- `docs/deployment/BACKUP_RESTORE.md`
+
+Those docs use the Docker Compose production-demo stack and preserve the
+default no-key demo mode.
+
 ---
 
 ## API Endpoints

@@ -33,6 +33,14 @@ The smoke script checks an already-running stack by default. It checks backend
 Use `--start` to start the production-demo Compose stack first and
 `--include-ready` to check backend `/ready`.
 
+Deployment runbook and smoke checklist details live in:
+
+```text
+docs/deployment/RUNBOOK.md
+docs/deployment/SMOKE_CHECKS.md
+docs/deployment/TROUBLESHOOTING.md
+```
+
 ## Harness CLI
 
 The Rust Harness CLI is the primary interface for the durable layer. Installed

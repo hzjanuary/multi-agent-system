@@ -3,6 +3,10 @@
 Use this checklist after running the demo seed command from
 `docs/demo/DEMO_RUNBOOK.md`.
 
+For production-demo smoke checks, also use
+`docs/deployment/SMOKE_CHECKS.md` and
+`scripts/deployment/smoke-prod-demo.sh`.
+
 The demo runbook may also ingest the local-demo knowledge base with
 `python -m app.knowledge.ingest_demo --confirm-local-demo`. With
 `RAG_ENABLED=true`, runtime grounding can attach bounded citations that the

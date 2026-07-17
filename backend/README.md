@@ -795,6 +795,12 @@ The additive production-demo Compose stack is defined at
 It keeps backend runtime packaging separate from the `backend-test` dev target
 and does not auto-run demo seed or knowledge ingestion commands.
 
+The full production-demo operator runbook is
+`../docs/deployment/RUNBOOK.md`. It covers env setup, production-demo image
+builds, smoke checks, explicit migrations, explicit demo seed, explicit
+knowledge ingestion, observability checks, backup/restore basics, rollback
+basics, and troubleshooting.
+
 Repository CI and local quality-gate scripts are documented in
 `../docs/deployment/README.md` and `../scripts/README.md`. The backend gate runs
 the Docker `backend-test` image, migrations, pytest, Ruff, Black, MyPy, demo

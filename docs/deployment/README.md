@@ -6,6 +6,11 @@ infrastructure by itself.
 
 Use these files when preparing a deployable demo stack:
 
+- `RUNBOOK.md` is the production-demo operator runbook.
+- `DEMO_PACKAGE.md` is the board-demo packaging checklist and walkthrough.
+- `SMOKE_CHECKS.md` documents automated and manual smoke checks.
+- `BACKUP_RESTORE.md` documents honest backup, restore, and rollback basics.
+- `TROUBLESHOOTING.md` covers common deployment and board-demo failures.
 - `ENVIRONMENT.md` explains the `local-demo`, `ci-test`, and
   `production-demo` environment profiles.
 - `.env.production.example` is a placeholder-only production-demo template for
@@ -16,6 +21,18 @@ Use these files when preparing a deployable demo stack:
 
 Do not commit real `.env` files, provider API keys, JWT secrets, database
 passwords, object storage credentials, or cloud credentials.
+
+Recommended production-demo order:
+
+```bash
+bash scripts/ci/compose-gate.sh
+docker-compose -f docker-compose.prod.yml --env-file .env.production.local build backend frontend
+docker-compose -f docker-compose.prod.yml --env-file .env.production.local up -d
+COMPOSE_ENV_FILE=.env.production.local bash scripts/deployment/smoke-prod-demo.sh --include-ready
+```
+
+See `RUNBOOK.md` before using these commands for a board demo. The runbook also
+covers explicit migrations, demo seed, and knowledge ingestion.
 
 ## Production-Demo Compose
 
@@ -171,3 +188,6 @@ COMPOSE_FILE=docker-compose.prod.yml \
 COMPOSE_ENV_FILE=docs/deployment/.env.production.example \
 bash scripts/deployment/smoke-prod-demo.sh --include-ready
 ```
+
+For the full smoke checklist, including manual browser and metrics checks, see
+`SMOKE_CHECKS.md`.

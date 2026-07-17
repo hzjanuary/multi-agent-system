@@ -268,3 +268,15 @@ They cover Docker startup, migrations, the explicit demo seed command, local
 demo credentials, workflow list/detail/create/run checkpoints, live timeline
 checks, optional knowledge ingestion, RAG evidence checks, approval/resume, and
 troubleshooting.
+
+For the production-demo package, use:
+
+```text
+docs/deployment/RUNBOOK.md
+docs/deployment/DEMO_PACKAGE.md
+docs/deployment/SMOKE_CHECKS.md
+```
+
+Those docs explain the production-demo Compose stack, public API/WS URL
+alignment, no-key default mode, optional RAG evidence mode, and board-demo
+smoke checklist.
