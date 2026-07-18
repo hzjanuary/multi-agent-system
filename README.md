@@ -445,6 +445,10 @@ Final graduation evaluation planning is documented in:
 - `docs/final/README.md`
 - `docs/final/EVALUATION_MATRIX.md`
 - `docs/final/ACCEPTANCE_EVIDENCE_PLAN.md`
+- `docs/final/FINAL_DEMO_SCRIPT.md`
+- `docs/final/DEFENSE_QA_BANK.md`
+- `docs/final/RELEASE_CHECKLIST.md`
+- `docs/final/FINAL_QUALITY_GATE.md`
 - `docs/report/README.md`
 - `docs/report/diagrams/README.md`
 

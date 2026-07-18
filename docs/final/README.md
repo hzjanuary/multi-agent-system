@@ -26,6 +26,22 @@ results yet.
   future E2E validation run.
 - `SCREENSHOT_CHECKLIST.md` defines final screenshot naming, storage,
   redaction, capture-status placeholders, and evaluation-dimension mapping.
+- `FINAL_DEMO_SCRIPT.md` provides the 8-12 minute board-demo speaker script
+  covering pitch, architecture, workflow, RAG, approval/resume, operations,
+  safety, and closing summary.
+- `DEMO_TIMING_PLAN.md` defines the 8-12 minute timing plan and 3-5 minute
+  fallback summary.
+- `DEMO_FAILURE_RECOVERY.md` lists safe fallback moves for common live demo
+  failures.
+- `DEFENSE_QA_BANK.md` provides structured defense questions, concise
+  answers, evidence references, and demo pointers.
+- `RELEASE_CHECKLIST.md` defines the final repository, documentation, secret,
+  quality-gate, evidence, safety, and submission package checklist.
+- `FINAL_QUALITY_GATE.md` lists the final release validation commands,
+  optional E2E commands, and no-secret/unsupported-claim scans.
+- `FINAL_RELEASE_NOTES.md` summarizes the final graduation-ready scope,
+  no-key defaults, validation entry points, deferred capabilities, and safety
+  notes.
 
 ## Evaluation Modes
 
@@ -70,6 +86,7 @@ Use existing runbooks and gates as source material:
 - `scripts/ci/all-gates.sh`
 - `scripts/deployment/smoke-prod-demo.sh`
 - `scripts/final/e2e-demo-validation.sh`
+- `scripts/final/final-quality-gate.sh`
 
 Graduation report narrative assets live in:
 

@@ -81,6 +81,9 @@ Show a deterministic procurement workflow that can:
 - Readiness checks dependencies but does not mutate state.
 - CI gates validate backend, frontend, Compose, dry-run seed, and dry-run
   knowledge ingestion.
+- Final demo speaker support lives in `docs/final/FINAL_DEMO_SCRIPT.md`,
+  `docs/final/DEMO_TIMING_PLAN.md`, `docs/final/DEMO_FAILURE_RECOVERY.md`, and
+  `docs/final/DEFENSE_QA_BANK.md`.
 
 ## Do Not Claim
 
@@ -111,5 +114,6 @@ For a board demo recording or handoff:
 - approval history screenshot
 - `COMPLETED` timeline screenshot
 - screenshot checklist reference: `docs/final/SCREENSHOT_CHECKLIST.md`
+- final demo script reference: `docs/final/FINAL_DEMO_SCRIPT.md`
 - architecture diagram source reference: `docs/report/diagrams/README.md`
 - note the git commit or image tag used

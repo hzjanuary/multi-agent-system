@@ -69,6 +69,29 @@ docs/final/E2E_DEMO_VALIDATION.md
 docs/final/E2E_EVIDENCE_CAPTURE_TEMPLATE.md
 ```
 
+## Final Release Gate
+
+SPEC-015 also provides a final quality gate wrapper for graduation release
+polish. It delegates to existing gates, does not deploy, does not start the
+production-demo stack, and does not run mutating E2E validation by default.
+
+```bash
+bash scripts/final/final-quality-gate.sh --help
+bash scripts/final/final-quality-gate.sh
+```
+
+Use `--skip-prod-image-build` when only documentation changed and a production
+image rebuild is intentionally deferred for time. Use `--no-script-help` only
+when script help checks were already captured.
+
+Final release checklist and command documentation live in:
+
+```text
+docs/final/RELEASE_CHECKLIST.md
+docs/final/FINAL_QUALITY_GATE.md
+docs/final/FINAL_RELEASE_NOTES.md
+```
+
 ## Harness CLI
 
 The Rust Harness CLI is the primary interface for the durable layer. Installed

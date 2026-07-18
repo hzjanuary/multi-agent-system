@@ -148,14 +148,39 @@ categories include:
 
 ## Appendix I: Final Demo Script And Q&A
 
-TASK 015.5 will define:
+Recommended source references:
+
+- `docs/final/FINAL_DEMO_SCRIPT.md`
+- `docs/final/DEMO_TIMING_PLAN.md`
+- `docs/final/DEMO_FAILURE_RECOVERY.md`
+- `docs/final/DEFENSE_QA_BANK.md`
+
+Suggested appendix content:
 
 - final board-demo script
-- timing plan
-- fallback summary
+- 8-12 minute timing plan
+- 3-5 minute fallback summary
+- failure recovery notes
 - defense Q&A bank
 
-## Appendix J: Known Limitations And Future Work
+## Appendix J: Release Checklist And Final Gate
+
+Recommended source references:
+
+- `docs/final/RELEASE_CHECKLIST.md`
+- `docs/final/FINAL_QUALITY_GATE.md`
+- `docs/final/FINAL_RELEASE_NOTES.md`
+- `scripts/final/final-quality-gate.sh`
+
+Suggested appendix content:
+
+- final repository release checklist
+- final quality gate command list
+- no-secret scan and unsupported-claim scan
+- final release scope summary
+- intentionally deferred capabilities
+
+## Appendix K: Known Limitations And Future Work
 
 Recommended source reference:
 

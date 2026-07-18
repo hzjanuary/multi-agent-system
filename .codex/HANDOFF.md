@@ -21,7 +21,104 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - TASK 015.4 implemented / pending review
+- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - TASK 015.6 implemented / pending review
+
+## Current TASK 015.6 Implementation State
+
+Implemented:
+
+- Added `docs/final/RELEASE_CHECKLIST.md` with final repository state,
+  documentation entry point, environment/secret, quality gate, evidence,
+  safety/overclaim, and submission package checks.
+- Added `docs/final/FINAL_QUALITY_GATE.md` with exact final validation
+  commands, optional local-demo E2E commands, no-secret scan, unsupported-claim
+  scan, and wrapper guidance.
+- Added `docs/final/FINAL_RELEASE_NOTES.md` summarizing included product
+  scope, deterministic no-key defaults, validation entry points, deferred
+  capabilities, and release safety notes.
+- Added `scripts/final/final-quality-gate.sh`, a Bash strict-mode,
+  non-deploying wrapper that delegates to existing CI gates, optional
+  production image build, script help checks, and whitespace checks.
+- Cross-linked release/final-gate assets from `docs/final/README.md`,
+  `docs/report/APPENDIX_GUIDE.md`, `scripts/README.md`, and the root
+  `README.md`.
+
+Scope boundaries preserved:
+
+- No product features, backend behavior, frontend behavior, runtime behavior,
+  Docker/Compose behavior, CI workflow behavior, API contract changes, tests,
+  migrations, database models, real secrets, provider keys, cloud resources,
+  generated screenshots, slides, PDF/DOCX/images/videos, final thesis file, or
+  global response envelope were added.
+
+Validation:
+
+- `git status --short` reviewed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- `bash scripts/ci/compose-gate.sh` passed.
+- `bash scripts/ci/backend-gate.sh` passed: 685 passed, 1 skipped, Ruff
+  passed, Black passed, MyPy passed, demo seed dry-run JSON passed, knowledge
+  ingestion dry-run JSON passed.
+- `bash scripts/ci/frontend-gate.sh` passed: lint passed, build passed,
+  typecheck passed, 55 frontend tests passed. npm reported 7 existing audit
+  advisories during install.
+- `bash scripts/ci/all-gates.sh` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example build backend frontend` passed.
+- `bash scripts/deployment/smoke-prod-demo.sh --help` passed.
+- `bash scripts/final/e2e-demo-validation.sh --help` passed.
+- `bash scripts/final/final-quality-gate.sh --help` passed.
+- `bash scripts/final/final-quality-gate.sh` passed.
+- Command-path consistency check for final/CI/smoke scripts, production
+  Compose, and env templates passed.
+- Focused real-looking secret scan passed.
+- Unsupported completed-claim scan found only the documented scan command in
+  `docs/final/FINAL_QUALITY_GATE.md`.
+- `git diff --check` passed with LF/CRLF warnings only.
+- `git diff --cached --check` passed.
+- Harness intake recorded as #118.
+- Harness story `TASK-015.6` marked implemented.
+- Harness trace recorded as #134.
+
+## Current TASK 015.5 Implementation State
+
+Implemented:
+
+- Added `docs/final/FINAL_DEMO_SCRIPT.md` with an English 8-12 minute
+  board-demo speaker script covering pitch, value proposition, architecture,
+  workflow, RAG, approval/resume, operations, safety, and closing summary.
+- Added `docs/final/DEMO_TIMING_PLAN.md` with the 8-12 minute timing plan and
+  a 3-5 minute fallback summary.
+- Added `docs/final/DEMO_FAILURE_RECOVERY.md` with safe fallback moves for
+  backend, frontend, login, workflow, approval, resume, RAG, WebSocket,
+  readiness, metrics, Docker Compose, CI, Windows Bash, and time-box failures.
+- Added `docs/final/DEFENSE_QA_BANK.md` with product, architecture, runtime,
+  approval, LLM, RAG, security, deployment, evaluation, and future-work Q&A
+  entries, each with evidence/doc references and demo pointers.
+- Cross-linked final demo support docs from `docs/final/README.md`,
+  `docs/report/APPENDIX_GUIDE.md`, `docs/deployment/DEMO_PACKAGE.md`, and the
+  root `README.md`.
+
+Scope boundaries preserved:
+
+- No screenshots, slides, PDF/DOCX, images, videos, final report chapters,
+  diagrams, backend behavior, frontend behavior, runtime behavior,
+  Docker/Compose behavior, CI behavior, API contract changes, tests,
+  migrations, database models, real secrets, provider keys, cloud resources, or
+  global response envelope were added.
+
+Validation:
+
+- `git status --short` reviewed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- Optional unsupported-claim/secret scan found only intentional deferred/do-not-
+  claim wording and a documented secret-scan command; no real-looking provider
+  keys were added.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Harness intake recorded as #117.
+- Harness story `TASK-015.5` marked implemented.
+- Harness trace recorded as #133.
 
 ## Current TASK 015.4 Implementation State
 
