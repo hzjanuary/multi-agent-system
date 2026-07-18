@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { KnowledgeDocumentList } from "@/components/knowledge/knowledge-document-list";
 import { KnowledgeSearchPanel } from "@/components/knowledge/knowledge-search-panel";
+import { WorkflowAgentActivityPanel } from "@/components/workflows/workflow-agent-activity-panel";
 import { WorkflowApprovalHistory } from "@/components/workflows/workflow-approval-history";
 import { WorkflowApprovalPanel } from "@/components/workflows/workflow-approval-panel";
 import { WorkflowDetail } from "@/components/workflows/workflow-detail";
@@ -114,6 +115,11 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
   return (
     <div className="grid gap-6">
       <WorkflowNextStepGuide status={state.workflow.status} />
+      <WorkflowAgentActivityPanel
+        approvalHistory={state.approvalHistory}
+        events={state.events}
+        workflow={state.workflow}
+      />
       <WorkflowRunPanel
         workflowId={state.workflow.workflow_id}
         workflowStatus={state.workflow.status}

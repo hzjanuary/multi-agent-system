@@ -107,6 +107,8 @@ describe("workflow pages", () => {
 
     expect(document.body.textContent).toContain("What should I do next?");
     expect(document.body.textContent).toContain("This workflow has not run yet.");
+    expect(document.body.textContent).toContain("Agent activity");
+    expect(document.body.textContent).toContain("Planner Agent");
     expect(document.body.textContent).toContain("workflow-123");
     expect(document.body.textContent).toContain("Request summary");
     expect(document.body.textContent).toContain("Approval history");
