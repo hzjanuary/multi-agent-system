@@ -21,7 +21,93 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - TASK 015.2 implemented / pending review
+- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - TASK 015.4 implemented / pending review
+
+## Current TASK 015.4 Implementation State
+
+Implemented:
+
+- Added `docs/report/diagrams/README.md` as the Mermaid diagram source index
+  and usage guide.
+- Added required Mermaid diagram Markdown files:
+  - `SYSTEM_CONTEXT.md`
+  - `CONTAINER_DEPLOYMENT.md`
+  - `BACKEND_LAYERED_ARCHITECTURE.md`
+  - `WORKFLOW_RUNTIME.md`
+  - `APPROVAL_RESUME_LIFECYCLE.md`
+  - `RAG_KNOWLEDGE_FLOW.md`
+  - `EVENT_STREAMING_FLOW.md`
+  - `CI_DEPLOYMENT_FLOW.md`
+- Added `docs/final/SCREENSHOT_CHECKLIST.md` with naming/storage guidance,
+  required and optional screenshot rows, redaction rules, and evaluation
+  dimension mapping.
+- Cross-linked the diagram and screenshot assets from `docs/report/README.md`,
+  `docs/report/APPENDIX_GUIDE.md`, `docs/final/README.md`,
+  `docs/deployment/DEMO_PACKAGE.md`, and the root `README.md`.
+
+Scope boundaries preserved:
+
+- No PNG/SVG/JPEG images, screenshots, slides, PDF/DOCX output, backend
+  behavior, frontend behavior, runtime behavior, Docker/Compose behavior, CI
+  behavior, API contract changes, tests, migrations, database models, real
+  secrets, provider keys, cloud resources, or global response envelope were
+  added.
+
+Validation:
+
+- `git status --short` reviewed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- Focused `rg` scan of changed report/final docs found no unsupported
+  implemented-capability claims or real-looking provider keys.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Harness intake recorded as #116.
+- Harness story `TASK-015.4` marked implemented.
+- Harness trace recorded as #132.
+
+## Current TASK 015.3 Implementation State
+
+Implemented:
+
+- Added `docs/report/README.md` as the graduation report asset index.
+- Added `docs/report/REPORT_OUTLINE.md` with the report chapter structure from
+  abstract through appendices.
+- Added `docs/report/TECHNICAL_NARRATIVE.md` explaining the business problem,
+  multi-agent OS approach, LangGraph, FastAPI, Next.js, storage choices,
+  deterministic/no-key mode, approval/resume, RAG grounding, event streaming,
+  and production-demo observability.
+- Added `docs/report/IMPLEMENTATION_PHASES.md` mapping SPEC-001 through
+  SPEC-014 to report-friendly phases with purpose, deliverables, evidence
+  sources, report relevance, and limitations.
+- Added `docs/report/ARCHITECTURE_AND_DESIGN.md` as written architecture
+  narrative only, with diagrams deferred to TASK 015.4.
+- Added `docs/report/EVALUATION_NARRATIVE.md` with methodology placeholders
+  linked to TASK 015.1 and TASK 015.2 final evidence docs.
+- Added `docs/report/LIMITATIONS_AND_FUTURE_WORK.md` with honest limitations
+  and deferred work.
+- Added `docs/report/APPENDIX_GUIDE.md` with appendix source references.
+- Linked report assets from `docs/final/README.md` and the root `README.md`.
+
+Scope boundaries preserved:
+
+- No diagrams, screenshots, slides, PDF/DOCX/thesis output, final evidence
+  claims, invented metrics, benchmark results, user study results, backend
+  behavior, frontend behavior, runtime behavior, Docker/Compose behavior, CI
+  behavior, API contract changes, tests, migrations, database models, real
+  secrets, provider keys, cloud resources, or global response envelope were
+  added.
+
+Validation:
+
+- `git status --short` reviewed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- Focused `rg` scan of changed report/final docs found only intentional
+  placeholder and safety/secret-handling language; no real-looking provider
+  keys were added.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Harness intake recorded as #115.
+- Harness story/trace recording pending.
 
 ## Current TASK 015.2 Implementation State
 

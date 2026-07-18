@@ -110,4 +110,6 @@ For a board demo recording or handoff:
 - evidence panel screenshot when RAG is enabled
 - approval history screenshot
 - `COMPLETED` timeline screenshot
+- screenshot checklist reference: `docs/final/SCREENSHOT_CHECKLIST.md`
+- architecture diagram source reference: `docs/report/diagrams/README.md`
 - note the git commit or image tag used

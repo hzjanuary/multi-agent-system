@@ -24,6 +24,8 @@ results yet.
   notes, and evidence capture checklist.
 - `E2E_EVIDENCE_CAPTURE_TEMPLATE.md` is a placeholder-only note template for a
   future E2E validation run.
+- `SCREENSHOT_CHECKLIST.md` defines final screenshot naming, storage,
+  redaction, capture-status placeholders, and evaluation-dimension mapping.
 
 ## Evaluation Modes
 
@@ -68,3 +70,15 @@ Use existing runbooks and gates as source material:
 - `scripts/ci/all-gates.sh`
 - `scripts/deployment/smoke-prod-demo.sh`
 - `scripts/final/e2e-demo-validation.sh`
+
+Graduation report narrative assets live in:
+
+- `docs/report/README.md`
+- `docs/report/REPORT_OUTLINE.md`
+- `docs/report/TECHNICAL_NARRATIVE.md`
+- `docs/report/IMPLEMENTATION_PHASES.md`
+- `docs/report/ARCHITECTURE_AND_DESIGN.md`
+- `docs/report/EVALUATION_NARRATIVE.md`
+- `docs/report/LIMITATIONS_AND_FUTURE_WORK.md`
+- `docs/report/APPENDIX_GUIDE.md`
+- `docs/report/diagrams/README.md`

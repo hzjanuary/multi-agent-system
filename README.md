@@ -445,6 +445,8 @@ Final graduation evaluation planning is documented in:
 - `docs/final/README.md`
 - `docs/final/EVALUATION_MATRIX.md`
 - `docs/final/ACCEPTANCE_EVIDENCE_PLAN.md`
+- `docs/report/README.md`
+- `docs/report/diagrams/README.md`
 
 ---
 
