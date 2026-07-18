@@ -21,7 +21,57 @@ Closed specs:
 
 Current active spec:
 
-- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - TASK 015.6 implemented / pending review
+- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - TASK 015.7 final closeout review complete / pending review
+
+## Current TASK 015.7 Closeout Review State
+
+Scope:
+
+- Verify SPEC-015 final evaluation, E2E validation, report, diagrams,
+  screenshot checklist, final demo/Q&A, release polish, no-key demo, safety,
+  and final quality gate readiness.
+- Only tiny docs/handoff fixes are allowed if blocking issues are found.
+
+Validation:
+
+- SPEC-015 status: Approved.
+- Overall project status: Ready for graduation submission.
+- `git status --short` reviewed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- `bash scripts/ci/compose-gate.sh` passed.
+- `bash scripts/ci/backend-gate.sh` passed.
+- `bash scripts/ci/frontend-gate.sh` passed.
+- `bash scripts/ci/all-gates.sh` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example build backend frontend` passed.
+- `bash scripts/deployment/smoke-prod-demo.sh --help` passed.
+- `bash scripts/final/e2e-demo-validation.sh --help` passed.
+- `bash scripts/final/final-quality-gate.sh --help` passed.
+- `bash scripts/final/final-quality-gate.sh` passed.
+- `docker-compose build backend-test` passed.
+- `docker-compose run --rm backend-test pytest` passed: 685 passed, 1
+  skipped, 2 warnings.
+- `docker-compose run --rm backend-test ruff check .` passed.
+- `docker-compose run --rm backend-test black --check .` passed.
+- `docker-compose run --rm backend-test mypy app` passed.
+- `docker-compose run --rm backend-test python -m app.demo.seed --confirm-local-demo --dry-run --json` passed.
+- `docker-compose run --rm backend-test python -m app.knowledge.ingest_demo --confirm-local-demo --dry-run --json` passed.
+- `cd frontend && npm install` passed with 7 existing npm audit advisories.
+- `cd frontend && npm run lint` passed.
+- `cd frontend && npm run build` passed.
+- `cd frontend && npm run typecheck` passed.
+- `cd frontend && npm test` passed: 55 passed.
+- Focused real-looking secret scan passed.
+- Unsupported completed-claim scan found only the documented scan command in
+  `docs/final/FINAL_QUALITY_GATE.md`.
+- Untracked generated binary/artifact scan passed.
+- `git diff --check` passed with LF/CRLF warnings only.
+- `git diff --cached --check` passed.
+- Optional mutating E2E/RAG production-demo smoke startup checks were skipped;
+  required non-mutating validations passed.
+- Harness intake recorded as #119.
+- Harness story `TASK-015.7` marked implemented with approval evidence.
+- Harness trace recorded as #135.
 
 ## Current TASK 015.6 Implementation State
 
