@@ -36,6 +36,7 @@ from app.runtime.schemas import (
     RuntimeWorkflowState,
 )
 from app.runtime.state_adapter import (
+    RuntimeStateAdapterError,
     runtime_state_to_workflow_state,
     workflow_state_to_runtime_state,
 )
@@ -183,7 +184,24 @@ class RuntimeService:
             payload={"status": workflow_state.status.value},
         )
 
-        runtime_state = workflow_state_to_runtime_state(workflow_state)
+        try:
+            runtime_state = workflow_state_to_runtime_state(workflow_state)
+        except RuntimeStateAdapterError as error:
+            await self._append_runtime_failed_event(
+                workflow_id,
+                actor_type=actor_type,
+                actor_id=actor_id,
+                message="Workflow runtime could not start from persisted state.",
+                payload={
+                    "status": workflow_state.status.value,
+                    "error_type": type(error).__name__,
+                    "runtime_state_error": "invalid_runtime_stage",
+                },
+            )
+            raise WorkflowRuntimePreconditionError(
+                "Workflow runtime could not start from persisted state",
+            ) from error
+
         current_workflow_state = workflow_state
         runtime_payload = cast(
             RuntimeStatePayload, runtime_state.model_dump(mode="json")

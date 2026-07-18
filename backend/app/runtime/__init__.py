@@ -47,6 +47,7 @@ from app.runtime.service import (
     WorkflowRuntimePreconditionError,
 )
 from app.runtime.state_adapter import (
+    RuntimeStateAdapterError,
     runtime_state_to_workflow_state,
     workflow_state_to_runtime_state,
 )
@@ -71,6 +72,7 @@ __all__ = [
     "RuntimeService",
     "RuntimeStage",
     "RuntimeStatePayload",
+    "RuntimeStateAdapterError",
     "RuntimeWorkflowResult",
     "RuntimeWorkflowState",
     "WorkflowRuntimeError",

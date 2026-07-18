@@ -9,6 +9,7 @@ from app.models.enums import WorkflowStatus
 from app.runtime import (
     RUNTIME_STAGES,
     RuntimeStage,
+    RuntimeStateAdapterError,
     RuntimeWorkflowState,
     runtime_stage_values,
     runtime_state_to_workflow_state,
@@ -164,8 +165,61 @@ def test_runtime_state_rejects_invalid_current_stage() -> None:
 def test_runtime_adapter_rejects_invalid_workflow_current_step() -> None:
     state = _workflow_state().model_copy(update={"current_step": "unknown"})
 
-    with pytest.raises(ValueError, match="unknown"):
+    with pytest.raises(RuntimeStateAdapterError, match="unknown"):
         workflow_state_to_runtime_state(state)
+
+
+@pytest.mark.parametrize(
+    "current_step",
+    [None, "", "created", "CREATED", "not_started", "Not started"],
+)
+def test_workflow_state_to_runtime_state_accepts_not_started_markers(
+    current_step: str | None,
+) -> None:
+    state = _workflow_state().model_copy(
+        update={
+            "status": WorkflowStatus.CREATED,
+            "current_step": current_step,
+            "runtime_context": {},
+        },
+    )
+
+    runtime_state = workflow_state_to_runtime_state(state)
+
+    assert runtime_state.current_stage is None
+    assert runtime_state.status is WorkflowStatus.CREATED
+
+
+@pytest.mark.parametrize(
+    ("current_step", "expected_stage"),
+    [
+        ("planner", RuntimeStage.PLANNER),
+        ("PLANNER", RuntimeStage.PLANNER),
+        ("Email_Preparation", RuntimeStage.EMAIL_PREPARATION),
+    ],
+)
+def test_workflow_state_to_runtime_state_accepts_case_insensitive_stages(
+    current_step: str,
+    expected_stage: RuntimeStage,
+) -> None:
+    state = _workflow_state().model_copy(update={"current_step": current_step})
+
+    runtime_state = workflow_state_to_runtime_state(state)
+
+    assert runtime_state.current_stage is expected_stage
+
+
+def test_runtime_adapter_accepts_case_insensitive_completed_stages() -> None:
+    state = _workflow_state().model_copy(
+        update={"runtime_context": {"completed_stages": ["PLANNER", "retrieval"]}},
+    )
+
+    runtime_state = workflow_state_to_runtime_state(state)
+
+    assert runtime_state.completed_stages == (
+        RuntimeStage.PLANNER,
+        RuntimeStage.RETRIEVAL,
+    )
 
 
 def test_runtime_state_supports_error_and_failed_stage() -> None:

@@ -144,11 +144,15 @@ async def test_seeded_event_backlog_is_readable_and_ordered(
         for event in DEMO_WORKFLOW_EVENTS
         if event.workflow_key == history_workflow.key
     ]
-    assert [event.event_id for event in events] == expected_event_ids
-    assert events[0].event_type == "workflow.runtime.started"
-    assert events[0].status is WorkflowEventStatus.STARTED
-    assert events[-1].event_type == "workflow.runtime.waiting_for_approval"
-    assert all(event.payload["demo_reference_only"] is True for event in events)
+    actual_seed_event_ids = [
+        event.event_id for event in events if event.event_id in expected_event_ids
+    ]
+    seed_events = [event for event in events if event.event_id in expected_event_ids]
+    assert actual_seed_event_ids == expected_event_ids
+    assert seed_events[0].event_type == "workflow.runtime.started"
+    assert seed_events[0].status is WorkflowEventStatus.STARTED
+    assert seed_events[-1].event_type == "workflow.runtime.waiting_for_approval"
+    assert all(event.payload["demo_reference_only"] is True for event in seed_events)
 
 
 @pytest.mark.asyncio

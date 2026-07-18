@@ -23,6 +23,71 @@ Current active spec:
 
 - SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - closed / final-graduation-ready
 
+## Current Runtime Created-Step Bug Fix State
+
+Scope:
+
+- Backend runtime bug fix for `POST /api/v1/workflows/{workflow_id}/run`
+  crashing when a CREATED workflow has persisted `current_step`/current stage
+  marker values such as `created`.
+
+Root cause:
+
+- `backend/app/runtime/state_adapter.py` converted persisted `current_step`
+  directly with `RuntimeStage(value)`. Seeded/current state can represent
+  not-started workflow state as `created`, which is a workflow status marker,
+  not a runtime stage.
+
+Implemented:
+
+- Added `RuntimeStateAdapterError`.
+- Added safe runtime stage parsing in the state adapter:
+  - `None`, empty string, `created`, `CREATED`, `not_started`, `Not started`,
+    and equivalent not-started markers map to `None`.
+  - Valid runtime stage names are parsed case-insensitively.
+  - Unknown non-empty values raise `RuntimeStateAdapterError` instead of raw
+    enum `ValueError`.
+- Updated runtime service startup conversion to catch
+  `RuntimeStateAdapterError`, append a safe `workflow.runtime.failed` event, and
+  return the existing precondition error path instead of an unhandled crash.
+- Added regression tests for not-started markers, case-insensitive stages,
+  completed stage parsing, API `/run` from a CREATED workflow with
+  `current_step="created"`, `WAITING_APPROVAL` result, no
+  `email_preparation` before resume, and safe unknown-stage handling.
+- Hardened the demo workflow seed event test so it verifies deterministic
+  seeded event IDs/order even when the local demo database already contains
+  additional real runtime/resume events.
+
+Scope boundaries preserved:
+
+- No API contract changes, frontend changes, Docker/Compose/CI behavior
+  changes, migrations, database models, auto-resume behavior, or
+  email-preparation execution from `/run` were added.
+
+Validation:
+
+- `docker-compose config` passed with the existing non-blocking Docker
+  config-file access warning.
+- `docker-compose build backend-test` passed.
+- Focused regression set passed: 33 tests passed before final verify; Harness
+  story verify focused set passed with 32 tests passed.
+- Full `docker-compose run --rm backend-test pytest` passed: 697 passed, 1
+  skipped, 2 warnings.
+- `docker-compose run --rm backend-test ruff check .` passed.
+- `docker-compose run --rm backend-test black --check .` passed.
+- `docker-compose run --rm backend-test mypy app` passed.
+- `bash scripts/ci/backend-gate.sh` passed with approved Git Bash escalation.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Manual browser smoke was not run; automated API regression covers the
+  reported CREATED workflow crash path.
+
+Harness:
+
+- Intake recorded as #123.
+- Story `RUNTIME-CREATED-STAGE-NORMALIZATION` added, marked implemented, and
+  verified.
+- Trace #138 recorded.
+
 ## Current Demo-First Frontend UX Simplification State
 
 Scope:

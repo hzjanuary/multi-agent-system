@@ -17,6 +17,22 @@ _STAGE_TO_WORKFLOW_SECTION: dict[RuntimeStage, str] = {
     RuntimeStage.EMAIL_PREPARATION: "email",
 }
 
+_INITIAL_STAGE_MARKERS = frozenset(
+    {
+        "",
+        "created",
+        "not_started",
+        "not started",
+        "not-started",
+        "none",
+        "null",
+    },
+)
+
+
+class RuntimeStateAdapterError(Exception):
+    """Raised when persisted workflow state cannot be converted for runtime."""
+
 
 def workflow_state_to_runtime_state(state: WorkflowState) -> RuntimeWorkflowState:
     """Convert persisted WorkflowState into a runtime-compatible state copy."""
@@ -102,7 +118,15 @@ def _stage_outputs_from_workflow_state(
     raw_stage_outputs = state.outputs.get("stage_outputs", {})
     if isinstance(raw_stage_outputs, dict):
         for stage_value, output in raw_stage_outputs.items():
-            stage = RuntimeStage(stage_value)
+            stage = _runtime_stage_from_value(
+                stage_value,
+                field_name="outputs.stage_outputs",
+                allow_initial=False,
+            )
+            if stage is None:
+                raise RuntimeStateAdapterError(
+                    "outputs.stage_outputs cannot contain an initial workflow marker",
+                )
             outputs[stage] = dict(output) if isinstance(output, dict) else {}
 
     for stage, section_name in _STAGE_TO_WORKFLOW_SECTION.items():
@@ -124,9 +148,35 @@ def _workflow_section_updates(
 
 
 def _stage_or_none(value: Any) -> RuntimeStage | None:
+    return _runtime_stage_from_value(
+        value,
+        field_name="current_step",
+        allow_initial=True,
+    )
+
+
+def _runtime_stage_from_value(
+    value: Any,
+    *,
+    field_name: str,
+    allow_initial: bool,
+) -> RuntimeStage | None:
     if value is None:
         return None
-    return RuntimeStage(value)
+    if not isinstance(value, str):
+        raise RuntimeStateAdapterError(f"{field_name} must be a runtime stage string")
+
+    normalized = value.strip().lower().replace("-", "_")
+    if allow_initial and normalized in _INITIAL_STAGE_MARKERS:
+        return None
+
+    for stage in RuntimeStage:
+        if normalized == stage.value:
+            return stage
+
+    raise RuntimeStateAdapterError(
+        f"{field_name} contains unknown runtime stage: {value}",
+    )
 
 
 def _stages_from_values(values: Any, *, field_name: str) -> tuple[RuntimeStage, ...]:
@@ -134,4 +184,16 @@ def _stages_from_values(values: Any, *, field_name: str) -> tuple[RuntimeStage, 
         return ()
     if isinstance(values, str):
         raise TypeError(f"{field_name} must be a sequence of runtime stages")
-    return tuple(RuntimeStage(value) for value in values)
+    stages: list[RuntimeStage] = []
+    for value in values:
+        stage = _runtime_stage_from_value(
+            value,
+            field_name=field_name,
+            allow_initial=False,
+        )
+        if stage is None:
+            raise RuntimeStateAdapterError(
+                f"{field_name} cannot contain an initial workflow marker",
+            )
+        stages.append(stage)
+    return tuple(stages)

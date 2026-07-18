@@ -108,6 +108,70 @@ async def test_allowed_roles_can_run_workflow_to_waiting_approval(
 
 
 @pytest.mark.asyncio
+async def test_run_workflow_accepts_created_current_step_marker(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.MANAGER])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-created-current-step",
+    )
+    persisted_workflow = await db_session.get(Workflow, UUID(workflow.workflow_id))
+    assert persisted_workflow is not None
+    persisted_workflow.state_payload = {
+        **persisted_workflow.state_payload,
+        "current_step": "created",
+    }
+    await db_session.commit()
+
+    response = await client.post(
+        f"/api/v1/workflows/{workflow.workflow_id}/run",
+        headers=auth_headers(user),
+    )
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["status"] == WorkflowStatus.WAITING_APPROVAL
+    assert data["waiting_for_approval"] is True
+    assert data["completed"] is False
+    assert "email_preparation" not in data["completed_stages"]
+    assert data["result"]["state"]["current_stage"] == RuntimeStage.APPROVAL.value
+
+
+@pytest.mark.asyncio
+async def test_run_workflow_rejects_unknown_current_step_safely(
+    client: AsyncClient,
+    db_session: AsyncSession,
+) -> None:
+    user = await create_user_with_roles(db_session, role_names=[RoleName.ADMIN])
+    workflow = await create_workflow_directly(
+        db_session,
+        domain=f"{TEST_DOMAIN_PREFIX}-invalid-current-step",
+    )
+    persisted_workflow = await db_session.get(Workflow, UUID(workflow.workflow_id))
+    assert persisted_workflow is not None
+    persisted_workflow.state_payload = {
+        **persisted_workflow.state_payload,
+        "current_step": "unknown_runtime_stage",
+    }
+    await db_session.commit()
+
+    response = await client.post(
+        f"/api/v1/workflows/{workflow.workflow_id}/run",
+        headers=auth_headers(user),
+    )
+    data = response.json()
+
+    assert response.status_code == 409
+    assert data["detail"]["code"] == "workflow_runtime_precondition_failed"
+    assert data["detail"]["message"] == (
+        "Workflow runtime could not start from persisted state"
+    )
+    assert "ValueError" not in str(data)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "role_name",
     [RoleName.SALES, RoleName.LEGAL, RoleName.FINANCE, RoleName.VIEWER],
