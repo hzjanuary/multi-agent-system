@@ -41,6 +41,34 @@ docs/deployment/SMOKE_CHECKS.md
 docs/deployment/TROUBLESHOOTING.md
 ```
 
+## Final Demo Validation
+
+SPEC-015 adds a final E2E demo validation script for the board-demo lifecycle:
+health checks, explicit migrations and demo seed, optional knowledge ingestion,
+Manager/Admin login, workflow run to `WAITING_APPROVAL`, approval, `/resume`
+continuation to `COMPLETED`, timeline checks, and optional RBAC/RAG/metrics
+checks.
+
+```bash
+bash scripts/final/e2e-demo-validation.sh --help
+bash scripts/final/e2e-demo-validation.sh --confirm-local-demo --include-ready
+```
+
+The default script mode is non-mutating. The full workflow lifecycle requires
+`--confirm-local-demo`, never prints tokens or passwords, and uses existing API
+endpoints only. RAG validation remains optional:
+
+```bash
+bash scripts/final/e2e-demo-validation.sh --confirm-local-demo --include-ready --include-rag
+```
+
+Checklist and evidence capture guidance live in:
+
+```text
+docs/final/E2E_DEMO_VALIDATION.md
+docs/final/E2E_EVIDENCE_CAPTURE_TEMPLATE.md
+```
+
 ## Harness CLI
 
 The Rust Harness CLI is the primary interface for the durable layer. Installed

@@ -440,6 +440,12 @@ Production-demo packaging and operator docs are documented in:
 Those docs use the Docker Compose production-demo stack and preserve the
 default no-key demo mode.
 
+Final graduation evaluation planning is documented in:
+
+- `docs/final/README.md`
+- `docs/final/EVALUATION_MATRIX.md`
+- `docs/final/ACCEPTANCE_EVIDENCE_PLAN.md`
+
 ---
 
 ## API Endpoints

@@ -37,6 +37,7 @@
 - SPEC-012 Human Approval and Workflow Resume
 - SPEC-013 RAG and Document Knowledge Base
 - SPEC-014 Production Deployment and Observability
+- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets
 - Future agent/tool specs: Calculator Tool, Compliance Agent, Validation Agent,
   and Email Agent should be assigned non-conflicting SPEC numbers when planned.
 
@@ -64,3 +65,9 @@
 - SPEC-027 CI/CD
 - SPEC-028 Deployment Guide
 - SPEC-029 Final Documentation
+
+## Phase 9 - Final Graduation Readiness
+
+- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets is
+  the bounded final evaluation and graduation asset planning slice for the
+  completed demo path.

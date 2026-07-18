@@ -17,10 +17,127 @@ Closed specs:
 - SPEC-011 LLM Provider Abstraction - Approved / Closed
 - SPEC-012 Human Approval and Workflow Resume - Approved / Closed
 - SPEC-013 RAG and Document Knowledge Base - Approved / Closed
+- SPEC-014 Production Deployment and Observability - Approved / Closed
 
 Current active spec:
 
-- SPEC-014 Production Deployment and Observability - TASK 014.6 implemented / pending review
+- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - TASK 015.2 implemented / pending review
+
+## Current TASK 015.2 Implementation State
+
+Implemented:
+
+- Added `scripts/final/e2e-demo-validation.sh` for guarded final board-demo
+  validation using existing health, auth, workflow, approval, resume,
+  knowledge, and observability endpoints.
+- Added `docs/final/E2E_DEMO_VALIDATION.md` with prerequisites, environment
+  variables, no-key default mode, optional RAG mode, script usage, manual
+  checklist, expected outcomes, troubleshooting, limitations, and safety notes.
+- Added `docs/final/E2E_EVIDENCE_CAPTURE_TEMPLATE.md` as a placeholder-only
+  final E2E evidence note template.
+- Updated `docs/final/README.md`,
+  `docs/final/ACCEPTANCE_EVIDENCE_PLAN.md`, and `scripts/README.md` with the
+  final E2E validation script and evidence-capture links.
+
+Scope boundaries preserved:
+
+- No backend behavior, frontend behavior, runtime behavior, Docker/Compose
+  behavior, CI workflow behavior, API contract, tests, migrations, database
+  models, real secrets, provider keys, cloud resources, deployment automation,
+  startup seed, startup ingestion, final report chapters, diagrams,
+  screenshots, slides, or global response envelope were added.
+
+Validation:
+
+- `git status --short` reviewed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- `bash scripts/final/e2e-demo-validation.sh --help` passed when Git Bash was
+  first on `PATH`; the default Windows `bash` command resolves to a broken WSL
+  shim on this host.
+- `bash scripts/ci/compose-gate.sh` passed when Git Bash was first on `PATH`.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Harness intake recorded as #114.
+- Harness story `TASK-015.2` marked implemented.
+- Harness trace recorded as #130.
+
+## Current SPEC-015 Planning State
+
+Planning files:
+
+- `.ai/specs/SPEC-015-final-evaluation-demo-report-assets/spec.md`
+- `.ai/specs/SPEC-015-final-evaluation-demo-report-assets/tasks.md`
+
+## Current TASK 015.1 Implementation State
+
+Implemented:
+
+- Added `docs/final/README.md` as the final evaluation planning entry point.
+- Added `docs/final/EVALUATION_MATRIX.md` mapping final evaluation dimensions
+  to SPEC-001 through SPEC-014 capabilities, acceptance criteria, automated
+  evidence, manual demo evidence, expected artifacts, risks, and placeholder
+  final statuses.
+- Added `docs/final/ACCEPTANCE_EVIDENCE_PLAN.md` defining command-based
+  evidence, manual demo evidence, no-key and optional RAG-enabled evaluation
+  modes, safety/no-secret evidence, and later artifact placeholders.
+- Added `docs/final/EVALUATION_REPORT_TEMPLATE.md` as a placeholder-only
+  evaluation report skeleton for later evidence capture.
+- Linked final evaluation planning from the root `README.md`.
+
+Scope boundaries preserved:
+
+- No E2E automation scripts, final report chapters, diagrams, screenshots,
+  slides, tests, backend behavior, frontend behavior, runtime behavior, Docker
+  behavior, CI behavior, migrations, database models, real secrets, provider
+  keys, cloud resources, or deployment automation were added.
+
+Validation:
+
+- `git status --short` reviewed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- Git Bash `scripts/ci/compose-gate.sh` passed.
+- `git diff --check` passed with LF/CRLF warnings only.
+- Harness intake recorded as #113.
+- Harness story `TASK-015.1` marked implemented.
+- Harness trace recorded as #129.
+
+Scope:
+
+- Plan final graduation evaluation evidence for the completed SPEC-001 through
+  SPEC-014 product path.
+- Define a repeatable end-to-end demo validation strategy covering startup,
+  migrations, demo seed, knowledge ingestion, workflow run to
+  `WAITING_APPROVAL`, RAG evidence, approval, resume, `COMPLETED`, RBAC,
+  readiness, and metrics.
+- Plan safe evidence capture under `docs/final/` or equivalent.
+- Plan graduation report structure, architecture diagram inventory, screenshot
+  checklist, final demo script, defense Q&A bank, and repository release
+  checklist.
+- Preserve no-key deterministic defaults: fake LLM provider, disabled LLM
+  runtime, fake embeddings, and `RAG_ENABLED=false`.
+
+Deferrals:
+
+- New backend or frontend features.
+- Admin operations or policy builder.
+- Enterprise SSO.
+- Production email sending.
+- Production secret vault.
+- Cloud deployment automation.
+- Terraform or Kubernetes.
+- Upload UI or admin document-management UI.
+- Token streaming or agent-thought streaming.
+- Global response envelope rollout.
+- Real secrets, provider keys, or paid/live LLM provider requirements.
+
+Planning validation:
+
+- `git status --short` completed.
+- `docker-compose config` passed.
+- `docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- `git diff --check` passed.
+- Harness intake recorded as #112.
 
 ## Current TASK 014.6 Implementation State
 
