@@ -23,6 +23,36 @@ Current active spec:
 
 - SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - closed / final-graduation-ready
 
+## Current SPEC-016 Conversational Sales Agent Roadmap State
+
+Scope:
+
+- Documentation/specification only. No backend behavior, frontend behavior,
+  Telegram bridge behavior, API contracts, database migrations/models,
+  Docker/Compose behavior, CI behavior, real web search, price lookup, fake
+  evidence, or secrets changed.
+
+Implemented:
+
+- Added `.ai/specs/SPEC-016-conversational-sales-agent/spec.md`.
+- Added `.ai/specs/SPEC-016-conversational-sales-agent/tasks.md`.
+- Updated `.ai/specs/SPEC_INDEX.md` to include SPEC-016.
+- Added short post-demo roadmap links from `README.md` and
+  `docs/demo/TELEGRAM_INBOUND_DEMO.md`.
+- SPEC-016 formalizes the completed Telegram/Ollama demo work as a safe
+  Conversational Sales Agent roadmap with future provider-independent external
+  reference price research, internal catalog/RAG evidence, deterministic
+  normalization, human approval, and sales reply boundaries.
+
+Safety:
+
+- Future external price research is explicitly feature-flagged and labeled as
+  reference evidence, not final quote.
+- SPEC-016 keeps deterministic fallback, no raw prompts/provider payloads,
+  no chain-of-thought, no unsupported silent item dropping, no fake prices,
+  no stock/delivery promises, no auto-approval, no auto-resume, and no real
+  email as acceptance boundaries.
+
 ## Current SPEC-017 Frontend Visual Redesign State
 
 Scope:

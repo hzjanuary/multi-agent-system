@@ -17,6 +17,12 @@ mode, optional local Ollama extraction for Telegram only, sales-style replies,
 the mixed unsupported item guard, approval/resume, and the live troubleshooting
 checklist.
 
+Post-demo roadmap: `.ai/specs/SPEC-016-conversational-sales-agent/spec.md`
+formalizes the Conversational Sales Agent direction, including safe catalog/RAG
+evidence and future external reference price research. That spec is a roadmap;
+this local bridge still does not perform real web search, price lookup,
+auto-approval, auto-resume, or final quote issuance.
+
 ## Why Polling
 
 Polling with Telegram `getUpdates` keeps the demo local and avoids public

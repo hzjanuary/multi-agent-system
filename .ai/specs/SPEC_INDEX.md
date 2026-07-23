@@ -38,6 +38,7 @@
 - SPEC-013 RAG and Document Knowledge Base
 - SPEC-014 Production Deployment and Observability
 - SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets
+- SPEC-016 Conversational Sales Agent and External Price Research
 - Future agent/tool specs: Calculator Tool, Compliance Agent, Validation Agent,
   and Email Agent should be assigned non-conflicting SPEC numbers when planned.
 

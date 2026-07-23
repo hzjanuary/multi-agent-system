@@ -334,7 +334,8 @@ validation requires explicit `--confirm-local-demo`.
 
 ## Roadmap After Defense
 
-1. RAG/external price research with citations.
+1. Conversational Sales Agent and RAG/external reference price research with
+   citations: `.ai/specs/SPEC-016-conversational-sales-agent/spec.md`.
 2. LLM runtime hardening.
 3. Catalog expansion beyond the laptop demo item.
 4. Email/Gmail integration for approved final communications.
