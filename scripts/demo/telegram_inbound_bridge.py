@@ -14,6 +14,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -32,6 +33,13 @@ EXAMPLE_MESSAGE = (
 )
 MAX_TEXT_LENGTH = 2000
 HTTP_TIMEOUT_SECONDS = 15
+PARSER_VERSION = "telegram-demo-parser-v2"
+SUPPORTED_ITEM_NAME = "Standard business laptop"
+HELPFUL_REQUEST_PROMPT = (
+    "Please include quantity and item.\n"
+    "English example: quote for 50 standard business laptops.\n"
+    "Ví dụ tiếng Việt: cần báo giá 50 máy tính xách tay."
+)
 
 
 @dataclass(frozen=True)
@@ -53,10 +61,19 @@ class ParsedCustomerRequest:
     original_text: str
     quantity: int
     item_name: str
+    language: str
+    requested_addons: tuple[str, ...] = ()
 
     @property
     def summary(self) -> str:
         return f"{self.quantity} x {self.item_name}"
+
+    @property
+    def options_summary(self) -> str | None:
+        if not self.requested_addons:
+            return None
+        labels = [addon_display_label(addon) for addon in self.requested_addons]
+        return ", ".join(labels)
 
 
 @dataclass(frozen=True)
@@ -197,7 +214,7 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
         send_or_log_reply(
             config,
             chat_id,
-            "Please send a text procurement request, for example: quote for 50 standard business laptops.",
+            HELPFUL_REQUEST_PROMPT,
         )
         return
 
@@ -205,14 +222,13 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
     if text.startswith("/"):
         handle_command(config, chat_id, text)
         return
+    if is_greeting_message(text):
+        send_or_log_reply(config, chat_id, HELPFUL_REQUEST_PROMPT)
+        return
 
     parsed = parse_customer_request(text)
     if parsed is None:
-        send_or_log_reply(
-            config,
-            chat_id,
-            "Please include quantity and item, for example: quote for 50 standard business laptops.",
-        )
+        send_or_log_reply(config, chat_id, HELPFUL_REQUEST_PROMPT)
         return
 
     customer_name = sender_display_name(message)
@@ -277,32 +293,42 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
 def handle_command(config: BridgeConfig, chat_id: str, text: str) -> None:
     command = text.split(maxsplit=1)[0].lower()
     if command in {"/start", "/help"}:
-        send_or_log_reply(
-            config,
-            chat_id,
-            (
-                "Send a procurement request such as: quote for 50 standard "
-                "business laptops. The local demo bridge creates a workflow, "
-                "runs it to WAITING_APPROVAL, and requires Manager approval in "
-                "the web UI."
-            ),
-        )
+        send_or_log_reply(config, chat_id, help_command_message())
         return
     send_or_log_reply(
         config,
         chat_id,
-        "Only /start and /help are supported. Send a procurement request text to create a demo workflow.",
+        "Only /start and /help are supported.\n" + HELPFUL_REQUEST_PROMPT,
     )
 
 
+def help_command_message() -> str:
+    return (
+        "Send a procurement request such as:\n"
+        "English: quote for 50 standard business laptops\n"
+        "Tiếng Việt: tôi muốn mua 50 máy tính xách tay có cài Office 365\n"
+        "The local demo bridge creates a workflow, runs it to "
+        "WAITING_APPROVAL, and requires Manager approval in the web UI."
+    )
+
+
+def is_greeting_message(text: str) -> bool:
+    normalized = normalize_for_matching(text)
+    return normalized in {"xin chao", "chao", "hello", "hi"}
+
+
 def parse_customer_request(text: str) -> ParsedCustomerRequest | None:
-    normalized = re.sub(r"\s+", " ", text.strip())
+    normalized = re.sub(r"\s+", " ", text.strip())[:MAX_TEXT_LENGTH]
+    searchable = normalize_for_matching(normalized)
     match = re.search(
-        r"\b(?:purchase|buy|quote for|quotation for|need|order|want|"
-        r"would like to purchase)?\s*(\d{1,5})\s+"
-        r"((?:standard\s+)?(?:business\s+)?(?:laptops?|notebooks?))\b",
-        normalized,
-        flags=re.IGNORECASE,
+        r"\b(\d{1,5})\s+"
+        r"(?:cai|chiec|bo|cay|may|pcs?|units?)?\s*"
+        r"("
+        r"(?:standard\s+)?(?:business\s+)?(?:laptops?|notebooks?)"
+        r"|laptop(?:\s+doanh\s+nhan)?"
+        r"|may\s+tinh\s+xach\s+tay(?:\s+doanh\s+nhan)?(?:\s+tieu\s+chuan)?"
+        r")\b",
+        searchable,
     )
     if not match:
         return None
@@ -311,21 +337,62 @@ def parse_customer_request(text: str) -> ParsedCustomerRequest | None:
     if quantity <= 0:
         return None
 
-    item_text = match.group(2).lower()
-    item_name = (
-        "Standard business laptop"
-        if "laptop" in item_text or "notebook" in item_text
-        else title_case_item(item_text)
-    )
     return ParsedCustomerRequest(
-        original_text=normalized[:MAX_TEXT_LENGTH],
+        original_text=normalized,
         quantity=quantity,
-        item_name=item_name,
+        item_name=SUPPORTED_ITEM_NAME,
+        language=detect_language(normalized, searchable),
+        requested_addons=detect_requested_addons(searchable),
     )
 
 
-def title_case_item(value: str) -> str:
-    return " ".join(part.capitalize() for part in value.split())
+def normalize_for_matching(value: str) -> str:
+    ascii_text = "".join(
+        char
+        for char in unicodedata.normalize("NFD", value)
+        if unicodedata.category(char) != "Mn"
+    )
+    return re.sub(r"\s+", " ", ascii_text.lower()).strip()
+
+
+def detect_language(original_text: str, searchable_text: str) -> str:
+    has_vietnamese_marks = normalize_for_matching(original_text) != original_text.lower()
+    vietnamese_markers = (
+        "toi ",
+        "muon ",
+        "mua ",
+        "can ",
+        "bao gia",
+        "may tinh xach tay",
+        "doanh nhan",
+        "tieu chuan",
+        "phong kinh doanh",
+        "cai ",
+        "co cai",
+        "cai san",
+    )
+    if has_vietnamese_marks or any(marker in searchable_text for marker in vietnamese_markers):
+        return "vi"
+    return "en"
+
+
+def detect_requested_addons(searchable_text: str) -> tuple[str, ...]:
+    addon_patterns = (
+        r"\boffice\s*365\b",
+        r"\bmicrosoft\s*365\b",
+        r"\bcai\s+san\s+office\b",
+        r"\bco\s+office\b",
+        r"\bco\s+cai\s+office\b",
+    )
+    if any(re.search(pattern, searchable_text) for pattern in addon_patterns):
+        return ("office_365",)
+    return ()
+
+
+def addon_display_label(addon: str) -> str:
+    if addon == "office_365":
+        return "Office 365"
+    return addon.replace("_", " ").title()
 
 
 def build_workflow_create_payload(
@@ -340,9 +407,11 @@ def build_workflow_create_payload(
         "domain": "it_equipment",
         "request": {
             "raw_text": parsed.original_text,
+            "request_text": parsed.original_text,
             "source": "telegram",
             "customer": {"name": customer_name or "Telegram Customer"},
             "items": [{"name": parsed.item_name, "quantity": parsed.quantity}],
+            "requested_addons": list(parsed.requested_addons),
         },
         "metadata": {
             "state_version": 1,
@@ -352,6 +421,9 @@ def build_workflow_create_payload(
                 "telegram_chat_id": str(chat_id),
                 "telegram_message_id": str(message_id),
                 "demo": True,
+                "language": parsed.language,
+                "requested_addons": list(parsed.requested_addons),
+                "parser_version": PARSER_VERSION,
             },
         },
     }
@@ -515,8 +587,12 @@ def telegram_workflow_reply(
         if auto_run
         else "The workflow was created. Click Run workflow in the UI to start it."
     )
+    options_line = (
+        f"Options: {parsed.options_summary}\n" if parsed.options_summary else ""
+    )
     return (
-        f"Received request: {parsed.summary}\n"
+        f"Parsed: {parsed.summary}\n"
+        f"{options_line}"
         f"Workflow id: {workflow_id}\n"
         f"Status: {status}\n"
         f"{action}\n"
@@ -535,9 +611,13 @@ def telegram_run_failed_reply(
 ) -> str:
     workflow_url = f"{config.frontend_base_url}/workflows/{workflow.workflow_id}"
     monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow.workflow_id}"
+    options_line = (
+        f"Options: {parsed.options_summary}\n" if parsed.options_summary else ""
+    )
     return (
         "Received request and created the workflow, but auto-run did not complete.\n"
-        f"Request: {parsed.summary}\n"
+        f"Parsed: {parsed.summary}\n"
+        f"{options_line}"
         f"Workflow id: {workflow.workflow_id}\n"
         f"Status: {workflow.status}\n"
         f"Workflow: {workflow_url}\n"

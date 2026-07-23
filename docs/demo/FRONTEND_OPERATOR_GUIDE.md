@@ -32,6 +32,16 @@ notes. Use it when you want to show a customer request arriving from Telegram,
 being converted into a workflow, running to `WAITING_APPROVAL`, and then being
 approved/resumed through the normal frontend UI.
 
+The Telegram bridge accepts the English board-demo request and bounded
+Vietnamese laptop RFQ messages such as:
+
+```text
+tôi muốn mua 50 cái máy tính xách tay doanh nhân tiêu chuẩn có cài sẵn office 365
+```
+
+Greeting-only messages such as `xin chào` return an example prompt and do not
+create a workflow.
+
 ## Login Account
 
 Use the Manager account for the main demo:

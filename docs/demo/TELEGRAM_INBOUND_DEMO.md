@@ -4,9 +4,9 @@
 
 The Telegram inbound bridge lets a customer actor send a procurement request
 from a phone during the local graduation demo. The local script polls Telegram,
-parses a bounded laptop quotation request, creates a procurement workflow
-through the existing backend API, optionally runs it to `WAITING_APPROVAL`, and
-replies with workflow and Agent Monitor links.
+parses a bounded English or Vietnamese laptop quotation request, creates a
+procurement workflow through the existing backend API, optionally runs it to
+`WAITING_APPROVAL`, and replies with workflow and Agent Monitor links.
 
 This is a local demo bridge. It is not a production Telegram webhook
 integration.
@@ -131,11 +131,52 @@ quote for 5 business laptops
 quotation for 7 standard business laptops
 ```
 
+Supported Vietnamese variations:
+
+```text
+tôi muốn mua 50 cái máy tính xách tay doanh nhân tiêu chuẩn có cài sẵn office 365
+tôi muốn mua 50 máy tính xách tay
+cần báo giá 50 laptop
+báo giá cho 30 máy tính xách tay
+mua 20 laptop cho phòng kinh doanh
+cần 15 laptop doanh nhân
+50 máy tính xách tay có cài office 365
+```
+
+The deterministic parser normalizes `laptop`, `máy tính xách tay`,
+`máy tính xách tay doanh nhân`, `laptop doanh nhân`, and
+`máy tính xách tay tiêu chuẩn` to:
+
+```text
+Standard business laptop
+```
+
+It also detects these optional add-on phrases:
+
+```text
+office 365
+microsoft 365
+cài sẵn office
+có office
+```
+
+Detected Office phrases are stored as `office_365` in the workflow request and
+metadata.
+
+Greeting-only messages such as `xin chào`, `hello`, and `hi` do not create a
+workflow. The bridge replies with English and Vietnamese examples.
+
 If the parser cannot identify both quantity and item, it replies:
 
 ```text
-Please include quantity and item, for example: quote for 50 standard business laptops.
+Please include quantity and item.
+English example: quote for 50 standard business laptops.
+Ví dụ tiếng Việt: cần báo giá 50 máy tính xách tay.
 ```
+
+If a quantity is present but the item is unsupported, the bridge still refuses
+to create a workflow silently. Ask the customer actor to use a supported laptop
+phrase such as `laptop` or `máy tính xách tay`.
 
 ## Board Demo Script
 
@@ -147,7 +188,8 @@ Please include quantity and item, for example: quote for 50 standard business la
 6. Send the primary customer message from a phone to the demo bot.
 7. The bridge creates a workflow and, by default, calls `/run`.
 8. The Telegram reply includes:
-   - received request summary
+   - parsed request summary
+   - detected options such as Office 365 when present
    - workflow id
    - status
    - workflow detail URL
@@ -171,6 +213,19 @@ POST /api/v1/workflows/{workflow_id}/run
 ```
 
 It does not call approval or resume endpoints. Those remain human UI actions.
+
+The workflow payload stores safe bounded metadata:
+
+```text
+source=telegram
+language=en or vi
+requested_addons=["office_365"] when detected
+demo=true
+parser_version=telegram-demo-parser-v2
+```
+
+The original Telegram text is preserved in the workflow request as `raw_text`
+and `request_text`.
 
 ## Troubleshooting
 
@@ -231,6 +286,7 @@ Send a message with a quantity and item:
 
 ```text
 quote for 50 standard business laptops
+cần báo giá 50 máy tính xách tay
 ```
 
 The parser is intentionally deterministic for the board demo and does not try
@@ -241,7 +297,8 @@ to interpret arbitrary procurement text.
 - Local polling only; no webhook endpoint.
 - In-memory Telegram offset only; restart can re-read recent unconfirmed
   updates depending on Telegram offset state.
-- Laptop quotation parser only.
+- Laptop quotation parser only, with English and Vietnamese demo phrases.
+- Multi-item parsing is not implemented.
 - No production secret storage.
 - No Telegram user identity binding to backend users.
 - No auto-approval or auto-resume.
