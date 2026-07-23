@@ -1,7 +1,0 @@
-services:
-  backend:
-    environment:
-      LLM_PROVIDER: fake
-      LLM_RUNTIME_ENABLED: "false"
-      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
-      OLLAMA_MODEL: "qwen2.5:7b-instruct-q4_K_M"
