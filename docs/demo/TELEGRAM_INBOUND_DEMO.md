@@ -55,6 +55,7 @@ export DEMO_MANAGER_EMAIL="manager@example.test"
 export DEMO_MANAGER_PASSWORD="DemoPassword123!"
 export TELEGRAM_POLL_INTERVAL_SECONDS="2"
 export TELEGRAM_LLM_EXTRACTION_ENABLED="false"
+export TELEGRAM_SALES_REPLY_ENABLED="false"
 ```
 
 Windows PowerShell equivalent:
@@ -67,6 +68,7 @@ $env:DEMO_MANAGER_EMAIL = "manager@example.test"
 $env:DEMO_MANAGER_PASSWORD = "DemoPassword123!"
 $env:TELEGRAM_POLL_INTERVAL_SECONDS = "2"
 $env:TELEGRAM_LLM_EXTRACTION_ENABLED = "false"
+$env:TELEGRAM_SALES_REPLY_ENABLED = "false"
 ```
 
 The Manager credentials are local-demo/board-demo only.
@@ -147,6 +149,20 @@ python scripts/demo/telegram_inbound_bridge.py --no-llm-extraction
 ```
 
 `--no-llm-extraction` forces deterministic parsing only.
+
+To use customer-friendly front-office reply wording:
+
+```bash
+python scripts/demo/telegram_inbound_bridge.py --sales-replies
+```
+
+To force the original technical demo reply style:
+
+```bash
+python scripts/demo/telegram_inbound_bridge.py --technical-replies
+```
+
+Technical replies remain the default.
 
 ## Example Customer Messages
 
@@ -262,6 +278,47 @@ Fallback behavior:
 - Both paths fail: ask for a clearer quantity and item.
 
 The Telegram reply never mentions internal LLM failures.
+
+## Optional Sales-Style Replies
+
+The bridge can optionally use deterministic sales-style reply templates for a
+more customer-facing live demo:
+
+```text
+TELEGRAM_SALES_REPLY_ENABLED=false
+```
+
+Enable for one run:
+
+```bash
+python scripts/demo/telegram_inbound_bridge.py --sales-replies
+```
+
+Sales-style replies:
+
+- thank the customer
+- confirm the parsed need, such as `50 x Standard business laptop`
+- mention Office 365 when detected
+- explain that the request entered the internal quotation workflow
+- explain that the system checks pricing policy, contract/discount rules,
+  compliance, and approval requirements
+- include workflow id, status, workflow URL, and Agent Monitor URL
+- clearly state that no final quote has been issued yet
+
+Sales-style replies never:
+
+- invent prices
+- claim a discount amount
+- claim stock availability
+- promise delivery dates
+- claim final approval
+- claim a real email was sent
+- expose raw backend errors, stack traces, prompts, provider payloads, tokens,
+  or passwords
+
+When sales replies are disabled, the bridge keeps the technical demo reply
+style with parsed fields, workflow id, status, URLs, and bounded technical run
+errors.
 
 ## Board Demo Script
 
@@ -427,7 +484,7 @@ For optional LLM extraction specifically:
 
 ```bash
 ollama run qwen2.5:7b-instruct-q4_K_M
-TELEGRAM_LLM_EXTRACTION_ENABLED=true python scripts/demo/telegram_inbound_bridge.py
+TELEGRAM_LLM_EXTRACTION_ENABLED=true python scripts/demo/telegram_inbound_bridge.py --sales-replies
 ```
 
 If Ollama is stopped or misconfigured, deterministic fallback still handles

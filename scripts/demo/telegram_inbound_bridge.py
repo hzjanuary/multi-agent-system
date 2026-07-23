@@ -63,6 +63,7 @@ class BridgeConfig:
     llm_model: str
     llm_base_url: str
     llm_timeout_seconds: int
+    sales_replies_enabled: bool
 
 
 @dataclass(frozen=True)
@@ -199,6 +200,20 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Disable optional LLM extraction and use deterministic parsing only.",
     )
     parser.set_defaults(llm_extraction=None)
+    reply_group = parser.add_mutually_exclusive_group()
+    reply_group.add_argument(
+        "--sales-replies",
+        action="store_true",
+        dest="sales_replies",
+        help="Use customer-friendly local-demo sales reply templates.",
+    )
+    reply_group.add_argument(
+        "--technical-replies",
+        action="store_false",
+        dest="sales_replies",
+        help="Use technical demo reply templates (default).",
+    )
+    parser.set_defaults(sales_replies=None)
     parser.set_defaults(auto_run=True)
     return parser.parse_args(argv)
 
@@ -248,6 +263,10 @@ def config_from_env(args: argparse.Namespace) -> BridgeConfig:
                 str(DEFAULT_TELEGRAM_LLM_TIMEOUT_SECONDS),
             )
         ),
+        sales_replies_enabled=resolve_bool_flag(
+            args.sales_replies,
+            os.getenv("TELEGRAM_SALES_REPLY_ENABLED", "false"),
+        ),
     )
 
 
@@ -274,7 +293,7 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
         send_or_log_reply(
             config,
             chat_id,
-            HELPFUL_REQUEST_PROMPT,
+            follow_up_message(config, ""),
         )
         return
 
@@ -283,12 +302,12 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
         handle_command(config, chat_id, text)
         return
     if is_greeting_message(text):
-        send_or_log_reply(config, chat_id, HELPFUL_REQUEST_PROMPT)
+        send_or_log_reply(config, chat_id, greeting_message(config, text))
         return
 
     parsed = extract_customer_request(text, config)
     if parsed is None:
-        send_or_log_reply(config, chat_id, HELPFUL_REQUEST_PROMPT)
+        send_or_log_reply(config, chat_id, follow_up_message(config, text))
         return
 
     customer_name = sender_display_name(message)
@@ -353,16 +372,18 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
 def handle_command(config: BridgeConfig, chat_id: str, text: str) -> None:
     command = text.split(maxsplit=1)[0].lower()
     if command in {"/start", "/help"}:
-        send_or_log_reply(config, chat_id, help_command_message())
+        send_or_log_reply(config, chat_id, help_command_message(config))
         return
     send_or_log_reply(
         config,
         chat_id,
-        "Only /start and /help are supported.\n" + HELPFUL_REQUEST_PROMPT,
+        "Only /start and /help are supported.\n" + follow_up_message(config, text),
     )
 
 
-def help_command_message() -> str:
+def help_command_message(config: BridgeConfig | None = None) -> str:
+    if config and config.sales_replies_enabled:
+        return sales_greeting_message("xin chào")
     return (
         "Send a procurement request such as:\n"
         "English: quote for 50 standard business laptops\n"
@@ -888,6 +909,14 @@ def telegram_workflow_reply(
     status: str,
     auto_run: bool,
 ) -> str:
+    if config.sales_replies_enabled:
+        return telegram_sales_workflow_reply(
+            config=config,
+            parsed=parsed,
+            workflow_id=workflow_id,
+            status=status,
+            auto_run=auto_run,
+        )
     workflow_url = f"{config.frontend_base_url}/workflows/{workflow_id}"
     monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow_id}"
     action = (
@@ -917,6 +946,12 @@ def telegram_run_failed_reply(
     workflow: WorkflowCreationResult,
     error: ApiError,
 ) -> str:
+    if config.sales_replies_enabled:
+        return telegram_sales_run_failed_reply(
+            config=config,
+            parsed=parsed,
+            workflow=workflow,
+        )
     workflow_url = f"{config.frontend_base_url}/workflows/{workflow.workflow_id}"
     monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow.workflow_id}"
     options_line = (
@@ -933,6 +968,136 @@ def telegram_run_failed_reply(
         f"Run error: {bound_text(str(error))}\n"
         "Open the workflow in the UI and click Run workflow after the backend is ready."
     )
+
+
+def telegram_sales_workflow_reply(
+    *,
+    config: BridgeConfig,
+    parsed: ParsedCustomerRequest,
+    workflow_id: str,
+    status: str,
+    auto_run: bool,
+) -> str:
+    workflow_url = f"{config.frontend_base_url}/workflows/{workflow_id}"
+    monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow_id}"
+    options = (
+        f" kèm {parsed.options_summary}" if parsed.options_summary else ""
+    )
+    if parsed.language == "vi":
+        processing = (
+            "Yêu cầu đã được chuyển vào hệ thống xử lý báo giá nội bộ để kiểm tra "
+            "chính sách giá, hợp đồng/chiết khấu áp dụng, tuân thủ và điều kiện "
+            "phê duyệt."
+            if auto_run
+            else "Yêu cầu đã được ghi nhận trong hệ thống nội bộ. Nhân sự vận hành "
+            "sẽ bấm Run workflow để bắt đầu kiểm tra."
+        )
+        return (
+            f"Cảm ơn anh/chị. Em đã ghi nhận nhu cầu {parsed.summary}{options}.\n\n"
+            f"{processing}\n\n"
+            f"Mã yêu cầu: {workflow_id}\n"
+            f"Trạng thái: {status} — đang chờ quản lý phê duyệt nếu đã chạy tới "
+            "ranh giới phê duyệt.\n"
+            f"Link theo dõi nội bộ: {workflow_url}\n"
+            f"Agent Monitor: {monitor_url}\n\n"
+            "Lưu ý: Đây chưa phải báo giá cuối cùng. Báo giá chỉ được hoàn tất "
+            "sau khi quản lý phê duyệt. Hệ thống không tự phê duyệt, không tự "
+            "resume và không gửi email thật."
+        )
+    return (
+        f"Thank you. I recorded the request for {parsed.summary}{options}.\n\n"
+        "The request has been transferred into the internal quotation workflow "
+        "to check pricing policy, contract/discount rules, compliance, and "
+        "approval requirements.\n\n"
+        f"Request id: {workflow_id}\n"
+        f"Status: {status}\n"
+        f"Internal workflow: {workflow_url}\n"
+        f"Agent Monitor: {monitor_url}\n\n"
+        "Note: this is not a final quote. The quotation is completed only after "
+        "manager approval. The system does not auto-approve, auto-resume, or send "
+        "real email."
+    )
+
+
+def telegram_sales_run_failed_reply(
+    *,
+    config: BridgeConfig,
+    parsed: ParsedCustomerRequest,
+    workflow: WorkflowCreationResult,
+) -> str:
+    workflow_url = f"{config.frontend_base_url}/workflows/{workflow.workflow_id}"
+    monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow.workflow_id}"
+    options = (
+        f" kèm {parsed.options_summary}" if parsed.options_summary else ""
+    )
+    if parsed.language == "vi":
+        return (
+            f"Cảm ơn anh/chị. Em đã ghi nhận nhu cầu {parsed.summary}{options}.\n\n"
+            "Yêu cầu đã được tạo trong hệ thống nội bộ nhưng bước xử lý tự động "
+            "chưa hoàn tất. Nhân sự vận hành sẽ mở workflow và bấm Run workflow "
+            "sau khi backend sẵn sàng.\n\n"
+            f"Mã yêu cầu: {workflow.workflow_id}\n"
+            f"Trạng thái hiện tại: {workflow.status}\n"
+            f"Link theo dõi nội bộ: {workflow_url}\n"
+            f"Agent Monitor: {monitor_url}\n\n"
+            "Lưu ý: Đây chưa phải báo giá cuối cùng và chưa có phê duyệt quản lý."
+        )
+    return (
+        f"Thank you. I recorded the request for {parsed.summary}{options}.\n\n"
+        "The request was created in the internal workflow system, but automated "
+        "processing has not completed. The operator should open the workflow and "
+        "click Run workflow after the backend is ready.\n\n"
+        f"Request id: {workflow.workflow_id}\n"
+        f"Current status: {workflow.status}\n"
+        f"Internal workflow: {workflow_url}\n"
+        f"Agent Monitor: {monitor_url}\n\n"
+        "Note: this is not a final quote and no manager approval has been issued."
+    )
+
+
+def greeting_message(config: BridgeConfig, text: str) -> str:
+    if config.sales_replies_enabled:
+        return sales_greeting_message(text)
+    return HELPFUL_REQUEST_PROMPT
+
+
+def follow_up_message(config: BridgeConfig, text: str) -> str:
+    if config.sales_replies_enabled:
+        return sales_follow_up_message(text)
+    return HELPFUL_REQUEST_PROMPT
+
+
+def sales_greeting_message(text: str) -> str:
+    if preferred_reply_language(text) == "vi":
+        return (
+            "Em chào anh/chị. Anh/chị có thể gửi nhu cầu mua sắm theo mẫu: "
+            "báo giá 50 laptop văn phòng tiêu chuẩn có Office 365.\n"
+            "English example: quote for 50 standard business laptops with Office 365."
+        )
+    return (
+        "Hello. Please send a procurement request such as: quote for 50 standard "
+        "business laptops with Office 365.\n"
+        "Ví dụ tiếng Việt: báo giá 50 laptop văn phòng tiêu chuẩn có Office 365."
+    )
+
+
+def sales_follow_up_message(text: str) -> str:
+    if preferred_reply_language(text) == "vi":
+        return (
+            "Em cần thêm số lượng và mặt hàng để lập yêu cầu báo giá. "
+            "Ví dụ: báo giá 50 laptop văn phòng tiêu chuẩn có Office 365.\n"
+            "English example: quote for 50 standard business laptops."
+        )
+    return (
+        "Please include quantity and item, for example: quote for 50 standard "
+        "business laptops.\n"
+        "Ví dụ tiếng Việt: báo giá 50 laptop văn phòng tiêu chuẩn có Office 365."
+    )
+
+
+def preferred_reply_language(text: str) -> str:
+    searchable = normalize_for_matching(text)
+    return detect_language(text, searchable)
 
 
 def safe_http_error(error: urllib.error.HTTPError) -> str:

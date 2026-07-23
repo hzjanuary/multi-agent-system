@@ -1,15 +1,23 @@
 import unittest
+from unittest.mock import patch
 
 from scripts.demo.telegram_inbound_bridge import (
+    ApiError,
     BridgeConfig,
     EXAMPLE_MESSAGE,
     LLMExtractionError,
+    WorkflowCreationResult,
     build_workflow_create_payload,
+    config_from_env,
     extract_customer_request,
+    follow_up_message,
+    greeting_message,
     is_greeting_message,
+    parse_args,
     parse_llm_extraction_result,
     parse_customer_request,
     sender_display_name,
+    telegram_run_failed_reply,
     telegram_workflow_reply,
 )
 
@@ -186,6 +194,7 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
             llm_model="qwen2.5:7b-instruct-q4_K_M",
             llm_base_url="http://localhost:11434",
             llm_timeout_seconds=30,
+            sales_replies_enabled=False,
         )
 
         reply = telegram_workflow_reply(
@@ -232,6 +241,7 @@ class TelegramInboundBridgeLLMExtractionTests(unittest.TestCase):
             llm_model="qwen2.5:7b-instruct-q4_K_M",
             llm_base_url="http://localhost:11434",
             llm_timeout_seconds=30,
+            sales_replies_enabled=False,
         )
 
     def test_llm_json_parses_when_clean(self) -> None:
@@ -373,6 +383,160 @@ class TelegramInboundBridgeLLMExtractionTests(unittest.TestCase):
         )
 
         self.assertIsNone(parsed)
+
+
+class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
+    def config(self, *, sales: bool = False) -> BridgeConfig:
+        return BridgeConfig(
+            telegram_bot_token=None,
+            backend_api_base_url="http://localhost:8000/api/v1",
+            frontend_base_url="http://localhost:3000",
+            manager_email="manager@example.test",
+            manager_password="DemoPassword123!",
+            poll_interval_seconds=2.0,
+            allowed_chat_id=None,
+            dry_run=True,
+            once=True,
+            auto_run=True,
+            llm_extraction_enabled=False,
+            llm_provider="ollama",
+            llm_model="qwen2.5:7b-instruct-q4_K_M",
+            llm_base_url="http://localhost:11434",
+            llm_timeout_seconds=30,
+            sales_replies_enabled=sales,
+        )
+
+    def vietnamese_parsed_request(self) -> object:
+        parsed = parse_customer_request("cần báo giá 50 laptop có office 365")
+        assert parsed is not None
+        return parsed
+
+    def test_default_technical_reply_remains_available(self) -> None:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+
+        reply = telegram_workflow_reply(
+            config=self.config(),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+        )
+
+        self.assertIn("Parsed: 50 x Standard business laptop", reply)
+        self.assertIn("The workflow was created and run to the approval boundary.", reply)
+        self.assertIn("Human approval is required before resume", reply)
+
+    def test_sales_replies_flag_enables_sales_response(self) -> None:
+        args = parse_args(["--sales-replies"])
+        with patch.dict("os.environ", {}, clear=True):
+            config = config_from_env(args)
+
+        self.assertTrue(config.sales_replies_enabled)
+
+    def test_sales_replies_env_enables_sales_response(self) -> None:
+        args = parse_args([])
+        with patch.dict("os.environ", {"TELEGRAM_SALES_REPLY_ENABLED": "true"}, clear=True):
+            config = config_from_env(args)
+
+        self.assertTrue(config.sales_replies_enabled)
+
+    def test_vietnamese_success_sales_reply_is_customer_friendly(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+        )
+
+        self.assertIn("Cảm ơn anh/chị", reply)
+        self.assertIn("50 x Standard business laptop", reply)
+        self.assertIn("Office 365", reply)
+        self.assertIn("workflow-123", reply)
+        self.assertIn("WAITING_APPROVAL", reply)
+        self.assertIn("http://localhost:3000/workflows/workflow-123", reply)
+        self.assertIn(
+            "http://localhost:3000/agent-monitor?workflowId=workflow-123",
+            reply,
+        )
+        self.assertIn("Đây chưa phải báo giá cuối cùng", reply)
+
+    def test_sales_run_failed_reply_hides_raw_backend_error_json(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+        reply = telegram_run_failed_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow=WorkflowCreationResult("workflow-123", "CREATED"),
+            error=ApiError('HTTP 500: {"traceback":"secret stack","detail":"raw"}'),
+        )
+
+        self.assertIn("workflow-123", reply)
+        self.assertIn("http://localhost:3000/workflows/workflow-123", reply)
+        self.assertIn("chưa hoàn tất", reply)
+        self.assertNotIn("traceback", reply)
+        self.assertNotIn("HTTP 500", reply)
+        self.assertNotIn('{"', reply)
+
+    def test_technical_run_failed_reply_keeps_error_detail(self) -> None:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+
+        reply = telegram_run_failed_reply(
+            config=self.config(),
+            parsed=parsed,
+            workflow=WorkflowCreationResult("workflow-123", "CREATED"),
+            error=ApiError("HTTP 500: backend unavailable"),
+        )
+
+        self.assertIn("Run error: HTTP 500: backend unavailable", reply)
+
+    def test_sales_greeting_reply_does_not_create_workflow(self) -> None:
+        self.assertIsNone(parse_customer_request("xin chào"))
+        reply = greeting_message(self.config(sales=True), "xin chào")
+
+        self.assertIn("Em chào anh/chị", reply)
+        self.assertIn("báo giá 50 laptop", reply)
+
+    def test_sales_missing_quantity_reply_does_not_create_workflow(self) -> None:
+        self.assertIsNone(parse_customer_request("tôi muốn mua laptop"))
+        reply = follow_up_message(self.config(sales=True), "tôi muốn mua laptop")
+
+        self.assertIn("Em cần thêm số lượng", reply)
+        self.assertIn("báo giá 50 laptop", reply)
+
+    def test_sales_unsupported_item_reply_does_not_create_workflow(self) -> None:
+        self.assertIsNone(parse_customer_request("quote for 10 ergonomic chairs"))
+        reply = follow_up_message(self.config(sales=True), "quote for 10 ergonomic chairs")
+
+        self.assertIn("Please include quantity and item", reply)
+        self.assertIn("standard business laptops", reply)
+
+    def test_sales_replies_do_not_contain_forbidden_claims(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+        ).lower()
+
+        forbidden = (
+            "final approved quote",
+            "approved quote",
+            "delivery date",
+            "ships by",
+            "email sent",
+            "usd",
+            "$",
+            "stock available",
+        )
+        for claim in forbidden:
+            with self.subTest(claim=claim):
+                self.assertNotIn(claim, reply)
 
 
 if __name__ == "__main__":

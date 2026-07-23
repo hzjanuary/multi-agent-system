@@ -26,6 +26,10 @@ open:
 The optional Telegram inbound bridge is documented in
 `docs/demo/TELEGRAM_INBOUND_DEMO.md`.
 
+For a more customer-facing live demo, start the bridge with
+`--sales-replies`. This changes only Telegram reply wording. It does not create
+prices, approve workflows, resume workflows, or send real email.
+
 The `/demo` command center also includes a **Telegram Live Demo** section with
 the exact phone message, local bridge command, Agent Monitor link, and safety
 notes. Use it when you want to show a customer request arriving from Telegram,
