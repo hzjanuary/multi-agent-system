@@ -18,14 +18,14 @@ export function Header({ title, description }: HeaderProps) {
   }
 
   return (
-    <header className="border-b border-border/70 bg-background/70 px-4 py-5 backdrop-blur sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <header className="border-b border-border/70 bg-background/70 px-4 py-3 backdrop-blur sm:px-6 md:py-5 lg:px-8">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground md:text-3xl">
             {title}
           </h1>
           {description ? (
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            <p className="mt-1 max-w-4xl text-sm leading-6 text-muted-foreground">
               {description}
             </p>
           ) : null}

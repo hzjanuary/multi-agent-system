@@ -61,7 +61,7 @@ export function AppShell({ title, description, children }: AppShellProps) {
       <Sidebar />
       <div className="min-w-0 flex-1">
         <Header title={title} description={description} />
-        <main className="px-4 py-5 sm:px-6 lg:px-8">{children}</main>
+        <main className="px-4 py-4 sm:px-6 md:py-5 lg:px-8">{children}</main>
       </div>
     </div>
   );

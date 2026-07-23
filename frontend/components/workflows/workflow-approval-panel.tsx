@@ -45,6 +45,10 @@ export function WorkflowApprovalPanel({
     workflow.status === "APPROVED" || approvalHistory.can_resume === true;
   const isSubmitting = actionState.status === "submitting";
   const statusCopy = approvalStatusCopy(workflow.status, canResume);
+  const panelClassName =
+    canSubmitDecision || canResume
+      ? "ops-panel-strong p-5 md:p-6"
+      : "ops-panel p-5 md:p-6";
 
   async function submitDecision(decision: ApprovalDecisionType) {
     const validationMessage = approvalValidationMessage(decision, comment);
@@ -107,7 +111,7 @@ export function WorkflowApprovalPanel({
   }
 
   return (
-    <section className="ops-panel p-6">
+    <section className={panelClassName}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="ops-kicker">
@@ -172,7 +176,7 @@ export function WorkflowApprovalPanel({
       )}
 
       {canResume ? (
-        <div className="ops-panel-muted mt-5 p-4">
+        <div className="mt-5 rounded-md border border-primary/30 bg-primary/10 p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h3 className="text-sm font-semibold">

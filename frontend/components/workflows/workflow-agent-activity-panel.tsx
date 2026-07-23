@@ -137,7 +137,7 @@ export function WorkflowAgentActivityPanel({
   );
 
   return (
-    <section className="ops-panel p-6">
+    <section className="ops-panel p-5 md:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="ops-kicker">
@@ -158,7 +158,7 @@ export function WorkflowAgentActivityPanel({
         </span>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      <div className="mt-5 grid gap-3 lg:grid-cols-2">
         {activities.map((activity) => (
           <AgentActivityCard activity={activity} key={activity.name} />
         ))}
@@ -183,9 +183,9 @@ export function deriveWorkflowAgentActivities(
 
 function AgentActivityCard({ activity }: { activity: AgentActivity }) {
   return (
-    <article className="grid gap-4 rounded-lg border border-border/70 bg-background/55 p-4 shadow-[0_0_0_1px_hsl(var(--primary)/0.04)_inset]">
+    <article className="grid gap-4 rounded-md border border-border/70 bg-background/50 p-4 shadow-[0_0_0_1px_hsl(var(--primary)/0.04)_inset]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-base font-semibold">{activity.name}</h3>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
             {activity.purpose}
@@ -195,7 +195,7 @@ function AgentActivityCard({ activity }: { activity: AgentActivity }) {
           {activity.status}
         </span>
       </div>
-      <div className="grid gap-3 text-sm">
+      <div className="grid gap-3 border-l border-primary/25 pl-3 text-sm">
         <div>
           <p className="text-xs font-medium uppercase text-muted-foreground">
             Evidence source

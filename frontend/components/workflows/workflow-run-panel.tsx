@@ -52,9 +52,12 @@ export function WorkflowRunPanel({
   }
 
   const isRunning = runState.status === "running";
+  const panelClassName = guidance.canRun
+    ? "ops-panel-strong p-5 md:p-6"
+    : "ops-panel p-5 md:p-6";
 
   return (
-    <section className="ops-panel p-6">
+    <section className={panelClassName}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="ops-kicker">

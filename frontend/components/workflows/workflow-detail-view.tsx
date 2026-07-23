@@ -120,16 +120,18 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
         events={state.events}
         workflow={state.workflow}
       />
-      <WorkflowRunPanel
-        workflowId={state.workflow.workflow_id}
-        workflowStatus={state.workflow.status}
-        onRunCompleted={refreshWorkflowDetail}
-      />
-      <WorkflowApprovalPanel
-        approvalHistory={state.approvalHistory}
-        workflow={state.workflow}
-        onApprovalChanged={refreshWorkflowDetail}
-      />
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <WorkflowRunPanel
+          workflowId={state.workflow.workflow_id}
+          workflowStatus={state.workflow.status}
+          onRunCompleted={refreshWorkflowDetail}
+        />
+        <WorkflowApprovalPanel
+          approvalHistory={state.approvalHistory}
+          workflow={state.workflow}
+          onApprovalChanged={refreshWorkflowDetail}
+        />
+      </div>
       <WorkflowDetail workflow={state.workflow} />
       <WorkflowEvidencePanel workflow={state.workflow} events={state.events} />
       <WorkflowApprovalHistory history={state.approvalHistory} />

@@ -7,10 +7,10 @@ export default function DemoPage() {
   return (
     <main className="ops-page">
       <section className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-6 lg:px-8">
-        <div className="ops-panel-strong grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="ops-panel-strong grid gap-5 p-5 md:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div className="max-w-4xl">
             <p className="ops-kicker">Evaluator start here</p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground md:text-6xl">
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground md:mt-4 md:text-6xl">
               Start the defense demo.
             </h1>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
@@ -36,12 +36,12 @@ export default function DemoPage() {
           </div>
         </div>
 
-        <section className="ops-panel p-6">
+        <section className="ops-panel p-5 md:p-6">
           <h2 className="text-lg font-semibold">Operation map</h2>
-          <div className="mt-5 grid gap-3 md:grid-cols-6">
+          <div className="mt-5 grid gap-2 md:grid-cols-6">
             {workflowLifecycle.map((step, index) => (
               <div
-                className="relative rounded-md border border-primary/20 bg-background/60 p-4 text-center"
+                className="relative rounded-md border border-primary/20 bg-background/60 p-3 text-center md:p-4"
                 key={step}
               >
                 <p className="text-xs font-medium text-primary">
@@ -91,7 +91,7 @@ export default function DemoPage() {
           <DemoWorkflowCards />
         </section>
 
-        <section className="ops-panel-strong p-6">
+        <section className="ops-panel-strong p-5 md:p-6">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
               <p className="ops-kicker">
@@ -107,7 +107,7 @@ export default function DemoPage() {
                 Evaluators can then watch the workflow in Agent Monitor, submit
                 Manager approval, resume, and verify COMPLETED.
               </p>
-              <div className="mt-5 grid gap-3 md:grid-cols-7">
+              <div className="mt-5 grid gap-2 md:grid-cols-7">
                 {[
                   "Phone message",
                   "Telegram bridge",
@@ -118,7 +118,7 @@ export default function DemoPage() {
                   "Approve / Resume / COMPLETED",
                 ].map((step) => (
                   <div
-                    className="rounded-md border border-primary/20 bg-background/60 p-3 text-center text-xs font-semibold leading-5 text-muted-foreground"
+                    className="rounded-md border border-primary/20 bg-background/60 p-2.5 text-center text-xs font-semibold leading-5 text-muted-foreground md:p-3"
                     key={step}
                   >
                     {step}

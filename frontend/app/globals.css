@@ -67,11 +67,11 @@
   }
 
   .ops-panel {
-    @apply rounded-lg border bg-card/90 text-card-foreground shadow-sm;
+    @apply rounded-lg border bg-card/90 text-card-foreground;
     border-color: hsl(var(--border) / 0.85);
     box-shadow:
       0 1px 0 hsl(var(--foreground) / 0.04) inset,
-      0 24px 70px hsl(246 50% 2% / 0.45);
+      0 18px 52px hsl(246 50% 2% / 0.34);
   }
 
   .ops-panel-strong {
@@ -82,7 +82,7 @@
     border-color: hsl(var(--ops-border-strong) / 0.55);
     box-shadow:
       0 0 0 1px hsl(var(--primary) / 0.08) inset,
-      0 28px 90px hsl(246 52% 2% / 0.62);
+      0 24px 72px hsl(246 52% 2% / 0.50);
   }
 
   .ops-panel-muted {
@@ -133,7 +133,7 @@
   }
 
   .ops-card-link {
-    @apply rounded-lg border bg-card/80 text-card-foreground shadow-sm transition;
+    @apply rounded-lg border bg-card/80 text-card-foreground transition;
     border-color: hsl(var(--border) / 0.76);
   }
 
@@ -149,7 +149,7 @@
   }
 
   .ops-table {
-    @apply overflow-hidden rounded-lg border bg-card/90 text-card-foreground shadow-sm;
+    @apply overflow-hidden rounded-lg border bg-card/90 text-card-foreground;
     border-color: hsl(var(--border) / 0.8);
   }
 
