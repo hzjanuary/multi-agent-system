@@ -31,6 +31,9 @@ script under `scripts/demo/` and uses only existing backend endpoints.
 - The workflow created by the default auto-run path must still stop at
   `WAITING_APPROVAL`.
 - Real LLM providers are not required.
+- Ollama is not required for the Telegram bridge. The bridge parser is
+  deterministic; Ollama is only relevant if backend LLM runtime mode is
+  separately enabled for local experimentation.
 
 ## Create A Telegram Bot
 
@@ -304,3 +307,17 @@ to interpret arbitrary procurement text.
 - No auto-approval or auto-resume.
 - No customer email sending.
 - No real LLM provider required.
+
+## Ollama Is Optional
+
+The Telegram inbound bridge works in the stable default mode:
+
+```text
+LLM_PROVIDER=fake
+LLM_RUNTIME_ENABLED=false
+```
+
+If you want to validate local Ollama before experimenting with LLM-backed
+runtime behavior, use `docs/llm/OLLAMA_LOCAL_SMOKE.md`. Do not enable Ollama for
+the default defense demo unless you intentionally want variable local-model
+behavior.

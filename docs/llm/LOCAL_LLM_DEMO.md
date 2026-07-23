@@ -182,6 +182,10 @@ schema mismatch fails safely and records bounded error metadata.
 Start Ollama locally and ensure `OLLAMA_BASE_URL` points to it. Verify the
 configured model is available before running the backend in Ollama mode.
 
+For the Docker backend, use `OLLAMA_BASE_URL=http://host.docker.internal:11434`
+in a local `docker-compose.override.yml`. See
+`docs/llm/OLLAMA_LOCAL_SMOKE.md` for the complete local smoke guide.
+
 ### Fallback Expectations
 
 `LLM_FALLBACK_ENABLED=false` by default. Fallback does not hide authentication

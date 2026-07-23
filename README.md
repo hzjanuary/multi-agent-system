@@ -383,6 +383,7 @@ Deferred capabilities:
 - [Deployment docs](docs/deployment/README.md)
 - [LLM provider setup](docs/llm/PROVIDER_SETUP.md)
 - [Local LLM/no-key demo](docs/llm/LOCAL_LLM_DEMO.md)
+- [Ollama local smoke guide](docs/llm/OLLAMA_LOCAL_SMOKE.md)
 - [Final release notes](docs/final/FINAL_RELEASE_NOTES.md)
 - [Graduation report outline](docs/report/REPORT_OUTLINE.md)
 

@@ -128,6 +128,9 @@ OLLAMA_MODEL=<local model name>
 Before using Ollama mode, start the Ollama server and make sure the configured
 model is available locally.
 
+For a Docker Compose override example and a safe optional smoke command, see
+`docs/llm/OLLAMA_LOCAL_SMOKE.md`.
+
 Common errors:
 
 - server not running or connection refused: unavailable error
