@@ -3,8 +3,11 @@ import unittest
 from scripts.demo.telegram_inbound_bridge import (
     BridgeConfig,
     EXAMPLE_MESSAGE,
+    LLMExtractionError,
     build_workflow_create_payload,
+    extract_customer_request,
     is_greeting_message,
+    parse_llm_extraction_result,
     parse_customer_request,
     sender_display_name,
     telegram_workflow_reply,
@@ -131,7 +134,11 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
         self.assertEqual(payload["metadata"]["attributes"]["requested_addons"], [])
         self.assertEqual(
             payload["metadata"]["attributes"]["parser_version"],
-            "telegram-demo-parser-v2",
+            "telegram-demo-parser-v3",
+        )
+        self.assertEqual(
+            payload["metadata"]["attributes"]["extraction_mode"],
+            "deterministic",
         )
         self.assertEqual(
             payload["metadata"]["attributes"]["telegram_chat_id"],
@@ -174,6 +181,11 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
             dry_run=True,
             once=True,
             auto_run=True,
+            llm_extraction_enabled=False,
+            llm_provider="ollama",
+            llm_model="qwen2.5:7b-instruct-q4_K_M",
+            llm_base_url="http://localhost:11434",
+            llm_timeout_seconds=30,
         )
 
         reply = telegram_workflow_reply(
@@ -200,6 +212,167 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
             "@procurement_user",
         )
         self.assertEqual(sender_display_name({}), "Telegram Customer")
+
+
+class TelegramInboundBridgeLLMExtractionTests(unittest.TestCase):
+    def config(self, *, enabled: bool = True) -> BridgeConfig:
+        return BridgeConfig(
+            telegram_bot_token=None,
+            backend_api_base_url="http://localhost:8000/api/v1",
+            frontend_base_url="http://localhost:3000",
+            manager_email="manager@example.test",
+            manager_password="DemoPassword123!",
+            poll_interval_seconds=2.0,
+            allowed_chat_id=None,
+            dry_run=True,
+            once=True,
+            auto_run=True,
+            llm_extraction_enabled=enabled,
+            llm_provider="ollama",
+            llm_model="qwen2.5:7b-instruct-q4_K_M",
+            llm_base_url="http://localhost:11434",
+            llm_timeout_seconds=30,
+        )
+
+    def test_llm_json_parses_when_clean(self) -> None:
+        parsed = parse_llm_extraction_result(
+            '{"language":"vi","intent":"procurement_rfq","items":[{"name":"laptop","quantity":50}],"requested_addons":["office_365"],"needs_follow_up":false,"follow_up_question":""}',
+            original_text="cần báo giá 50 laptop có office 365",
+            provider="ollama",
+            model="qwen2.5:7b-instruct-q4_K_M",
+        )
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.quantity, 50)
+        self.assertEqual(parsed.item_name, "Standard business laptop")
+        self.assertEqual(parsed.requested_addons, ("office_365",))
+        self.assertEqual(parsed.extraction_mode, "llm")
+        self.assertEqual(parsed.llm_provider, "ollama")
+
+    def test_llm_json_parses_when_fenced(self) -> None:
+        parsed = parse_llm_extraction_result(
+            '```json\n{"language":"en","intent":"procurement_rfq","items":[{"name":"notebook","quantity":"12"}],"requested_addons":[],"needs_follow_up":false,"follow_up_question":""}\n```',
+            original_text="please quote 12 notebooks",
+            provider="ollama",
+            model="qwen2.5:7b-instruct-q4_K_M",
+        )
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.quantity, 12)
+        self.assertEqual(parsed.item_name, "Standard business laptop")
+        self.assertEqual(parsed.language, "en")
+
+    def test_llm_missed_office_addon_but_normalizer_adds_it(self) -> None:
+        parsed = parse_llm_extraction_result(
+            '{"language":"vi","intent":"procurement_rfq","items":[{"name":"máy tính xách tay","quantity":50}],"requested_addons":[],"needs_follow_up":false,"follow_up_question":""}',
+            original_text="50 máy tính xách tay có cài office 365",
+            provider="ollama",
+            model="qwen2.5:7b-instruct-q4_K_M",
+        )
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.requested_addons, ("office_365",))
+
+    def test_llm_long_item_name_normalizes_to_standard_laptop(self) -> None:
+        parsed = parse_llm_extraction_result(
+            '{"language":"en","intent":"procurement_rfq","items":[{"name":"premium business laptop with office 365 preinstalled","quantity":25}],"requested_addons":[],"needs_follow_up":false,"follow_up_question":""}',
+            original_text="quote 25 premium business laptop with office 365 preinstalled",
+            provider="ollama",
+            model="qwen2.5:7b-instruct-q4_K_M",
+        )
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.item_name, "Standard business laptop")
+        self.assertEqual(parsed.requested_addons, ("office_365",))
+
+    def test_llm_invalid_json_falls_back_to_deterministic_parser(self) -> None:
+        parsed = extract_customer_request(
+            "quote for 50 standard business laptops",
+            self.config(),
+            llm_extractor=lambda _text, _config: (_ for _ in ()).throw(
+                LLMExtractionError("bad json")
+            ),
+        )
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.quantity, 50)
+        self.assertEqual(parsed.extraction_mode, "fallback")
+        self.assertEqual(parsed.llm_provider, "ollama")
+
+    def test_llm_timeout_error_falls_back_to_deterministic_parser(self) -> None:
+        def timeout_extractor(_text: str, _config: BridgeConfig) -> None:
+            raise LLMExtractionError("timeout")
+
+        parsed = extract_customer_request(
+            "cần báo giá 50 laptop",
+            self.config(),
+            llm_extractor=timeout_extractor,
+        )
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.quantity, 50)
+        self.assertEqual(parsed.extraction_mode, "fallback")
+
+    def test_missing_quantity_follow_up_does_not_create_request(self) -> None:
+        parsed = parse_llm_extraction_result(
+            '{"language":"vi","intent":"procurement_rfq","items":[{"name":"laptop","quantity":0}],"requested_addons":[],"needs_follow_up":true,"follow_up_question":"Bạn cần bao nhiêu laptop?"}',
+            original_text="tôi muốn mua laptop",
+            provider="ollama",
+            model="qwen2.5:7b-instruct-q4_K_M",
+        )
+
+        self.assertIsNone(parsed)
+
+    def test_unsupported_item_follow_up_does_not_create_request(self) -> None:
+        parsed = parse_llm_extraction_result(
+            '{"language":"en","intent":"procurement_rfq","items":[{"name":"ergonomic chair","quantity":10}],"requested_addons":[],"needs_follow_up":true,"follow_up_question":"Which supported item?"}',
+            original_text="quote for 10 chairs",
+            provider="ollama",
+            model="qwen2.5:7b-instruct-q4_K_M",
+        )
+
+        self.assertIsNone(parsed)
+
+    def test_extraction_metadata_is_bounded_and_safe(self) -> None:
+        parsed = parse_llm_extraction_result(
+            '{"language":"en","intent":"procurement_rfq","items":[{"name":"laptop","quantity":50}],"requested_addons":[],"needs_follow_up":false,"follow_up_question":""}',
+            original_text="quote for 50 laptops",
+            provider="ollama",
+            model="qwen2.5:7b-instruct-q4_K_M",
+        )
+        assert parsed is not None
+
+        payload = build_workflow_create_payload(
+            parsed,
+            customer_name="Ada Customer",
+            chat_id="12345",
+            message_id="67890",
+        )
+        attributes = payload["metadata"]["attributes"]
+
+        self.assertEqual(attributes["extraction_mode"], "llm")
+        self.assertEqual(attributes["llm_provider"], "ollama")
+        self.assertEqual(attributes["llm_model"], "qwen2.5:7b-instruct-q4_K_M")
+        serialized = str(attributes).lower()
+        self.assertNotIn("prompt", serialized)
+        self.assertNotIn("provider_payload", serialized)
+        self.assertNotIn("raw_response", serialized)
+
+    def test_no_workflow_creation_for_greeting(self) -> None:
+        parsed = parse_llm_extraction_result(
+            '{"language":"vi","intent":"greeting","items":[],"requested_addons":[],"needs_follow_up":true,"follow_up_question":"Bạn cần mua gì?"}',
+            original_text="xin chào",
+            provider="ollama",
+            model="qwen2.5:7b-instruct-q4_K_M",
+        )
+
+        self.assertIsNone(parsed)
 
 
 if __name__ == "__main__":

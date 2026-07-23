@@ -31,9 +31,11 @@ script under `scripts/demo/` and uses only existing backend endpoints.
 - The workflow created by the default auto-run path must still stop at
   `WAITING_APPROVAL`.
 - Real LLM providers are not required.
-- Ollama is not required for the Telegram bridge. The bridge parser is
-  deterministic; Ollama is only relevant if backend LLM runtime mode is
-  separately enabled for local experimentation.
+- Ollama is not required for the default Telegram bridge. The deterministic
+  parser remains the stable path.
+- Optional LLM-backed RFQ extraction can be enabled locally. It falls back to
+  deterministic parsing and still never auto-approves, auto-resumes, or sends
+  email.
 
 ## Create A Telegram Bot
 
@@ -52,6 +54,7 @@ export FRONTEND_BASE_URL="http://localhost:3000"
 export DEMO_MANAGER_EMAIL="manager@example.test"
 export DEMO_MANAGER_PASSWORD="DemoPassword123!"
 export TELEGRAM_POLL_INTERVAL_SECONDS="2"
+export TELEGRAM_LLM_EXTRACTION_ENABLED="false"
 ```
 
 Windows PowerShell equivalent:
@@ -63,9 +66,23 @@ $env:FRONTEND_BASE_URL = "http://localhost:3000"
 $env:DEMO_MANAGER_EMAIL = "manager@example.test"
 $env:DEMO_MANAGER_PASSWORD = "DemoPassword123!"
 $env:TELEGRAM_POLL_INTERVAL_SECONDS = "2"
+$env:TELEGRAM_LLM_EXTRACTION_ENABLED = "false"
 ```
 
 The Manager credentials are local-demo/board-demo only.
+
+Optional local LLM extraction variables:
+
+```bash
+export TELEGRAM_LLM_EXTRACTION_ENABLED="true"
+export TELEGRAM_LLM_PROVIDER="ollama"
+export TELEGRAM_LLM_MODEL="${OLLAMA_MODEL:-qwen2.5:7b-instruct-q4_K_M}"
+export TELEGRAM_LLM_BASE_URL="${OLLAMA_BASE_URL:-http://localhost:11434}"
+export TELEGRAM_LLM_TIMEOUT_SECONDS="30"
+```
+
+The bridge only supports local optional extraction through Ollama today. Do not
+commit local model settings or environment files.
 
 ## Local Startup
 
@@ -115,6 +132,21 @@ To restrict processing to one chat:
 ```bash
 python scripts/demo/telegram_inbound_bridge.py --allowed-chat-id "<telegram-chat-id>"
 ```
+
+To enable optional LLM-backed extraction for one local run:
+
+```bash
+TELEGRAM_LLM_EXTRACTION_ENABLED=true python scripts/demo/telegram_inbound_bridge.py
+```
+
+Equivalent CLI flags:
+
+```bash
+python scripts/demo/telegram_inbound_bridge.py --llm-extraction
+python scripts/demo/telegram_inbound_bridge.py --no-llm-extraction
+```
+
+`--no-llm-extraction` forces deterministic parsing only.
 
 ## Example Customer Messages
 
@@ -181,6 +213,56 @@ If a quantity is present but the item is unsupported, the bridge still refuses
 to create a workflow silently. Ask the customer actor to use a supported laptop
 phrase such as `laptop` or `máy tính xách tay`.
 
+## Optional LLM Extraction
+
+The bridge can optionally ask a local Ollama model to extract a more natural
+Telegram message into a strict JSON object before deterministic normalization.
+This mode is off by default.
+
+Default optional extraction settings:
+
+```text
+TELEGRAM_LLM_EXTRACTION_ENABLED=false
+TELEGRAM_LLM_PROVIDER=ollama
+TELEGRAM_LLM_MODEL=<OLLAMA_MODEL or qwen2.5:7b-instruct-q4_K_M>
+TELEGRAM_LLM_BASE_URL=<OLLAMA_BASE_URL or http://localhost:11434>
+TELEGRAM_LLM_TIMEOUT_SECONDS=30
+```
+
+The LLM is instructed to return exactly one JSON object:
+
+```json
+{
+  "language": "vi",
+  "intent": "procurement_rfq",
+  "items": [{"name": "Standard business laptop", "quantity": 50}],
+  "requested_addons": ["office_365"],
+  "needs_follow_up": false,
+  "follow_up_question": ""
+}
+```
+
+The script accepts raw JSON or fenced `json` output, but invalid or schema-bad
+responses are discarded safely.
+
+After LLM extraction, the deterministic canonicalizer still runs:
+
+- laptop aliases normalize to `Standard business laptop`
+- Office 365 aliases normalize to `office_365`
+- quantity must be a positive integer
+- unsupported items or missing quantity produce a follow-up prompt
+- raw prompts and raw provider payloads are not stored in workflow metadata
+
+Fallback behavior:
+
+- LLM extraction disabled: deterministic parser only.
+- LLM extraction succeeds: use the normalized LLM result.
+- LLM timeout, provider error, invalid JSON, or unsupported shape: fallback to
+  deterministic parser.
+- Both paths fail: ask for a clearer quantity and item.
+
+The Telegram reply never mentions internal LLM failures.
+
 ## Board Demo Script
 
 1. Start backend infrastructure.
@@ -224,11 +306,17 @@ source=telegram
 language=en or vi
 requested_addons=["office_365"] when detected
 demo=true
-parser_version=telegram-demo-parser-v2
+parser_version=telegram-demo-parser-v3
+extraction_mode=deterministic, llm, or fallback
+llm_provider=ollama when LLM extraction produced or attempted a fallback result
+llm_model=<bounded model name> when LLM extraction produced or attempted a fallback result
 ```
 
 The original Telegram text is preserved in the workflow request as `raw_text`
 and `request_text`.
+
+The bridge does not store raw prompts, raw model responses, provider payloads,
+tokens, passwords, or Telegram bot tokens in workflow metadata.
 
 ## Troubleshooting
 
@@ -295,6 +383,18 @@ cần báo giá 50 máy tính xách tay
 The parser is intentionally deterministic for the board demo and does not try
 to interpret arbitrary procurement text.
 
+### Optional LLM Extraction Fails
+
+The bridge silently falls back to deterministic parsing and keeps the Telegram
+reply demo-friendly. Check local console output only for bounded operational
+errors. Do not print prompts, model responses, tokens, or passwords.
+
+Validate Ollama separately:
+
+```bash
+python scripts/demo/llm_provider_smoke.py --provider ollama --model qwen2.5:7b-instruct-q4_K_M
+```
+
 ## Limitations
 
 - Local polling only; no webhook endpoint.
@@ -306,7 +406,8 @@ to interpret arbitrary procurement text.
 - No Telegram user identity binding to backend users.
 - No auto-approval or auto-resume.
 - No customer email sending.
-- No real LLM provider required.
+- No real LLM provider required by default.
+- Optional LLM extraction is local-only and not part of CI.
 
 ## Ollama Is Optional
 
@@ -321,3 +422,13 @@ If you want to validate local Ollama before experimenting with LLM-backed
 runtime behavior, use `docs/llm/OLLAMA_LOCAL_SMOKE.md`. Do not enable Ollama for
 the default defense demo unless you intentionally want variable local-model
 behavior.
+
+For optional LLM extraction specifically:
+
+```bash
+ollama run qwen2.5:7b-instruct-q4_K_M
+TELEGRAM_LLM_EXTRACTION_ENABLED=true python scripts/demo/telegram_inbound_bridge.py
+```
+
+If Ollama is stopped or misconfigured, deterministic fallback still handles
+supported English and Vietnamese laptop RFQs.

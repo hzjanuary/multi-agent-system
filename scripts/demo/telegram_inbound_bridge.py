@@ -26,6 +26,10 @@ DEFAULT_FRONTEND_BASE_URL = "http://localhost:3000"
 DEFAULT_MANAGER_EMAIL = "manager@example.test"
 DEFAULT_MANAGER_PASSWORD = "DemoPassword123!"
 DEFAULT_POLL_INTERVAL_SECONDS = 2.0
+DEFAULT_TELEGRAM_LLM_PROVIDER = "ollama"
+DEFAULT_TELEGRAM_LLM_MODEL = "qwen2.5:7b-instruct-q4_K_M"
+DEFAULT_TELEGRAM_LLM_BASE_URL = "http://localhost:11434"
+DEFAULT_TELEGRAM_LLM_TIMEOUT_SECONDS = 30
 EXAMPLE_MESSAGE = (
     "We would like to purchase 50 standard business laptops for a new "
     "operations team. We signed a master agreement in May 2026. Please provide "
@@ -33,7 +37,7 @@ EXAMPLE_MESSAGE = (
 )
 MAX_TEXT_LENGTH = 2000
 HTTP_TIMEOUT_SECONDS = 15
-PARSER_VERSION = "telegram-demo-parser-v2"
+PARSER_VERSION = "telegram-demo-parser-v3"
 SUPPORTED_ITEM_NAME = "Standard business laptop"
 HELPFUL_REQUEST_PROMPT = (
     "Please include quantity and item.\n"
@@ -54,6 +58,11 @@ class BridgeConfig:
     dry_run: bool
     once: bool
     auto_run: bool
+    llm_extraction_enabled: bool
+    llm_provider: str
+    llm_model: str
+    llm_base_url: str
+    llm_timeout_seconds: int
 
 
 @dataclass(frozen=True)
@@ -63,6 +72,9 @@ class ParsedCustomerRequest:
     item_name: str
     language: str
     requested_addons: tuple[str, ...] = ()
+    extraction_mode: str = "deterministic"
+    llm_provider: str | None = None
+    llm_model: str | None = None
 
     @property
     def summary(self) -> str:
@@ -88,6 +100,10 @@ class BridgeError(Exception):
 
 class ApiError(BridgeError):
     """Safe API error with bounded public message."""
+
+
+class LLMExtractionError(BridgeError):
+    """Safe LLM extraction error that is never shown to Telegram users."""
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -169,6 +185,20 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         dest="auto_run",
         help="Only create workflows; do not call /run.",
     )
+    llm_group = parser.add_mutually_exclusive_group()
+    llm_group.add_argument(
+        "--llm-extraction",
+        action="store_true",
+        dest="llm_extraction",
+        help="Enable optional LLM-backed RFQ extraction before deterministic fallback.",
+    )
+    llm_group.add_argument(
+        "--no-llm-extraction",
+        action="store_false",
+        dest="llm_extraction",
+        help="Disable optional LLM extraction and use deterministic parsing only.",
+    )
+    parser.set_defaults(llm_extraction=None)
     parser.set_defaults(auto_run=True)
     return parser.parse_args(argv)
 
@@ -194,7 +224,37 @@ def config_from_env(args: argparse.Namespace) -> BridgeConfig:
         dry_run=bool(args.dry_run),
         once=bool(args.once),
         auto_run=bool(args.auto_run),
+        llm_extraction_enabled=resolve_bool_flag(
+            args.llm_extraction,
+            os.getenv("TELEGRAM_LLM_EXTRACTION_ENABLED", "false"),
+        ),
+        llm_provider=os.getenv(
+            "TELEGRAM_LLM_PROVIDER",
+            DEFAULT_TELEGRAM_LLM_PROVIDER,
+        ).strip().lower(),
+        llm_model=(
+            os.getenv("TELEGRAM_LLM_MODEL")
+            or os.getenv("OLLAMA_MODEL")
+            or DEFAULT_TELEGRAM_LLM_MODEL
+        ).strip(),
+        llm_base_url=(
+            os.getenv("TELEGRAM_LLM_BASE_URL")
+            or os.getenv("OLLAMA_BASE_URL")
+            or DEFAULT_TELEGRAM_LLM_BASE_URL
+        ).strip().rstrip("/"),
+        llm_timeout_seconds=int(
+            os.getenv(
+                "TELEGRAM_LLM_TIMEOUT_SECONDS",
+                str(DEFAULT_TELEGRAM_LLM_TIMEOUT_SECONDS),
+            )
+        ),
     )
+
+
+def resolve_bool_flag(cli_value: bool | None, env_value: str) -> bool:
+    if cli_value is not None:
+        return cli_value
+    return env_value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
@@ -226,7 +286,7 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
         send_or_log_reply(config, chat_id, HELPFUL_REQUEST_PROMPT)
         return
 
-    parsed = parse_customer_request(text)
+    parsed = extract_customer_request(text, config)
     if parsed is None:
         send_or_log_reply(config, chat_id, HELPFUL_REQUEST_PROMPT)
         return
@@ -346,6 +406,247 @@ def parse_customer_request(text: str) -> ParsedCustomerRequest | None:
     )
 
 
+def extract_customer_request(
+    text: str,
+    config: BridgeConfig,
+    *,
+    llm_extractor: Any | None = None,
+) -> ParsedCustomerRequest | None:
+    """Extract a customer RFQ with optional LLM parsing and deterministic fallback."""
+    if not config.llm_extraction_enabled:
+        return parse_customer_request(text)
+
+    extractor = llm_extractor or llm_extract_customer_request
+    try:
+        llm_parsed = extractor(text, config)
+    except LLMExtractionError:
+        llm_parsed = None
+    if llm_parsed is not None:
+        return llm_parsed
+
+    deterministic = parse_customer_request(text)
+    if deterministic is None:
+        return None
+    return parsed_with_extraction_metadata(
+        deterministic,
+        extraction_mode="fallback",
+        llm_provider=config.llm_provider,
+        llm_model=config.llm_model,
+    )
+
+
+def llm_extract_customer_request(
+    text: str,
+    config: BridgeConfig,
+) -> ParsedCustomerRequest | None:
+    """Use a local provider call for extraction, then normalize deterministically."""
+    if config.llm_provider != "ollama":
+        raise LLMExtractionError("unsupported Telegram LLM provider")
+    payload = {
+        "model": config.llm_model,
+        "messages": [
+            {"role": "system", "content": llm_extraction_system_prompt()},
+            {"role": "user", "content": text[:MAX_TEXT_LENGTH]},
+        ],
+        "stream": False,
+        "options": {"temperature": 0, "num_predict": 500},
+    }
+    request = urllib.request.Request(
+        f"{config.llm_base_url}/api/chat",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=max(1, min(config.llm_timeout_seconds, 120)),
+        ) as response:
+            response_payload = json.loads(response.read().decode("utf-8"))
+    except (
+        TimeoutError,
+        urllib.error.HTTPError,
+        urllib.error.URLError,
+        json.JSONDecodeError,
+    ) as error:
+        raise LLMExtractionError("Telegram LLM extraction failed") from error
+
+    message = response_payload.get("message")
+    content = message.get("content") if isinstance(message, dict) else None
+    if not isinstance(content, str):
+        raise LLMExtractionError("Telegram LLM extraction returned no content")
+    return parse_llm_extraction_result(
+        content,
+        original_text=text,
+        provider=config.llm_provider,
+        model=config.llm_model,
+    )
+
+
+def llm_extraction_system_prompt() -> str:
+    return (
+        "Extract a procurement RFQ intent from one Telegram message. Return exactly "
+        "one JSON object and no markdown. Shape: {\"language\":\"vi|en|unknown\","
+        "\"intent\":\"procurement_rfq|greeting|unsupported|other\","
+        "\"items\":[{\"name\":\"...\",\"quantity\":0}],\"requested_addons\":[],"
+        "\"needs_follow_up\":true,\"follow_up_question\":\"...\"}. Rules: use "
+        "canonical item names when possible. laptop, laptops, notebook, máy tính "
+        "xách tay, laptop doanh nhân -> Standard business laptop. office 365, "
+        "microsoft 365, cài sẵn office, có office -> requested_addons "
+        "[\"office_365\"]. Do not include add-ons inside item name. If quantity is "
+        "missing or item is unknown, needs_follow_up=true. Return JSON only."
+    )
+
+
+def parse_llm_extraction_result(
+    value: str,
+    *,
+    original_text: str,
+    provider: str,
+    model: str,
+) -> ParsedCustomerRequest | None:
+    data = extract_json_object(value)
+    if data is None:
+        raise LLMExtractionError("invalid Telegram LLM JSON")
+    return parsed_request_from_llm_data(
+        data,
+        original_text=original_text,
+        provider=provider,
+        model=model,
+    )
+
+
+def extract_json_object(value: str) -> dict[str, Any] | None:
+    stripped = value.strip()
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", stripped, flags=re.S)
+    candidate = fenced.group(1) if fenced else stripped
+    if not candidate.startswith("{"):
+        start = candidate.find("{")
+        end = candidate.rfind("}")
+        if start == -1 or end <= start:
+            return None
+        candidate = candidate[start : end + 1]
+    try:
+        parsed = json.loads(candidate)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def parsed_request_from_llm_data(
+    data: dict[str, Any],
+    *,
+    original_text: str,
+    provider: str,
+    model: str,
+) -> ParsedCustomerRequest | None:
+    intent = str(data.get("intent", "other")).strip().lower()
+    if intent in {"greeting", "unsupported", "other"}:
+        return None
+    if intent != "procurement_rfq":
+        return None
+
+    items = data.get("items")
+    if not isinstance(items, list) or not items:
+        return None
+    first_item = items[0]
+    if not isinstance(first_item, dict):
+        return None
+
+    quantity = coerce_positive_quantity(first_item.get("quantity"))
+    item_name = canonical_item_name(str(first_item.get("name", "")))
+    if quantity is None or item_name is None:
+        return None
+
+    original_normalized = re.sub(r"\s+", " ", original_text.strip())[:MAX_TEXT_LENGTH]
+    searchable = normalize_for_matching(
+        f"{original_normalized} {first_item.get('name', '')}"
+    )
+    requested_addons = canonical_requested_addons(
+        data.get("requested_addons"),
+        searchable,
+    )
+    raw_language = str(data.get("language", "unknown")).strip().lower()
+    language = (
+        raw_language
+        if raw_language in {"vi", "en"}
+        else detect_language(original_normalized, searchable)
+    )
+    return ParsedCustomerRequest(
+        original_text=original_normalized,
+        quantity=quantity,
+        item_name=item_name,
+        language=language,
+        requested_addons=requested_addons,
+        extraction_mode="llm",
+        llm_provider=provider,
+        llm_model=model[:200],
+    )
+
+
+def coerce_positive_quantity(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value if value > 0 else None
+    if isinstance(value, str) and re.fullmatch(r"\d{1,5}", value.strip()):
+        quantity = int(value.strip())
+        return quantity if quantity > 0 else None
+    return None
+
+
+def canonical_item_name(value: str) -> str | None:
+    normalized = normalize_for_matching(value)
+    laptop_patterns = (
+        "standard business laptop",
+        "business laptop",
+        "laptop",
+        "laptops",
+        "notebook",
+        "notebooks",
+        "may tinh xach tay",
+        "laptop doanh nhan",
+        "may tinh xach tay doanh nhan",
+        "may tinh xach tay tieu chuan",
+    )
+    if any(pattern in normalized for pattern in laptop_patterns):
+        return SUPPORTED_ITEM_NAME
+    return None
+
+
+def canonical_requested_addons(
+    llm_addons: Any,
+    searchable_text: str,
+) -> tuple[str, ...]:
+    addons: list[str] = []
+    if isinstance(llm_addons, list):
+        for addon in llm_addons:
+            normalized = normalize_for_matching(str(addon))
+            if normalized in {"office 365", "office_365", "microsoft 365"}:
+                addons.append("office_365")
+    addons.extend(detect_requested_addons(searchable_text))
+    return tuple(dict.fromkeys(addons))
+
+
+def parsed_with_extraction_metadata(
+    parsed: ParsedCustomerRequest,
+    *,
+    extraction_mode: str,
+    llm_provider: str | None,
+    llm_model: str | None,
+) -> ParsedCustomerRequest:
+    return ParsedCustomerRequest(
+        original_text=parsed.original_text,
+        quantity=parsed.quantity,
+        item_name=parsed.item_name,
+        language=parsed.language,
+        requested_addons=parsed.requested_addons,
+        extraction_mode=extraction_mode,
+        llm_provider=llm_provider,
+        llm_model=llm_model[:200] if llm_model else None,
+    )
+
+
 def normalize_for_matching(value: str) -> str:
     ascii_text = "".join(
         char
@@ -402,6 +703,21 @@ def build_workflow_create_payload(
     chat_id: str,
     message_id: str,
 ) -> dict[str, Any]:
+    attributes: dict[str, Any] = {
+        "source": "telegram",
+        "telegram_chat_id": str(chat_id),
+        "telegram_message_id": str(message_id),
+        "demo": True,
+        "language": parsed.language,
+        "requested_addons": list(parsed.requested_addons),
+        "parser_version": PARSER_VERSION,
+        "extraction_mode": parsed.extraction_mode,
+    }
+    if parsed.llm_provider:
+        attributes["llm_provider"] = parsed.llm_provider[:80]
+    if parsed.llm_model:
+        attributes["llm_model"] = parsed.llm_model[:200]
+
     return {
         "workflow_type": "procurement_quotation",
         "domain": "it_equipment",
@@ -416,15 +732,7 @@ def build_workflow_create_payload(
         "metadata": {
             "state_version": 1,
             "tags": {"source": "telegram", "demo": "true"},
-            "attributes": {
-                "source": "telegram",
-                "telegram_chat_id": str(chat_id),
-                "telegram_message_id": str(message_id),
-                "demo": True,
-                "language": parsed.language,
-                "requested_addons": list(parsed.requested_addons),
-                "parser_version": PARSER_VERSION,
-            },
+            "attributes": attributes,
         },
     }
 
