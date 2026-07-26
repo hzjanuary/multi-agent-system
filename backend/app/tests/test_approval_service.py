@@ -5,10 +5,11 @@ from __future__ import annotations
 import json
 from collections.abc import AsyncIterator, Sequence
 from typing import cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.approvals import (
@@ -314,7 +315,7 @@ async def create_user_with_role(
     """Create an actor with one role."""
     role = await ensure_role(db_session, role_name)
     user = User(
-        email=f"{role_name.value.lower()}-approval@example.test",
+        email=f"{role_name.value.lower()}-approval-{uuid4()}@example.test",
         hashed_password=hash_password("not-used-in-approval-tests"),
         roles=[role],
     )
@@ -325,13 +326,27 @@ async def create_user_with_role(
 
 async def ensure_role(session: AsyncSession, role_name: RoleName) -> Role:
     """Create or reuse an RBAC role."""
-    role = await session.scalar(select(Role).where(Role.name == role_name.value))
+    role: Role | None = await get_role_by_name(session, role_name)
     if role is not None:
         return role
-    role = Role(name=role_name.value, description=f"{role_name.value} role")
-    session.add(role)
-    await session.flush()
-    return role
+
+    try:
+        async with session.begin_nested():
+            role = Role(name=role_name.value, description=f"{role_name.value} role")
+            session.add(role)
+            await session.flush()
+            return role
+    except IntegrityError:
+        role = await get_role_by_name(session, role_name)
+        if role is not None:
+            return role
+        raise
+
+
+async def get_role_by_name(session: AsyncSession, role_name: RoleName) -> Role | None:
+    """Return an existing role by stable RBAC name."""
+    result = await session.execute(select(Role).where(Role.name == role_name.value))
+    return result.scalar_one_or_none()
 
 
 async def list_workflow_events(
