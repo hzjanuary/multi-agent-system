@@ -11,7 +11,7 @@ decision.
 ## Status
 
 - Final graduation-ready project.
-- SPEC-001 through SPEC-015 completed and approved.
+- SPEC-001 through SPEC-020 completed and approved.
 - Frontend demo surfaces use the **Violet Operations Console** dark command
   center design.
 - Default demo is deterministic and no-key.
@@ -334,13 +334,11 @@ validation requires explicit `--confirm-local-demo`.
 
 ## Roadmap After Defense
 
-1. Live verification and governance hardening for the SPEC-016 conversational
-   sales/reference evidence foundation. Price research remains disabled by
-   default and is not a final quote:
-   `.ai/specs/SPEC-016-conversational-sales-agent/spec.md`.
-2. LLM runtime hardening.
-3. Catalog expansion beyond the laptop demo item.
-4. Email/Gmail integration for approved final communications.
+1. LLM runtime hardening beyond the deterministic defense path.
+2. Catalog governance and expansion beyond the closed SPEC-018 demo catalog.
+3. Provider policy hardening after the manual-only SPEC-019 Tavily smoke path.
+4. Email/Gmail send-provider planning beyond the closed SPEC-020 preview-only
+   foundation.
 5. Production deployment polish.
 
 ## License

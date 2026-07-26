@@ -21,12 +21,14 @@ Closed specs:
 - SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - Approved / Closed
 - SPEC-016 Conversational Sales Agent and External Price Research - Approved / Closed
 - SPEC-017 Frontend Visual Redesign - Approved / Closed
+- SPEC-018 Catalog Expansion - Approved / Closed
+- SPEC-019 Provider Live Verification - Approved / Closed
+- SPEC-020 Approved Outbound Communication - Approved / Closed
 
 Current planned spec sequence:
 
-- SPEC-018 Catalog Expansion - implemented / ready for closeout review
-- SPEC-019 Provider Live Verification - implemented / ready for closeout review
-- SPEC-020 Approved Outbound Communication - Sprint 2 implemented / ready for closeout review
+- No active post-demo spec is open. Next work should start as a new bounded
+  planning spec before implementation.
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -214,19 +216,17 @@ Last known SPEC-016 validation:
   - `bash scripts/ci/all-gates.sh` passed, including production-demo image build and whitespace check.
   - `git diff --check` passed.
 
-Recommended next work after SPEC-016:
+Recommended next work after the closed SPEC-018 through SPEC-020 wave:
 
-- SPEC-018 Catalog Expansion and product governance for supported items beyond
-  the laptop demo.
-- SPEC-019 Provider Live Verification for Tavily/provider behavior with real
-  keys outside CI, including rate limits, caching, and citation quality
-  controls.
-- SPEC-020 Approved Outbound Communication after Manager/Admin approval.
-- Provider observability and policy controls for live external research.
+- Start a new bounded planning spec before expanding catalog governance,
+  provider operations, outbound send-provider behavior, or production
+  communication policy.
+- Keep provider observability and live external research controls future-scoped
+  until a new spec defines safety, audit, and validation requirements.
 
-## Planned Post-Demo Specs
+## Closed Post-Demo Specs
 
-Planning docs created:
+Closed spec docs:
 
 - `.ai/specs/SPEC-018-catalog-expansion/spec.md`
 - `.ai/specs/SPEC-018-catalog-expansion/tasks.md`
@@ -235,13 +235,13 @@ Planning docs created:
 - `.ai/specs/SPEC-020-approved-outbound-communication/spec.md`
 - `.ai/specs/SPEC-020-approved-outbound-communication/tasks.md`
 
-Recommended implementation sequence:
+Closed implementation sequence:
 
 1. SPEC-018 Catalog Expansion.
 2. SPEC-019 Provider Live Verification.
 3. SPEC-020 Approved Outbound Communication.
 
-Default demo safety remains unchanged across all three planned specs:
+Default demo safety remains unchanged across these closed specs:
 
 - `LLM_PROVIDER=fake`
 - `LLM_RUNTIME_ENABLED=false`
@@ -258,7 +258,7 @@ Default demo safety remains unchanged across all three planned specs:
 
 Status:
 
-- Implemented / ready for closeout review.
+- Approved / Closed.
 
 Scope implemented:
 
@@ -328,13 +328,13 @@ Last known validation:
 
 Remaining SPEC-018 work:
 
-- Await review/approval for SPEC-018 closeout.
+- None. Future catalog growth should be planned under a new bounded spec.
 
 ## Current SPEC-019 Provider Live Verification State
 
 Status:
 
-- Implemented / ready for closeout review.
+- Approved / Closed.
 
 Scope implemented:
 
@@ -347,7 +347,7 @@ Scope implemented:
 - Updated `docs/demo/FINAL_LIVE_DEMO_RUNBOOK.md` with a short optional
   provider verification pointer.
 - Updated `.ai/specs/SPEC-019-provider-live-verification/spec.md` and
-  `tasks.md` to implemented / ready for review.
+  `tasks.md` to approved / closed.
 
 Behavior:
 
@@ -395,13 +395,14 @@ Last known validation:
 
 Remaining SPEC-019 work:
 
-- Await review/approval for SPEC-019 closeout.
+- None. Future provider verification hardening should be planned under a new
+  bounded spec.
 
 ## Current SPEC-020 Approved Outbound Communication State
 
 Status:
 
-- Sprint 2 implemented / ready for closeout review.
+- Approved / Closed.
 
 Scope implemented:
 
@@ -494,7 +495,8 @@ Last known Sprint 2 validation:
 
 Remaining SPEC-020 work:
 
-- Await closeout review.
+- None. Future send-provider integration should be planned under a new bounded
+  spec.
 
 ## Current SPEC-017 Frontend Visual Redesign State
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Sprint 2 implemented / ready for closeout review
+Approved / Closed
 
 ## Sprint 2 Implementation Summary
 

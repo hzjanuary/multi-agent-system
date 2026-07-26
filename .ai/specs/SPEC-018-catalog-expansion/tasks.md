@@ -248,7 +248,7 @@ Sprint 2 implementation:
 
 ### TASK 018.7 - Final Validation And Docs
 
-Status: Implemented in Sprint 2.
+Status: Approved / Closed.
 
 Goal: Close SPEC-018 with updated docs, runbooks, and full validation.
 
@@ -261,7 +261,7 @@ Scope:
 
 Acceptance criteria:
 
-- SPEC-018 is ready for review/closure.
+- SPEC-018 is approved and closed.
 - Expanded catalog behavior is documented honestly.
 - No final quote, stock, delivery, fake external price, provider call, or
   unsupported item dropping is introduced.
@@ -285,7 +285,7 @@ git diff --check
 
 Sprint 2 implementation:
 
-- Updated SPEC-018 status to implemented / ready for closeout review.
+- Updated SPEC-018 status to approved / closed.
 - Updated demo/operator docs to describe explicit catalog metadata display as
   intake evidence only.
 - Updated `.codex/HANDOFF.md` with final SPEC-018 state and validation.

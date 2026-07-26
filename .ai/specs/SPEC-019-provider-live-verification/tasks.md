@@ -151,7 +151,7 @@ Implementation:
 
 ### TASK 019.5 - Final Validation And Docs
 
-Status: Implemented.
+Status: Approved / Closed.
 
 Goal: Close SPEC-019 with full validation and updated handoff.
 
@@ -164,7 +164,7 @@ Scope:
 
 Acceptance criteria:
 
-- SPEC-019 is ready for review/closure.
+- SPEC-019 is approved and closed.
 - Manual live smoke is isolated, explicit, redacted, and non-mutating.
 - No Telegram/workflow automatic live provider behavior exists.
 
@@ -190,7 +190,7 @@ TAVILY_API_KEY="<set locally>" python3 scripts/demo/tavily_live_smoke.py --provi
 
 Implementation:
 
-- Updated SPEC-019 status to implemented / ready for closeout review.
+- Updated SPEC-019 status to approved / closed.
 - Updated `.codex/HANDOFF.md` with current SPEC-019 scope and validation.
 - Live validation remains optional and was not run without a private local
   provider key.

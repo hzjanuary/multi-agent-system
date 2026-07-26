@@ -45,9 +45,9 @@
 
 ## Phase 6 - Post-Demo Product Roadmap
 
-- Planned: SPEC-018 Catalog Expansion
-- Planned: SPEC-019 Provider Live Verification
-- Planned: SPEC-020 Approved Outbound Communication
+- SPEC-018 Catalog Expansion - Approved / Closed
+- SPEC-019 Provider Live Verification - Approved / Closed
+- SPEC-020 Approved Outbound Communication - Approved / Closed
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,

@@ -1305,9 +1305,10 @@ Build the NextJS dashboard for operating and monitoring workflows.
 SPEC-015 Frontend Bootstrap
 SPEC-016 Authentication UI
 SPEC-017 Dashboard
-SPEC-018 Workflow List and Detail
-SPEC-019 Agent Monitor
-SPEC-020 Approval Center
+RETIRED PLACEHOLDER: SPEC-018 Workflow List and Detail
+RETIRED PLACEHOLDER: SPEC-019 Agent Monitor
+RETIRED PLACEHOLDER: SPEC-020 Approval Center
+Current approved SPEC-018 through SPEC-020 are post-demo roadmap specs in .ai/specs/SPEC_INDEX.md.
 SPEC-021 Document Management
 ```
 
@@ -1553,9 +1554,10 @@ SPEC-014 Email Agent
 SPEC-015 Frontend Bootstrap
 SPEC-016 Authentication UI
 SPEC-017 Dashboard
-SPEC-018 Workflow List and Detail
-SPEC-019 Agent Monitor
-SPEC-020 Approval Center
+RETIRED PLACEHOLDER: SPEC-018 Workflow List and Detail
+RETIRED PLACEHOLDER: SPEC-019 Agent Monitor
+RETIRED PLACEHOLDER: SPEC-020 Approval Center
+Current approved SPEC-018 through SPEC-020 are post-demo roadmap specs in .ai/specs/SPEC_INDEX.md.
 SPEC-021 Document Management
 SPEC-022 Audit Log
 SPEC-023 Analytics

@@ -251,7 +251,7 @@ git diff --check
 
 ### TASK 020.7 - Final Validation And Docs
 
-Status: Implemented in Sprint 2 / ready for closeout review.
+Status: Approved / Closed.
 
 Goal: Close SPEC-020 with docs, validation, and handoff updates.
 
@@ -263,14 +263,14 @@ Scope:
 
 Acceptance criteria:
 
-- SPEC-020 is ready for review/closure.
+- SPEC-020 is approved and closed.
 - No real email, auto-send, auto-approval, auto-resume, or pre-approval final
   quote behavior is introduced.
 - Audit and RBAC expectations are documented.
 
 Sprint 2 implementation:
 
-- Updated SPEC-020 status to Sprint 2 implemented / ready for closeout review.
+- Updated SPEC-020 status to approved / closed.
 - Added backend read-only preview endpoint:
   `GET /api/v1/workflows/{workflow_id}/outbound/preview`.
 - Added focused API tests for authentication, Admin/Manager access, Viewer
