@@ -191,6 +191,27 @@ class Settings(BaseSettings):
         max_length=3,
         alias="PRICE_RESEARCH_DEFAULT_CURRENCY",
     )
+    tavily_api_key: str = Field(default="", alias="TAVILY_API_KEY")
+    tavily_search_url: str = Field(
+        default="https://api.tavily.com/search",
+        min_length=1,
+        max_length=500,
+        alias="TAVILY_SEARCH_URL",
+    )
+    tavily_max_results: int = Field(
+        default=5,
+        ge=1,
+        le=10,
+        alias="TAVILY_MAX_RESULTS",
+    )
+    tavily_include_raw_content: bool = Field(
+        default=False,
+        alias="TAVILY_INCLUDE_RAW_CONTENT",
+    )
+    tavily_search_depth: Literal["basic", "advanced"] = Field(
+        default="basic",
+        alias="TAVILY_SEARCH_DEPTH",
+    )
     readiness_timeout_seconds: float = Field(
         default=2.0,
         ge=0.1,
@@ -287,6 +308,12 @@ class Settings(BaseSettings):
     def normalize_price_research_currency(cls, value: str) -> str:
         """Normalize default price research currency."""
         return str(value).strip().upper()
+
+    @field_validator("tavily_search_depth", mode="before")
+    @classmethod
+    def normalize_tavily_search_depth(cls, value: str) -> str:
+        """Normalize Tavily search depth."""
+        return str(value).strip().lower()
 
 
 @lru_cache

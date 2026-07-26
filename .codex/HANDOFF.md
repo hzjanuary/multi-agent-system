@@ -79,6 +79,22 @@ Implemented:
   - `backend/app/tests/test_price_research_rag_provider.py` covers structured
     metadata, unstructured-only evidence, no evidence, dependency rejection,
     service injection, fake/manual continuity, and no network calls
+- Implemented TASK 016.8 foundation:
+  - `backend/app/price_research/tavily_provider.py`
+  - `TavilyPriceResearchProvider` maps mocked Tavily Search API results into
+    bounded `PriceResearchSource(source_type="external_web")` citation
+    evidence.
+  - Tavily settings were added in `backend/app/config/settings.py`:
+    `TAVILY_API_KEY`, `TAVILY_SEARCH_URL`, `TAVILY_MAX_RESULTS`,
+    `TAVILY_INCLUDE_RAW_CONTENT`, and `TAVILY_SEARCH_DEPTH`.
+  - Tavily remains optional, disabled by default, and requires explicit
+    provider injection/key configuration. The generic provider factory fails
+    safely for `tavily` without explicit injection.
+  - Tavily tests use injected transports only and require no real API key or
+    network call.
+  - The adapter does not infer prices from snippets/prose, does not create
+    final quotes, and adds manual-review warnings when only external web
+    sources are available.
 
 Safety:
 
@@ -97,6 +113,10 @@ Safety:
   knowledge search output as bounded reference evidence only and never issues a
   final quote, stock promise, delivery promise, approval decision, or autonomous
   customer response.
+- Tavily price research is optional external web reference evidence only. It
+  builds sanitized bounded queries, does not include raw customer context or
+  chat history, does not store raw provider payloads, does not expose API keys,
+  and never infers prices from prose.
 - SPEC-016 keeps deterministic fallback, no raw prompts/provider payloads, no
   chain-of-thought, no unsupported silent item dropping, no fake prices, no
   stock/delivery promises, no auto-approval, no auto-resume, and no real email

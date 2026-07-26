@@ -21,6 +21,7 @@ from app.price_research.schemas import (
     ReferencePrice,
 )
 from app.price_research.service import PriceResearchService
+from app.price_research.tavily_provider import TavilyPriceResearchProvider
 
 __all__ = [
     "PriceResearchDisabledError",
@@ -37,5 +38,6 @@ __all__ = [
     "PriceResearchValidationError",
     "RAGPriceResearchProvider",
     "ReferencePrice",
+    "TavilyPriceResearchProvider",
     "get_price_research_provider",
 ]

@@ -36,6 +36,11 @@ def test_settings_load_default_development_values() -> None:
     assert settings.price_research_max_sources == 5
     assert settings.price_research_default_region == "VN"
     assert settings.price_research_default_currency == "VND"
+    assert settings.tavily_api_key == ""
+    assert settings.tavily_search_url == "https://api.tavily.com/search"
+    assert settings.tavily_max_results == 5
+    assert settings.tavily_include_raw_content is False
+    assert settings.tavily_search_depth == "basic"
     assert settings.readiness_timeout_seconds == 2.0
 
 
@@ -86,6 +91,11 @@ def test_settings_can_be_overridden_by_environment(
     monkeypatch.setenv("PRICE_RESEARCH_MAX_SOURCES", "3")
     monkeypatch.setenv("PRICE_RESEARCH_DEFAULT_REGION", "vn")
     monkeypatch.setenv("PRICE_RESEARCH_DEFAULT_CURRENCY", "usd")
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-key")
+    monkeypatch.setenv("TAVILY_SEARCH_URL", "https://api.tavily.test/search")
+    monkeypatch.setenv("TAVILY_MAX_RESULTS", "7")
+    monkeypatch.setenv("TAVILY_INCLUDE_RAW_CONTENT", "true")
+    monkeypatch.setenv("TAVILY_SEARCH_DEPTH", "ADVANCED")
     monkeypatch.setenv("READINESS_TIMEOUT_SECONDS", "5.5")
 
     settings = Settings()
@@ -134,6 +144,11 @@ def test_settings_can_be_overridden_by_environment(
     assert settings.price_research_max_sources == 3
     assert settings.price_research_default_region == "VN"
     assert settings.price_research_default_currency == "USD"
+    assert settings.tavily_api_key == "tvly-test-key"
+    assert settings.tavily_search_url == "https://api.tavily.test/search"
+    assert settings.tavily_max_results == 7
+    assert settings.tavily_include_raw_content is True
+    assert settings.tavily_search_depth == "advanced"
     assert settings.readiness_timeout_seconds == 5.5
 
 

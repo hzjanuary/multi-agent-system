@@ -44,6 +44,11 @@ def get_price_research_provider(provider_name: str) -> PriceResearchProvider:
             "RAG price research provider requires an injected knowledge search "
             "dependency",
         )
+    if normalized == "tavily":
+        raise PriceResearchProviderError(
+            "Tavily price research provider requires explicit provider injection "
+            "with TAVILY_API_KEY",
+        )
     raise PriceResearchProviderError(
         f"Unsupported price research provider: {provider_name}",
     )

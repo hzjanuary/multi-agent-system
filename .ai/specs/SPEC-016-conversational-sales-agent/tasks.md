@@ -196,6 +196,8 @@ git diff --check
 
 ### TASK 016.8 - Optional Web Search Provider Adapter Behind Feature Flag
 
+Status: Implemented as optional Tavily adapter foundation.
+
 Goal: Add one approved web/search provider adapter for external reference price
 research behind `PRICE_RESEARCH_ENABLED`.
 
@@ -215,6 +217,36 @@ Acceptance criteria:
 - Adapter output maps to the provider-independent source contract.
 - Tests cover timeout, unavailable, malformed response, no price found, and
   safe citation output.
+
+Implemented foundation:
+
+- Added `backend/app/price_research/tavily_provider.py`.
+- Added `TavilyPriceResearchProvider` for the official Tavily Search API
+  (`POST /search` with bearer authentication), using an injectable transport
+  so tests do not perform network calls.
+- Added Tavily settings:
+  - `TAVILY_API_KEY`
+  - `TAVILY_SEARCH_URL`
+  - `TAVILY_MAX_RESULTS`
+  - `TAVILY_INCLUDE_RAW_CONTENT`
+  - `TAVILY_SEARCH_DEPTH`
+- Tavily remains disabled by default and cannot be constructed by the generic
+  provider factory without explicit provider injection and key configuration.
+- External web results are mapped to bounded
+  `PriceResearchSource(source_type="external_web")` citation evidence.
+- The adapter does not infer prices from snippets/prose and returns no
+  `ReferencePrice` unless a future response contains explicit structured price
+  metadata.
+- Safe warnings label external web evidence as reference material, not a final
+  quote, and require manual pricing review when no structured price metadata is
+  available.
+- Tests cover missing key, sanitized query construction, mocked successful
+  responses, source mapping, score normalization, timeout/non-2xx/invalid JSON
+  errors, malformed results, max result bounds, no default network call with
+  injected transport, and factory/service safe failure without injection.
+- No workflow runtime integration, Telegram integration, frontend changes, API
+  endpoint, database model, migration, real web search in tests, final quote,
+  stock/delivery/discount/approval claim, or provider key was added.
 
 Validation:
 

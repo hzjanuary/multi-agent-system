@@ -234,6 +234,11 @@ def test_provider_factory_rejects_unknown_provider() -> None:
         get_price_research_provider("external_web")
 
 
+def test_provider_factory_rejects_tavily_without_explicit_injection() -> None:
+    with pytest.raises(PriceResearchProviderError, match="explicit provider injection"):
+        get_price_research_provider("tavily")
+
+
 @pytest.mark.asyncio
 async def test_service_enabled_with_fake_provider_name_delegates_successfully() -> None:
     service = PriceResearchService(enabled=True, provider_name="fake")
@@ -286,6 +291,11 @@ def test_settings_defaults_are_safe_and_disabled() -> None:
     assert settings.price_research_max_sources == 5
     assert settings.price_research_default_region == "VN"
     assert settings.price_research_default_currency == "VND"
+    assert settings.tavily_api_key == ""
+    assert settings.tavily_search_url == "https://api.tavily.com/search"
+    assert settings.tavily_max_results == 5
+    assert settings.tavily_include_raw_content is False
+    assert settings.tavily_search_depth == "basic"
 
 
 def test_settings_allow_safe_price_research_overrides(
@@ -297,6 +307,11 @@ def test_settings_allow_safe_price_research_overrides(
     monkeypatch.setenv("PRICE_RESEARCH_MAX_SOURCES", "3")
     monkeypatch.setenv("PRICE_RESEARCH_DEFAULT_REGION", "vn")
     monkeypatch.setenv("PRICE_RESEARCH_DEFAULT_CURRENCY", "usd")
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-key")
+    monkeypatch.setenv("TAVILY_SEARCH_URL", "https://api.tavily.test/search")
+    monkeypatch.setenv("TAVILY_MAX_RESULTS", "7")
+    monkeypatch.setenv("TAVILY_INCLUDE_RAW_CONTENT", "true")
+    monkeypatch.setenv("TAVILY_SEARCH_DEPTH", "ADVANCED")
 
     settings = Settings()
 
@@ -306,6 +321,11 @@ def test_settings_allow_safe_price_research_overrides(
     assert settings.price_research_max_sources == 3
     assert settings.price_research_default_region == "VN"
     assert settings.price_research_default_currency == "USD"
+    assert settings.tavily_api_key == "tvly-test-key"
+    assert settings.tavily_search_url == "https://api.tavily.test/search"
+    assert settings.tavily_max_results == 7
+    assert settings.tavily_include_raw_content is True
+    assert settings.tavily_search_depth == "advanced"
 
 
 def _assert_no_forbidden_positive_claims(result: PriceResearchResult) -> None:
