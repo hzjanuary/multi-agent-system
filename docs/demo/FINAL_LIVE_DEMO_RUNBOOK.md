@@ -38,6 +38,11 @@ deterministic procurement runtime and stop at `WAITING_APPROVAL`. Real LLM
 providers remain optional and feature-flagged, but they are not required for
 the final defense path.
 
+Optional provider live checks, such as Tavily adapter verification, are
+documented separately in `docs/demo/PROVIDER_LIVE_VERIFICATION.md`. They are
+manual-only, not part of CI, and not part of the stable Telegram/workflow demo
+path.
+
 ## Optional Telegram LLM Extraction Mode
 
 Ollama is optional and runs on the host machine. In this demo path it is used

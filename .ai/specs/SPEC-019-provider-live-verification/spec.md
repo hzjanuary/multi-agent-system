@@ -2,7 +2,38 @@
 
 ## Status
 
-Planned / ready for review before implementation
+Implemented / ready for closeout review
+
+## Implementation Summary
+
+SPEC-019 adds a manual-only Tavily live smoke path while preserving all stable
+demo and CI defaults.
+
+Implemented:
+
+- `scripts/demo/tavily_live_smoke.py`
+  - `--help` and `--dry-run` require no backend dependencies, provider key, or
+    network call.
+  - Live mode requires `--confirm-live-provider`, `--provider tavily`, and a
+    local `TAVILY_API_KEY`.
+  - The script lazy-loads the existing SPEC-016 Tavily adapter only for
+    confirmed live runs.
+  - Output is bounded JSON with request summary, sources, warnings, and
+    `is_final_quote=false`.
+  - Errors use nonzero exit codes and safe JSON messages.
+- `scripts/demo/test_tavily_live_smoke.py`
+  - Tests use injected mocked provider results only.
+  - Tests require no real provider key and no network access.
+  - Tests cover missing confirmation, missing key, dry-run no-network behavior,
+    safe output, redaction, unsupported provider, provider errors, provider
+    timeout, and forbidden-claim absence.
+- `docs/demo/PROVIDER_LIVE_VERIFICATION.md`
+  - Documents dry-run, live-run, policy checklist, troubleshooting, key leak
+    response, and stable demo boundaries.
+
+No CI live provider calls, Telegram integration, workflow/runtime integration,
+frontend changes, backend API changes, database models, migrations,
+Docker/Compose/CI behavior changes, or final quote behavior were introduced.
 
 ## Product Objective
 
@@ -235,8 +266,8 @@ git status --short
 Implementation validation should include:
 
 ```bash
-python3 scripts/demo/provider_live_smoke.py --help
-python3 scripts/demo/provider_live_smoke.py --provider tavily
+python3 scripts/demo/tavily_live_smoke.py --help
+python3 scripts/demo/tavily_live_smoke.py --provider tavily --item "Standard business laptop" --dry-run
 docker compose run --rm backend-test pytest app/tests/test_price_research_tavily_provider.py -q
 docker compose run --rm backend-test pytest -q
 docker compose run --rm backend-test ruff check .
@@ -249,7 +280,7 @@ git diff --check
 Manual live validation, only with a private local key:
 
 ```bash
-TAVILY_API_KEY="<set locally>" python3 scripts/demo/provider_live_smoke.py --provider tavily --confirm-live-provider
+TAVILY_API_KEY="<set locally>" python3 scripts/demo/tavily_live_smoke.py --provider tavily --item "Standard business laptop" --confirm-live-provider
 ```
 
 ## Suggested Task Order

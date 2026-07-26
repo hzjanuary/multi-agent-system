@@ -4,7 +4,7 @@
 
 ### TASK 019.1 - Live Verification Spec And Policy Checklist
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Define the manual live-provider verification policy before adding any
 live smoke command.
@@ -30,9 +30,15 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/demo/PROVIDER_LIVE_VERIFICATION.md` with manual-only policy,
+  provider checklist, no-key CI boundary, dry-run/live commands,
+  troubleshooting, and key leak response.
+
 ### TASK 019.2 - Manual Tavily Smoke Script With Explicit Confirmation
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Add a local smoke utility that can verify Tavily configuration only when
 the operator explicitly confirms live provider use.
@@ -55,14 +61,24 @@ Acceptance criteria:
 Validation:
 
 ```bash
-python3 scripts/demo/provider_live_smoke.py --help
-python3 scripts/demo/provider_live_smoke.py --provider tavily
+python3 scripts/demo/tavily_live_smoke.py --help
+python3 scripts/demo/tavily_live_smoke.py --provider tavily --item "Standard business laptop"
 git diff --check
 ```
 
+Implementation:
+
+- Added `scripts/demo/tavily_live_smoke.py`.
+- Live mode requires `--confirm-live-provider` and local `TAVILY_API_KEY`.
+- `--help` and `--dry-run` require no provider key and no backend dependency.
+- The script lazy-loads the existing Tavily adapter only for confirmed live
+  calls.
+- The command does not create workflows, poll Telegram, call `/run`, approve,
+  resume, send email, call frontend routes, or write database rows.
+
 ### TASK 019.3 - Safe JSON Output And Redaction Tests
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Prove live smoke output remains bounded, redacted, and evidence-only.
 
@@ -84,13 +100,23 @@ Validation:
 
 ```bash
 docker compose run --rm backend-test pytest app/tests/test_price_research_tavily_provider.py -q
-python3 -m unittest scripts.demo.test_provider_live_smoke
+python3 -m unittest scripts.demo.test_tavily_live_smoke
 git diff --check
 ```
 
+Implementation:
+
+- Added `scripts/demo/test_tavily_live_smoke.py`.
+- Tests use injected mocked provider output only and require no live key or
+  network call.
+- Tests cover missing confirmation, missing key, dry-run, mocked success,
+  redaction, unsupported provider, provider errors, provider timeout, and
+  forbidden positive claim absence.
+- Output remains bounded JSON and forces `is_final_quote=false`.
+
 ### TASK 019.4 - Docs For Local Provider Verification
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Document how to run live provider verification safely outside CI.
 
@@ -115,9 +141,17 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/demo/PROVIDER_LIVE_VERIFICATION.md`.
+- Added a short optional pointer from
+  `docs/demo/FINAL_LIVE_DEMO_RUNBOOK.md`.
+- Docs state live provider verification is manual-only, not required for the
+  stable demo, and not connected to Telegram/workflows/frontend.
+
 ### TASK 019.5 - Final Validation And Docs
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Close SPEC-019 with full validation and updated handoff.
 
@@ -138,7 +172,7 @@ Validation:
 
 ```bash
 git status --short
-python3 scripts/demo/provider_live_smoke.py --help
+python3 scripts/demo/tavily_live_smoke.py --help
 docker compose run --rm backend-test pytest -q
 docker compose run --rm backend-test ruff check .
 docker compose run --rm backend-test black --check .
@@ -151,5 +185,33 @@ Manual live validation remains optional and must be run only with a private
 local key:
 
 ```bash
-TAVILY_API_KEY="<set locally>" python3 scripts/demo/provider_live_smoke.py --provider tavily --confirm-live-provider
+TAVILY_API_KEY="<set locally>" python3 scripts/demo/tavily_live_smoke.py --provider tavily --item "Standard business laptop" --confirm-live-provider
 ```
+
+Implementation:
+
+- Updated SPEC-019 status to implemented / ready for closeout review.
+- Updated `.codex/HANDOFF.md` with current SPEC-019 scope and validation.
+- Live validation remains optional and was not run without a private local
+  provider key.
+
+## SPEC-019 Closeout Checklist
+
+- [x] Tavily live verification is manual-only.
+- [x] Live mode requires `--confirm-live-provider`.
+- [x] Live mode requires local `TAVILY_API_KEY`.
+- [x] Dry-run is no-key and no-network.
+- [x] Tests use mocked provider output and require no key/network.
+- [x] Output is bounded JSON.
+- [x] Output does not print API keys, Authorization headers, raw provider
+  payloads, raw HTML, cookies, tokens, prompts, or secrets.
+- [x] Output keeps `is_final_quote=false`.
+- [x] No CI live provider call was added.
+- [x] No Telegram integration was added.
+- [x] No workflow/runtime integration was added.
+- [x] No frontend changes were added.
+- [x] No backend API changes were added.
+- [x] No database models or migrations were added.
+- [x] No Docker/Compose/CI behavior changes were added.
+- [x] No final quote, stock, delivery, discount approval, approval, resume, or
+  email behavior was introduced.

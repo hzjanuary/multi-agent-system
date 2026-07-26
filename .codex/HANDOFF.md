@@ -24,8 +24,8 @@ Closed specs:
 
 Current planned spec sequence:
 
-- SPEC-018 Catalog Expansion - planned / ready for review before implementation
-- SPEC-019 Provider Live Verification - planned / ready for review before implementation
+- SPEC-018 Catalog Expansion - implemented / ready for closeout review
+- SPEC-019 Provider Live Verification - implemented / ready for closeout review
 - SPEC-020 Approved Outbound Communication - planned / ready for review before implementation
 
 ## Current SPEC-016 Conversational Sales Agent State
@@ -329,6 +329,73 @@ Last known validation:
 Remaining SPEC-018 work:
 
 - Await review/approval for SPEC-018 closeout.
+
+## Current SPEC-019 Provider Live Verification State
+
+Status:
+
+- Implemented / ready for closeout review.
+
+Scope implemented:
+
+- Added `scripts/demo/tavily_live_smoke.py` for manual-only Tavily live smoke.
+- Added `scripts/demo/test_tavily_live_smoke.py` with mocked provider-runner
+  tests only.
+- Added `docs/demo/PROVIDER_LIVE_VERIFICATION.md` for dry-run, confirmed live
+  smoke, provider policy checks, safe failures, key leak response, and stable
+  demo boundaries.
+- Updated `docs/demo/FINAL_LIVE_DEMO_RUNBOOK.md` with a short optional
+  provider verification pointer.
+- Updated `.ai/specs/SPEC-019-provider-live-verification/spec.md` and
+  `tasks.md` to implemented / ready for review.
+
+Behavior:
+
+- `--help` and `--dry-run` require no provider key, no network, and no backend
+  dependency import.
+- Confirmed live mode requires `--provider tavily`,
+  `--confirm-live-provider`, and local `TAVILY_API_KEY`.
+- Confirmed live mode lazy-loads the existing SPEC-016 Tavily adapter only
+  after confirmation and key checks.
+- Output is bounded JSON with safe request/result summaries,
+  `is_final_quote=false`, redacted sensitive markers, and no raw provider
+  payloads or raw HTML.
+- Missing confirmation, missing key, unsupported provider, provider errors, and
+  provider timeout return nonzero safe JSON errors.
+
+Out of scope / unchanged:
+
+- No CI live provider calls.
+- No Telegram integration or behavior change.
+- No workflow/runtime integration or behavior change.
+- No frontend changes.
+- No backend API endpoint changes.
+- No database models or migrations.
+- No Docker/Compose/CI behavior changes.
+- No final quote, stock, delivery, discount approval, auto-approval,
+  auto-resume, or real email behavior.
+
+Last known validation:
+
+- `python3 -m unittest scripts.demo.test_tavily_live_smoke` passed.
+- `python3 -m py_compile scripts/demo/tavily_live_smoke.py scripts/demo/test_tavily_live_smoke.py` passed.
+- `python3 scripts/demo/tavily_live_smoke.py --help` passed.
+- `python3 scripts/demo/tavily_live_smoke.py --provider tavily --item "Standard business laptop" --region VN --currency VND --dry-run` passed.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- `docker compose run --rm backend-test pytest -q` passed:
+  752 passed, 1 skipped.
+- `docker compose run --rm backend-test ruff check .` passed.
+- `docker compose run --rm backend-test black --check .` passed.
+- `docker compose run --rm backend-test mypy app` passed.
+- `bash scripts/ci/backend-gate.sh` passed.
+- `bash scripts/ci/all-gates.sh` passed, including frontend gate,
+  production-demo image build, and whitespace check.
+- `git diff --check` passed.
+
+Remaining SPEC-019 work:
+
+- Await review/approval for SPEC-019 closeout.
 
 ## Current SPEC-017 Frontend Visual Redesign State
 
