@@ -3,6 +3,7 @@ import type {
   ApprovalDecisionRequest,
   ApprovalDecisionResponse,
   ApprovalHistoryResponse,
+  OutboundCommunicationPreview,
   WorkflowCreateRequest,
   WorkflowEventListResponse,
   WorkflowListResponse,
@@ -100,6 +101,16 @@ export function resumeWorkflow(
     method: "POST",
     body: payload,
   });
+}
+
+export function getWorkflowOutboundPreview(
+  workflowId: string,
+  options: WorkflowRequestOptions,
+): Promise<OutboundCommunicationPreview> {
+  return apiFetch<OutboundCommunicationPreview>(
+    `${workflowPath(workflowId)}/outbound/preview`,
+    options,
+  );
 }
 
 export function listWorkflowEvents(

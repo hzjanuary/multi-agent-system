@@ -36,16 +36,26 @@ from app.auth.rbac import (
     normalize_role_name,
     require_roles,
 )
+from app.config import Settings
 from app.core.dependencies import (
     DbSessionDependency,
     provide_approval_service,
     provide_runtime_service,
+    provide_settings,
     provide_workflow_event_service,
     provide_workflow_event_subscriber,
     provide_workflow_service,
 )
 from app.models import User
 from app.models.enums import WorkflowStatus
+from app.outbound import (
+    OutboundCommunicationDisabledError,
+    OutboundCommunicationPolicyError,
+    OutboundCommunicationPreview,
+    OutboundCommunicationService,
+    OutboundCommunicationUnavailableError,
+    OutboundSendDisabledError,
+)
 from app.runtime.service import (
     RuntimeService,
     WorkflowRuntimeNodeError,
@@ -95,6 +105,10 @@ ApprovalServiceDependency = Annotated[
     ApprovalService,
     Depends(provide_approval_service),
 ]
+SettingsDependency = Annotated[
+    Settings,
+    Depends(provide_settings),
+]
 
 WORKFLOW_FULL_ACCESS_ROLES: tuple[RoleName, ...] = (
     RoleName.ADMIN,
@@ -143,6 +157,7 @@ WORKFLOW_PLANNED_ENDPOINTS: tuple[str, ...] = (
     "POST /api/v1/workflows/{workflow_id}/approval",
     "GET /api/v1/workflows/{workflow_id}/approval/history",
     "POST /api/v1/workflows/{workflow_id}/resume",
+    "GET /api/v1/workflows/{workflow_id}/outbound/preview",
     "WS /api/v1/workflows/{workflow_id}/stream",
 )
 
@@ -359,6 +374,64 @@ async def get_workflow_approval_history(
         raise workflow_http_exception(error) from error
 
 
+@router.get(
+    "/{workflow_id}/outbound/preview",
+    response_model=OutboundCommunicationPreview,
+    summary="Get approved outbound communication preview",
+)
+async def get_workflow_outbound_preview(
+    workflow_id: UUID,
+    current_user: WorkflowFullAccessDependency,
+    workflow_service: WorkflowServiceDependency,
+    settings: SettingsDependency,
+) -> OutboundCommunicationPreview:
+    """Return a preview-only outbound communication after approval and resume."""
+    workflow = await workflow_service.workflow_repository.get_by_id(workflow_id)
+    if workflow is None:
+        raise workflow_http_exception(
+            WorkflowNotFoundError(f"Workflow {workflow_id} was not found"),
+        )
+
+    outbound_service = OutboundCommunicationService(
+        enabled=settings.outbound_communication_enabled,
+        send_enabled=settings.outbound_send_enabled,
+        provider=settings.outbound_provider,
+        require_approval=settings.outbound_require_approval,
+        max_body_chars=settings.outbound_max_body_chars,
+        max_subject_chars=settings.outbound_max_subject_chars,
+        max_recipients=settings.outbound_max_recipients,
+    )
+    actor_roles = sorted(get_user_role_names(current_user))
+    actor_role = actor_roles[0] if actor_roles else None
+    try:
+        return outbound_service.build_preview(workflow, actor_role=actor_role)
+    except OutboundCommunicationDisabledError as error:
+        raise outbound_preview_http_exception(
+            code="outbound_preview_disabled",
+            message=str(error),
+        ) from error
+    except OutboundCommunicationPolicyError as error:
+        raise outbound_preview_http_exception(
+            code="outbound_preview_not_allowed",
+            message=str(error),
+        ) from error
+    except OutboundCommunicationUnavailableError as error:
+        raise outbound_preview_http_exception(
+            code="outbound_preview_unavailable",
+            message=str(error),
+        ) from error
+    except OutboundSendDisabledError as error:
+        raise outbound_preview_http_exception(
+            code="outbound_preview_provider_unavailable",
+            message=str(error),
+        ) from error
+    except ValueError as error:
+        raise outbound_preview_http_exception(
+            code="outbound_preview_invalid",
+            message="Outbound preview content is unavailable for safety review.",
+        ) from error
+
+
 @router.post(
     "/{workflow_id}/resume",
     response_model=WorkflowResumeResponse,
@@ -537,6 +610,14 @@ def approval_forbidden_http_exception() -> HTTPException:
     )
 
 
+def outbound_preview_http_exception(*, code: str, message: str) -> HTTPException:
+    """Return a safe conflict response for outbound preview errors."""
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail=workflow_error_detail(code=code, message=message),
+    )
+
+
 async def require_workflow_stream_access(
     websocket: WebSocket,
     session: DbSessionDependency,
@@ -612,6 +693,7 @@ __all__ = [
     "WORKFLOW_STREAM_BACKLOG_LIMIT",
     "RuntimeServiceDependency",
     "ApprovalServiceDependency",
+    "SettingsDependency",
     "WorkflowCreateAccessDependency",
     "WorkflowEventServiceDependency",
     "WorkflowEventSubscriberDependency",

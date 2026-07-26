@@ -30,7 +30,7 @@ from app.workflows import (
 TEST_EMAIL_PREFIX = "workflow-api"
 TEST_DOMAIN_PREFIX = "workflow-api-domain"
 TEST_ROLE_DESCRIPTION = "Workflow API endpoint test role"
-SPEC_007_WORKFLOW_ENDPOINTS = {
+WORKFLOW_METADATA_ENDPOINTS = {
     "POST /api/v1/workflows",
     "GET /api/v1/workflows",
     "GET /api/v1/workflows/{workflow_id}",
@@ -42,6 +42,7 @@ SPEC_007_WORKFLOW_ENDPOINTS = {
     "POST /api/v1/workflows/{workflow_id}/approval",
     "GET /api/v1/workflows/{workflow_id}/approval/history",
     "POST /api/v1/workflows/{workflow_id}/resume",
+    "GET /api/v1/workflows/{workflow_id}/outbound/preview",
 }
 
 
@@ -390,7 +391,7 @@ async def test_workflow_router_metadata_reports_implemented_api(
     assert response.status_code == 200
     assert data["name"] == "workflow-api"
     assert data["status"] == "implemented"
-    assert set(data["planned_endpoints"]) == SPEC_007_WORKFLOW_ENDPOINTS
+    assert set(data["planned_endpoints"]) == WORKFLOW_METADATA_ENDPOINTS
 
 
 @pytest.mark.asyncio

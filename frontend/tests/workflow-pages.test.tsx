@@ -113,6 +113,11 @@ describe("workflow pages", () => {
     expect(document.body.textContent).toContain("Request summary");
     expect(document.body.textContent).toContain("Approval history");
     expect(document.body.textContent).toContain("Evidence and citations");
+    expect(document.body.textContent).toContain("Approved Communication Preview");
+    expect(document.body.textContent).toContain("Pending completion");
+    expect(document.body.textContent).not.toContain("Load approved preview");
+    expect(document.body.textContent).not.toMatch(/email sent/i);
+    expect(document.body.textContent).not.toMatch(/approved quote sent/i);
     expect(document.body.textContent).toContain("No retrieved evidence has been attached yet.");
     expect(document.body.textContent).toContain("Search demo knowledge");
     expect(document.body.textContent).toContain("Demo documents");
@@ -122,6 +127,98 @@ describe("workflow pages", () => {
     expect(MockWebSocket.instances[0].url).toBe(
       "ws://localhost:8000/api/v1/workflows/workflow-123/stream?access_token=access-token",
     );
+  });
+
+  it("loads approved outbound preview for a completed workflow", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
+    installMockWebSocket();
+    mockFetchSequence([
+      {
+        workflow: {
+          ...sampleWorkflow("workflow-outbound-preview"),
+          status: "COMPLETED",
+          current_step: "email_preparation",
+        },
+      },
+      { events: [], count: 0, limit: 25, offset: 0 },
+      {
+        workflow_id: "workflow-outbound-preview",
+        approvals: [],
+        has_final_decision: true,
+        can_resume: false,
+      },
+      {
+        documents: [],
+        count: 0,
+      },
+      sampleOutboundPreview("workflow-outbound-preview"),
+    ]);
+
+    await render(<WorkflowDetailView workflowId="workflow-outbound-preview" />);
+    await clickButton("Load approved preview");
+
+    expect(document.body.textContent).toContain("Approved Communication Preview");
+    expect(document.body.textContent).toContain("Approved customer communication preview");
+    expect(document.body.textContent).toContain(
+      "Dear customer, this preview is ready for manual review.",
+    );
+    expect(document.body.textContent).toContain("Preview only");
+    expect(document.body.textContent).toContain("Operator review required.");
+    expect(document.body.textContent).toContain("customer@example.test");
+    expect(document.body.textContent).not.toContain("Send");
+    expect(document.body.textContent).not.toMatch(/email sent/i);
+    expect(document.body.textContent).not.toMatch(/approved quote sent/i);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/v1/workflows/workflow-outbound-preview/outbound/preview",
+      expect.objectContaining({
+        method: "GET",
+      }),
+    );
+  });
+
+  it("shows a safe unavailable state when outbound preview is disabled", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
+    installMockWebSocket();
+    mockFetchSequence([
+      {
+        workflow: {
+          ...sampleWorkflow("workflow-outbound-disabled"),
+          status: "COMPLETED",
+        },
+      },
+      { events: [], count: 0, limit: 25, offset: 0 },
+      {
+        workflow_id: "workflow-outbound-disabled",
+        approvals: [],
+        has_final_decision: true,
+        can_resume: false,
+      },
+      {
+        documents: [],
+        count: 0,
+      },
+      {
+        status: 409,
+        body: {
+          detail: {
+            code: "outbound_preview_disabled",
+            message: "Outbound communication preview is disabled.",
+          },
+        },
+      },
+    ]);
+
+    await render(<WorkflowDetailView workflowId="workflow-outbound-disabled" />);
+    await clickButton("Load approved preview");
+
+    expect(document.body.textContent).toContain(
+      "Preview unavailable: Outbound communication preview is disabled.",
+    );
+    expect(document.body.textContent).not.toContain(
+      "Approved customer communication preview",
+    );
+    expect(document.body.textContent).not.toContain("Send");
+    expect(document.body.textContent).not.toMatch(/email sent/i);
   });
 
   it("renders workflow detail reference evidence when workflow state has it", async () => {
@@ -246,13 +343,18 @@ async function render(element: ReactElement) {
 }
 
 function mockFetchSequence(payloads: unknown[]) {
-  const responses = payloads.map(
-    (payload) =>
-      new Response(JSON.stringify(payload), {
-        status: 200,
+  const responses = payloads.map((payload) => {
+    if (isMockErrorResponse(payload)) {
+      return new Response(JSON.stringify(payload.body), {
+        status: payload.status,
         headers: { "Content-Type": "application/json" },
-      }),
-  );
+      });
+    }
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  });
   vi.spyOn(globalThis, "fetch").mockImplementation(() => {
     const response = responses.shift();
     if (!response) {
@@ -260,6 +362,33 @@ function mockFetchSequence(payloads: unknown[]) {
     }
     return Promise.resolve(response);
   });
+}
+
+async function clickButton(label: string) {
+  const button = Array.from(document.querySelectorAll("button")).find(
+    (element) => element.textContent === label,
+  );
+  if (!button) {
+    throw new Error(`Button not found: ${label}`);
+  }
+  await act(async () => {
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
+
+function isMockErrorResponse(
+  value: unknown,
+): value is { status: number; body: unknown } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "status" in value &&
+    "body" in value
+  );
 }
 
 function sampleWorkflow(workflowId: string) {
@@ -289,6 +418,35 @@ function sampleCatalogMetadata() {
     unit: "unit",
     demo_only: true,
     requested_addons: ["office_365"],
+  };
+}
+
+function sampleOutboundPreview(workflowId: string) {
+  return {
+    workflow_id: workflowId,
+    channel: "email_preview",
+    provider: "preview",
+    subject: "Approved customer communication preview",
+    body: "Dear customer, this preview is ready for manual review.",
+    recipients: [
+      {
+        name: "Demo Customer",
+        email: "customer@example.test",
+        role: "buyer",
+      },
+    ],
+    source: "email_preview",
+    approval_status: "approved_and_resumed",
+    workflow_status: "COMPLETED",
+    generated_at: "2026-07-26T12:00:00Z",
+    warnings: [
+      "Operator review required.",
+      "Preview only; no outbound message was sent.",
+    ],
+    is_sendable: false,
+    is_sent: false,
+    requires_human_approval: false,
+    communication_label: "approved_outbound_preview",
   };
 }
 

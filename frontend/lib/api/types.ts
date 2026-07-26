@@ -250,6 +250,37 @@ export interface WorkflowResumeResponse {
   request_id?: string | null;
 }
 
+export type OutboundCommunicationChannel =
+  | "email_preview"
+  | "telegram_preview"
+  | "file_preview";
+
+export type OutboundCommunicationProvider = "preview" | "file" | "gmail_future";
+
+export interface OutboundRecipient {
+  name?: string | null;
+  email?: string | null;
+  role?: string | null;
+}
+
+export interface OutboundCommunicationPreview {
+  workflow_id: string;
+  channel: OutboundCommunicationChannel;
+  provider: OutboundCommunicationProvider;
+  subject: string;
+  body: string;
+  recipients: OutboundRecipient[];
+  source: string;
+  approval_status: string;
+  workflow_status: WorkflowStatus;
+  generated_at: string;
+  warnings: string[];
+  is_sendable: boolean;
+  is_sent: boolean;
+  requires_human_approval: boolean;
+  communication_label: string;
+}
+
 export interface WorkflowEventStreamMessage {
   type: "workflow.event";
   workflow_id: string;

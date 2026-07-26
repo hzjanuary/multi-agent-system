@@ -121,6 +121,25 @@ If no reference evidence panel appears, the frontend is intentionally showing
 that no explicit evidence was supplied. It does not synthesize prices,
 citations, discounts, stock, delivery, approval, or email-sent claims.
 
+## Approved Communication Preview
+
+Workflow detail includes an **Approved Communication Preview** panel. It is
+available only after the workflow has completed the Manager/Admin approval and
+explicit resume lifecycle.
+
+Use it on a `COMPLETED` workflow to load the backend-approved preview from:
+
+```text
+GET /api/v1/workflows/{workflow_id}/outbound/preview
+```
+
+The panel is preview-only. It can show returned subject, body, recipients, and
+warnings, but it does not send email, does not include a send button, does not
+call Gmail/SMTP, does not change Telegram behavior, and does not fabricate
+customer communication before approval/resume. If outbound preview is disabled
+or no explicit preview source exists, the frontend shows a safe unavailable
+state.
+
 ## Catalog Metadata
 
 Workflow detail and Agent Monitor may show a **Catalog Metadata** panel when

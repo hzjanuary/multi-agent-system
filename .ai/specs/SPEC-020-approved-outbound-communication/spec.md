@@ -2,7 +2,48 @@
 
 ## Status
 
-Sprint 1 implemented / ready for review
+Sprint 2 implemented / ready for closeout review
+
+## Sprint 2 Implementation Summary
+
+SPEC-020 Sprint 2 exposes the approved outbound communication preview through a
+read-only authenticated workflow API endpoint and a workflow detail frontend
+panel.
+
+Implemented:
+
+- Backend API:
+  - `GET /api/v1/workflows/{workflow_id}/outbound/preview`
+  - Admin/Manager access through existing workflow full-access RBAC.
+  - `WorkflowNotFoundError` maps to the existing workflow 404 style.
+  - Disabled, policy-blocked, unavailable, unsupported-provider, and unsafe
+    preview states map to safe `409` responses.
+  - The route delegates to `OutboundCommunicationService.build_preview(...)`.
+  - The route does not commit, mutate workflow state, append workflow events,
+    call LLM/RAG/Tavily providers, call SMTP/Gmail, or send email.
+- Frontend:
+  - `WorkflowOutboundPreviewPanel` on workflow detail.
+  - Completed workflows can load the approved preview explicitly.
+  - Non-completed workflows show a pending explanation only.
+  - Subject, body, recipients, and warnings render only from the backend
+    preview response.
+  - No send button or delivery control exists.
+- Tests:
+  - `backend/app/tests/test_workflow_api_outbound_preview.py`
+  - workflow page tests for the approved preview panel.
+
+SPEC-020 remains preview-only. The stable defaults remain:
+
+```text
+OUTBOUND_COMMUNICATION_ENABLED=false
+OUTBOUND_SEND_ENABLED=false
+OUTBOUND_PROVIDER=preview
+OUTBOUND_REQUIRE_APPROVAL=true
+```
+
+No real email, Gmail/SMTP/provider integration, Telegram send behavior,
+auto-send, auto-approval, auto-resume, database migration, workflow runtime
+change, or provider/network call was added.
 
 ## Sprint 1 Implementation Summary
 
@@ -72,9 +113,11 @@ Workflow reaches WAITING_APPROVAL
   -> Manager/Admin approval
   -> explicit /resume
   -> Email Preview / Approved Communication Draft
-  -> audit event for draft/preview
+  -> read-only approved communication preview API
+  -> workflow detail preview panel
+  -> optional future audit event for preview/export if a later spec authorizes mutation
   -> optional future send command behind OUTBOUND_SEND_ENABLED
-  -> audit event for send attempt/result
+  -> optional future audit event for send attempt/result
 ```
 
 ### Approval Boundary
@@ -123,6 +166,10 @@ with bounded payloads:
 
 Audit events must not include secrets, provider payloads, SMTP/Gmail tokens, or
 raw customer-sensitive attachments.
+
+Sprint 2 preview reads are intentionally non-mutating and do not append events.
+Persisted preview/view/export audit events remain future-scoped because adding
+them would turn the read endpoint into a write path.
 
 ### Role / RBAC Requirements
 
@@ -210,6 +257,10 @@ explicit configuration, secrets handling, RBAC, and audit events.
   payload, or chain-of-thought is stored or displayed.
 - Existing email preview behavior remains stable until explicitly changed.
 - Stable demo remains deterministic and no-key.
+- Sprint 2 API preview is available only after completed approval/resume
+  evidence and explicit preview content exist.
+- Sprint 2 frontend preview renders only backend-provided preview content and
+  does not fabricate communication content.
 
 ## Safety Boundaries
 
@@ -223,6 +274,9 @@ explicit configuration, secrets handling, RBAC, and audit events.
 - Explicit audit event required for any future send/draft.
 - No Gmail/provider key in CI.
 - No committed email credentials or OAuth tokens.
+- No send endpoint exists in Sprint 2.
+- Preview endpoint remains disabled unless `OUTBOUND_COMMUNICATION_ENABLED` is
+  explicitly enabled.
 
 ## Feature Flags And Configuration
 
