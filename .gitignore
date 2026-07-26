@@ -31,3 +31,7 @@ scripts/bin/harness-cli.exe
 
 # Local Docker Compose overrides may contain machine-specific settings.
 docker-compose.override.yml
+
+# Harness core maintenance binary
+scripts/bin/harness
+scripts/bin/harness.exe
