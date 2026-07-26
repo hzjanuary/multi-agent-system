@@ -4,7 +4,7 @@
 
 ### TASK 018.1 - Catalog Data Model / Contract Planning
 
-Status: Planned.
+Status: Implemented in Sprint 1.
 
 Goal: Define the deterministic catalog contract before implementing expanded
 item parsing or workflow payload changes.
@@ -33,9 +33,19 @@ git diff --check
 git status --short
 ```
 
+Sprint 1 implementation:
+
+- Added `scripts/demo/catalog.py` as the deterministic local-demo catalog
+  contract.
+- Catalog records include item id, display name, normalized item name, item
+  family, English/Vietnamese aliases, supported add-ons, unit, domain,
+  `demo_only`, and safe workflow metadata.
+- Kept catalog ownership local to `scripts/demo/` to avoid backend API,
+  runtime, database, or frontend behavior changes.
+
 ### TASK 018.2 - Deterministic Catalog Fixture And Tests
 
-Status: Planned.
+Status: Implemented in Sprint 1.
 
 Goal: Add versioned deterministic catalog data and tests for the approved item
 families.
@@ -62,9 +72,23 @@ docker compose run --rm backend-test pytest -q
 git diff --check
 ```
 
+Sprint 1 implementation:
+
+- Added deterministic catalog fixture entries for:
+  - Standard business laptop
+  - Business desktop PC
+  - Office monitor
+  - Office printer
+  - Wireless keyboard and mouse combo
+  - Office 365 / Microsoft 365 add-on
+- Added unittest coverage for required item families, English/Vietnamese alias
+  normalization, and Office 365 add-on compatibility.
+- Catalog contains no prices, stock, delivery promises, provider keys, or real
+  customer data.
+
 ### TASK 018.3 - Parser Alias Expansion For Supported Catalog Items
 
-Status: Planned.
+Status: Implemented in Sprint 1.
 
 Goal: Expand deterministic Telegram/parser normalization to use the catalog
 fixture for supported items.
@@ -91,9 +115,19 @@ python3 -m py_compile scripts/demo/telegram_inbound_bridge.py
 git diff --check
 ```
 
+Sprint 1 implementation:
+
+- Updated `scripts/demo/telegram_inbound_bridge.py` to use the deterministic
+  catalog for quantity/item parsing and LLM-result canonicalization.
+- Preserved existing laptop and Office 365 behavior.
+- Added supported parser examples for desktop PCs, office monitors, office
+  printers, and wireless keyboard/mouse combos in English and Vietnamese.
+- Added catalog metadata to existing workflow payload metadata attributes only;
+  no backend API/schema change was required.
+
 ### TASK 018.4 - Mixed-Item Safety Hardening
 
-Status: Planned.
+Status: Implemented in Sprint 1.
 
 Goal: Ensure expanded catalog support does not reintroduce silent item dropping.
 
@@ -118,9 +152,23 @@ python3 -m unittest scripts.demo.test_telegram_inbound_bridge
 git diff --check
 ```
 
+Sprint 1 implementation:
+
+- Replaced the old printer-specific unsupported guard now that printers are
+  supported catalog items.
+- Added unsupported detection for projector / `máy chiếu`, server / `máy chủ`,
+  phone / `điện thoại`, camera / `camera giám sát`, and router /
+  `bộ định tuyến`.
+- Preserved original customer text as the source of truth for mixed-item
+  safety, including LLM extraction paths.
+- Added tests proving supported plus unsupported requests do not create partial
+  workflows and unsupported-only requests do not create workflows.
+
 ### TASK 018.5 - Workflow Payload Catalog Metadata
 
-Status: Planned.
+Status: Planned. Sprint 1 added bounded catalog metadata to existing Telegram
+workflow payload attributes only; broader workflow metadata design remains
+planned.
 
 Goal: Attach bounded catalog metadata to workflow create payloads when parser
 normalization succeeds.

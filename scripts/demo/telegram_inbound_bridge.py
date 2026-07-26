@@ -14,12 +14,23 @@ import os
 import re
 import sys
 import time
-import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from typing import Any
+
+from scripts.demo.catalog import (
+    CATALOG_ITEMS,
+    CATALOG_VERSION,
+    CatalogItem,
+    addon_display_label,
+    compatible_addons,
+    detect_requested_addons as detect_catalog_requested_addons,
+    find_catalog_item,
+    get_catalog_item_by_name,
+    normalize_for_catalog_match,
+)
 
 DEFAULT_BACKEND_API_BASE_URL = "http://localhost:8000/api/v1"
 DEFAULT_FRONTEND_BASE_URL = "http://localhost:3000"
@@ -40,8 +51,7 @@ MAX_EVIDENCE_TEXT_LENGTH = 220
 MAX_EVIDENCE_URL_LENGTH = 300
 MAX_EVIDENCE_ITEMS = 2
 HTTP_TIMEOUT_SECONDS = 15
-PARSER_VERSION = "telegram-demo-parser-v3"
-SUPPORTED_ITEM_NAME = "Standard business laptop"
+PARSER_VERSION = "telegram-demo-parser-v4"
 HELPFUL_REQUEST_PROMPT = (
     "Please include quantity and item.\n"
     "English example: quote for 50 standard business laptops.\n"
@@ -79,6 +89,9 @@ class ParsedCustomerRequest:
     extraction_mode: str = "deterministic"
     llm_provider: str | None = None
     llm_model: str | None = None
+    catalog_item_id: str | None = None
+    item_family: str | None = None
+    catalog_version: str = CATALOG_VERSION
 
     @property
     def summary(self) -> str:
@@ -97,6 +110,7 @@ class UnsupportedItemMention:
     quantity: int | None
     item_label: str
     display_label: str
+    normalized_item_name: str | None = None
 
     @property
     def summary(self) -> str:
@@ -461,29 +475,44 @@ def is_greeting_message(text: str) -> bool:
 def parse_customer_request(text: str) -> ParsedCustomerRequest | None:
     normalized = re.sub(r"\s+", " ", text.strip())[:MAX_TEXT_LENGTH]
     searchable = normalize_for_matching(normalized)
-    match = re.search(
-        r"\b(\d{1,5})\s+"
-        r"(?:cai|chiec|bo|cay|may|pcs?|units?)?\s*"
-        r"("
-        r"(?:standard\s+)?(?:business\s+)?(?:laptops?|notebooks?)"
-        r"|laptop(?:\s+doanh\s+nhan)?"
-        r"|may\s+tinh\s+xach\s+tay(?:\s+doanh\s+nhan)?(?:\s+tieu\s+chuan)?"
-        r")\b",
-        searchable,
-    )
-    if not match:
+    matched = find_catalog_item_with_quantity(searchable)
+    if matched is None:
         return None
 
-    quantity = int(match.group(1))
+    quantity, catalog_item = matched
     if quantity <= 0:
+        return None
+    requested_addons = detect_requested_addons(searchable)
+    if not compatible_addons(catalog_item, requested_addons):
         return None
 
     return ParsedCustomerRequest(
         original_text=normalized,
         quantity=quantity,
-        item_name=SUPPORTED_ITEM_NAME,
+        item_name=catalog_item.normalized_item_name,
         language=detect_language(normalized, searchable),
-        requested_addons=detect_requested_addons(searchable),
+        requested_addons=requested_addons,
+        catalog_item_id=catalog_item.item_id,
+        item_family=catalog_item.item_family,
+        catalog_version=CATALOG_VERSION,
+    )
+
+
+def find_catalog_item_with_quantity(searchable: str) -> tuple[int, CatalogItem] | None:
+    for item in CATALOG_ITEMS:
+        for alias in sorted(item.normalized_aliases, key=len, reverse=True):
+            match = re.search(quantity_alias_regex(alias), searchable)
+            if match:
+                return int(match.group(1)), item
+    return None
+
+
+def quantity_alias_regex(alias: str) -> str:
+    return (
+        r"\b(\d{1,5})\s+"
+        r"(?:cai|chiec|bo|cay|may|pcs?|units?)?\s*"
+        + re.escape(alias)
+        + r"(?![a-z0-9])"
     )
 
 
@@ -604,10 +633,13 @@ def llm_extraction_system_prompt() -> str:
         "\"items\":[{\"name\":\"...\",\"quantity\":0}],\"requested_addons\":[],"
         "\"needs_follow_up\":true,\"follow_up_question\":\"...\"}. Rules: use "
         "canonical item names when possible. laptop, laptops, notebook, máy tính "
-        "xách tay, laptop doanh nhân -> Standard business laptop. office 365, "
-        "microsoft 365, cài sẵn office, có office -> requested_addons "
-        "[\"office_365\"]. Do not include add-ons inside item name. If quantity is "
-        "missing or item is unknown, needs_follow_up=true. Return JSON only."
+        "xách tay, laptop doanh nhân -> Standard business laptop. desktop pc, "
+        "máy tính bàn -> Business desktop PC. monitor, màn hình -> Office monitor. "
+        "printer, máy in -> Office printer. keyboard mouse combo, bộ bàn phím "
+        "chuột -> Wireless keyboard and mouse combo. office 365, microsoft 365, "
+        "cài sẵn office, có office -> requested_addons [\"office_365\"]. Do not "
+        "include add-ons inside item name. If quantity is missing or item is "
+        "unknown, needs_follow_up=true. Return JSON only."
     )
 
 
@@ -667,8 +699,8 @@ def parsed_request_from_llm_data(
         return None
 
     quantity = coerce_positive_quantity(first_item.get("quantity"))
-    item_name = canonical_item_name(str(first_item.get("name", "")))
-    if quantity is None or item_name is None:
+    catalog_item = canonical_catalog_item(str(first_item.get("name", "")))
+    if quantity is None or catalog_item is None:
         return None
 
     original_normalized = re.sub(r"\s+", " ", original_text.strip())[:MAX_TEXT_LENGTH]
@@ -679,6 +711,8 @@ def parsed_request_from_llm_data(
         data.get("requested_addons"),
         searchable,
     )
+    if not compatible_addons(catalog_item, requested_addons):
+        return None
     raw_language = str(data.get("language", "unknown")).strip().lower()
     language = (
         raw_language
@@ -688,12 +722,15 @@ def parsed_request_from_llm_data(
     return ParsedCustomerRequest(
         original_text=original_normalized,
         quantity=quantity,
-        item_name=item_name,
+        item_name=catalog_item.normalized_item_name,
         language=language,
         requested_addons=requested_addons,
         extraction_mode="llm",
         llm_provider=provider,
         llm_model=model[:200],
+        catalog_item_id=catalog_item.item_id,
+        item_family=catalog_item.item_family,
+        catalog_version=CATALOG_VERSION,
     )
 
 
@@ -708,23 +745,8 @@ def coerce_positive_quantity(value: Any) -> int | None:
     return None
 
 
-def canonical_item_name(value: str) -> str | None:
-    normalized = normalize_for_matching(value)
-    laptop_patterns = (
-        "standard business laptop",
-        "business laptop",
-        "laptop",
-        "laptops",
-        "notebook",
-        "notebooks",
-        "may tinh xach tay",
-        "laptop doanh nhan",
-        "may tinh xach tay doanh nhan",
-        "may tinh xach tay tieu chuan",
-    )
-    if any(pattern in normalized for pattern in laptop_patterns):
-        return SUPPORTED_ITEM_NAME
-    return None
+def canonical_catalog_item(value: str) -> CatalogItem | None:
+    return get_catalog_item_by_name(value) or find_catalog_item(value)
 
 
 def canonical_requested_addons(
@@ -735,7 +757,7 @@ def canonical_requested_addons(
     if isinstance(llm_addons, list):
         for addon in llm_addons:
             normalized = normalize_for_matching(str(addon))
-            if normalized in {"office 365", "office_365", "microsoft 365"}:
+            if normalized in {"office 365", "office_365", "microsoft 365", "m365"}:
                 addons.append("office_365")
     addons.extend(detect_requested_addons(searchable_text))
     return tuple(dict.fromkeys(addons))
@@ -757,16 +779,14 @@ def parsed_with_extraction_metadata(
         extraction_mode=extraction_mode,
         llm_provider=llm_provider,
         llm_model=llm_model[:200] if llm_model else None,
+        catalog_item_id=parsed.catalog_item_id,
+        item_family=parsed.item_family,
+        catalog_version=parsed.catalog_version,
     )
 
 
 def normalize_for_matching(value: str) -> str:
-    ascii_text = "".join(
-        char
-        for char in unicodedata.normalize("NFD", value)
-        if unicodedata.category(char) != "Mn"
-    )
-    return re.sub(r"\s+", " ", ascii_text.lower()).strip()
+    return normalize_for_catalog_match(value)
 
 
 def detect_language(original_text: str, searchable_text: str) -> str:
@@ -781,9 +801,19 @@ def detect_language(original_text: str, searchable_text: str) -> str:
         "doanh nhan",
         "tieu chuan",
         "phong kinh doanh",
+        "van phong",
+        "may tinh ban",
+        "may tinh de ban",
+        "may bo",
+        "man hinh",
+        "may in",
+        "ban phim",
+        "chuot",
         "cai ",
         "co cai",
         "cai san",
+        "kem ",
+        "bo ",
     )
     if has_vietnamese_marks or any(marker in searchable_text for marker in vietnamese_markers):
         return "vi"
@@ -791,55 +821,39 @@ def detect_language(original_text: str, searchable_text: str) -> str:
 
 
 def detect_requested_addons(searchable_text: str) -> tuple[str, ...]:
-    addon_patterns = (
-        r"\boffice\s*365\b",
-        r"\bmicrosoft\s*365\b",
-        r"\bcai\s+san\s+office\b",
-        r"\bco\s+office\b",
-        r"\bco\s+cai\s+office\b",
-    )
-    if any(re.search(pattern, searchable_text) for pattern in addon_patterns):
-        return ("office_365",)
-    return ()
+    return detect_catalog_requested_addons(searchable_text)
 
 
 def detect_unsupported_item_mentions(text: str) -> tuple[UnsupportedItemMention, ...]:
     searchable = normalize_for_matching(text)
     unsupported: list[UnsupportedItemMention] = []
-    printer_match = re.search(
-        r"(?:\b(\d{1,5})\s+(?:cai|chiec|may|pcs?|units?)?\s*)?"
-        r"\b("
-        r"may\s+in(?:\s+hp)?"
-        r"|hp\s+printers?"
-        r"|printers?"
-        r")\b",
-        searchable,
+    unsupported_patterns = (
+        ("projector", "projector", ("projector", "projectors", "may chieu")),
+        ("server", "server", ("server", "servers", "may chu")),
+        ("phone", "phone", ("phone", "phones", "dien thoai")),
+        ("camera", "camera giám sát", ("camera", "camera giam sat")),
+        ("router", "bộ định tuyến", ("router", "routers", "bo dinh tuyen")),
     )
-    if printer_match:
-        quantity = int(printer_match.group(1)) if printer_match.group(1) else None
-        unsupported.append(
-            UnsupportedItemMention(
-                quantity=quantity,
-                item_label="printer",
-                display_label=unsupported_printer_display_label(printer_match.group(2)),
+    for item_label, display_label, aliases in unsupported_patterns:
+        for alias in aliases:
+            match = re.search(
+                r"(?:\b(\d{1,5})\s+"
+                r"(?:cai|chiec|bo|cay|may|pcs?|units?)?\s*)?"
+                + re.escape(alias)
+                + r"(?![a-z0-9])",
+                searchable,
             )
-        )
+            if match:
+                quantity = int(match.group(1)) if match.group(1) else None
+                unsupported.append(
+                    UnsupportedItemMention(
+                        quantity=quantity,
+                        item_label=item_label,
+                        display_label=display_label,
+                    )
+                )
+                break
     return tuple(unsupported)
-
-
-def unsupported_printer_display_label(raw_value: str) -> str:
-    normalized = normalize_for_matching(raw_value)
-    if "hp" in normalized:
-        return "máy in HP"
-    if "may in" in normalized:
-        return "máy in"
-    return "printer"
-
-
-def addon_display_label(addon: str) -> str:
-    if addon == "office_365":
-        return "Office 365"
-    return addon.replace("_", " ").title()
 
 
 def build_workflow_create_payload(
@@ -863,6 +877,14 @@ def build_workflow_create_payload(
         attributes["llm_provider"] = parsed.llm_provider[:80]
     if parsed.llm_model:
         attributes["llm_model"] = parsed.llm_model[:200]
+    if parsed.catalog_item_id:
+        attributes["catalog"] = {
+            "catalog_version": parsed.catalog_version,
+            "item_id": parsed.catalog_item_id,
+            "normalized_item_name": parsed.item_name,
+            "item_family": parsed.item_family,
+            "requested_addons": list(parsed.requested_addons),
+        }
 
     return {
         "workflow_type": "procurement_quotation",
@@ -1373,8 +1395,9 @@ def technical_unsupported_mixed_item_message(request: UnsupportedMixedRequest) -
         "I found a supported item and an unsupported item. "
         f"Supported: {request.supported_summary}. "
         f"Unsupported: {request.unsupported_summary}. "
-        "Please send a request with supported items only. The current demo "
-        "catalog supports laptop quotation only."
+        "Please send a request with supported items only from the demo catalog. "
+        "The current demo catalog supports laptops, desktop PCs, office "
+        "monitors, office printers, and wireless keyboard/mouse combos."
     )
 
 
@@ -1383,20 +1406,35 @@ def sales_unsupported_mixed_item_message(request: UnsupportedMixedRequest) -> st
         supported = request.supported_summary.replace(
             "Standard business laptop",
             "laptop",
+        ).replace(
+            "Business desktop PC",
+            "máy tính bàn",
+        ).replace(
+            "Office monitor",
+            "màn hình văn phòng",
+        ).replace(
+            "Office printer",
+            "máy in văn phòng",
+        ).replace(
+            "Wireless keyboard and mouse combo",
+            "bộ bàn phím chuột không dây",
         )
         return (
             f"Em đã nhận được yêu cầu gồm {supported} và "
-            f"{request.unsupported_summary}. Hiện demo chỉ hỗ trợ xử lý báo giá "
-            "laptop. Mặt hàng máy in HP chưa có trong catalog demo, nên em chưa "
-            "tạo báo giá để tránh thiếu thông tin. Anh/chị có thể gửi riêng yêu "
-            "cầu laptop, ví dụ: báo giá 20 laptop văn phòng tiêu chuẩn."
+            f"{request.unsupported_summary}. Hiện catalog demo chỉ hỗ trợ laptop, "
+            "máy tính bàn, màn hình văn phòng, máy in văn phòng và bộ bàn phím "
+            "chuột. Mặt hàng chưa hỗ trợ chưa có trong catalog demo, nên em "
+            "chưa tạo báo giá để tránh thiếu thông tin. Anh/chị có thể gửi riêng "
+            "yêu cầu với mặt hàng được hỗ trợ, ví dụ: báo giá 20 laptop văn phòng "
+            "tiêu chuẩn."
         )
     return (
-        f"I found a supported laptop request ({request.supported_summary}) and "
+        f"I found a supported catalog request ({request.supported_summary}) and "
         f"an unsupported item ({request.unsupported_summary}). The current demo "
-        "catalog supports laptop quotation only, so I have not created a partial "
-        "workflow. Please send a laptop-only RFQ or add product catalog/pricing "
-        "first."
+        "catalog supports laptops, desktop PCs, office monitors, office printers, "
+        "and wireless keyboard/mouse combos, so I have not created a partial "
+        "workflow. Please send an RFQ with supported items only or add product "
+        "catalog/pricing first."
     )
 
 

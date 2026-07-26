@@ -4,9 +4,10 @@
 
 The Telegram inbound bridge lets a customer actor send a procurement request
 from a phone during the local graduation demo. The local script polls Telegram,
-parses a bounded English or Vietnamese laptop quotation request, creates a
-procurement workflow through the existing backend API, optionally runs it to
-`WAITING_APPROVAL`, and replies with workflow and Agent Monitor links.
+parses a bounded English or Vietnamese catalog-backed quotation request,
+creates a procurement workflow through the existing backend API, optionally
+runs it to `WAITING_APPROVAL`, and replies with workflow and Agent Monitor
+links.
 
 This is a local demo bridge. It is not a production Telegram webhook
 integration.
@@ -193,6 +194,10 @@ purchase 20 laptops
 buy 10 laptops
 quote for 5 business laptops
 quotation for 7 standard business laptops
+quote 15 business desktop PCs
+quote 12 office monitors
+quote 3 office printers
+quote 25 wireless keyboard and mouse combos
 ```
 
 Supported Vietnamese variations:
@@ -205,14 +210,22 @@ báo giá cho 30 máy tính xách tay
 mua 20 laptop cho phòng kinh doanh
 cần 15 laptop doanh nhân
 50 máy tính xách tay có cài office 365
+báo giá 20 máy tính bàn văn phòng
+báo giá 10 màn hình văn phòng
+báo giá 5 máy in văn phòng
+báo giá 30 bộ bàn phím chuột không dây
+báo giá 20 laptop văn phòng kèm office 365
 ```
 
-The deterministic parser normalizes `laptop`, `máy tính xách tay`,
-`máy tính xách tay doanh nhân`, `laptop doanh nhân`, and
-`máy tính xách tay tiêu chuẩn` to:
+The deterministic parser uses a local demo catalog. Sprint 1 supported item
+families are:
 
 ```text
 Standard business laptop
+Business desktop PC
+Office monitor
+Office printer
+Wireless keyboard and mouse combo
 ```
 
 It also detects these optional add-on phrases:
@@ -220,12 +233,17 @@ It also detects these optional add-on phrases:
 ```text
 office 365
 microsoft 365
+m365
+cài office
 cài sẵn office
+kèm office
+bản quyền office
 có office
 ```
 
 Detected Office phrases are stored as `office_365` in the workflow request and
-metadata.
+metadata. Office 365 is an add-on, not a price or final quote. The demo catalog
+currently treats Office 365 as compatible with laptop and desktop requests.
 
 Greeting-only messages such as `xin chào`, `hello`, and `hi` do not create a
 workflow. The bridge replies with English and Vietnamese examples.
@@ -239,21 +257,23 @@ Ví dụ tiếng Việt: cần báo giá 50 máy tính xách tay.
 ```
 
 If a quantity is present but the item is unsupported, the bridge still refuses
-to create a workflow silently. Ask the customer actor to use a supported laptop
-phrase such as `laptop` or `máy tính xách tay`.
+to create a workflow silently. Ask the customer actor to use a supported demo
+catalog phrase such as `laptop`, `máy tính bàn`, `màn hình văn phòng`,
+`máy in văn phòng`, or `bộ bàn phím chuột`.
 
 If a message mixes a supported laptop request with an unsupported item, the
 bridge also refuses to create a partial workflow. For example:
 
 ```text
-báo giá 20 cái laptop và 5 cái máy in hp
+báo giá 20 laptop và 3 máy chiếu
+quote 10 monitors and 2 servers
 ```
 
-The bridge recognizes `20 x Standard business laptop`, detects `5 x máy in HP`
-as unsupported, and replies with a clarification instead of dropping the printer
-line. The current local demo catalog supports laptop quotations only. Send a
-laptop-only RFQ or add catalog/pricing support before demonstrating other
-products.
+The bridge recognizes the supported catalog item, detects the unsupported item,
+and replies with a clarification instead of dropping the unsupported line.
+Supported catalog items do not imply price, stock, delivery, discount,
+approval, or final quotation. Send a request with supported catalog items only,
+or add catalog/pricing support before demonstrating other products.
 
 ## Optional LLM Extraction
 

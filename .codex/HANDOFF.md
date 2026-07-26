@@ -254,6 +254,56 @@ Default demo safety remains unchanged across all three planned specs:
 - no real email
 - no final quote before Manager/Admin approval
 
+## Current SPEC-018 Catalog Expansion State
+
+Scope implemented in Sprint 1:
+
+- Added deterministic local-demo catalog contract and fixture:
+  - `scripts/demo/catalog.py`
+- Updated Telegram bridge parser to use the catalog for deterministic
+  quantity/item parsing and LLM-result canonicalization:
+  - `scripts/demo/telegram_inbound_bridge.py`
+- Expanded supported catalog item families:
+  - Standard business laptop
+  - Business desktop PC
+  - Office monitor
+  - Office printer
+  - Wireless keyboard and mouse combo
+- Preserved Office 365 / Microsoft 365 as an add-on with compatibility rules.
+- Added safe catalog metadata to existing Telegram workflow payload metadata
+  attributes only; no backend API/schema change was required.
+- Replaced the old printer unsupported guard because printer is now explicitly
+  supported, and added unsupported detection for projector, server, phone,
+  camera, and router requests.
+- Preserved original customer text as the source of truth for mixed
+  supported/unsupported safety, including LLM extraction fallback paths.
+- Updated Telegram demo docs for expanded catalog examples and unsupported
+  mixed-item guidance.
+- Added/updated unit tests in `scripts/demo/test_telegram_inbound_bridge.py`
+  for catalog data, alias normalization, add-on compatibility, supported item
+  parsing, unsupported-only messages, mixed supported/unsupported blocking,
+  sales/technical replies, LLM fallback safety, and no fake price/stock/final
+  quote claims.
+
+Out of scope / unchanged:
+
+- No backend API endpoint changes.
+- No database models or migrations.
+- No workflow runtime changes.
+- No frontend changes.
+- No Tavily/web/provider calls.
+- No price lookup.
+- No outbound communication/email behavior.
+- No final quote, stock, delivery, discount approval, auto-approval, or
+  auto-resume behavior.
+
+Remaining SPEC-018 work:
+
+- Broader workflow metadata design remains planned under TASK 018.5.
+- Frontend catalog display polish remains planned only if future workflow state
+  exposes catalog metadata that should be rendered.
+- Final SPEC-018 closeout remains future work after Sprint 1 review.
+
 ## Current SPEC-017 Frontend Visual Redesign State
 
 Scope:

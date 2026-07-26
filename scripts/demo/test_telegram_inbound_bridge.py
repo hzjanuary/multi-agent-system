@@ -26,6 +26,69 @@ from scripts.demo.telegram_inbound_bridge import (
     telegram_workflow_reply,
     unsupported_mixed_item_message,
 )
+from scripts.demo.catalog import (
+    CATALOG_ITEMS,
+    CATALOG_VERSION,
+    OFFICE_365_ADDON_ID,
+    compatible_addons,
+    find_catalog_item,
+    get_catalog_item_by_name,
+    supported_item_families,
+)
+
+
+class DemoCatalogTests(unittest.TestCase):
+    def test_catalog_contains_all_supported_item_families(self) -> None:
+        self.assertEqual(
+            set(supported_item_families()),
+            {
+                "Standard business laptop",
+                "Business desktop PC",
+                "Office monitor",
+                "Office printer",
+                "Wireless keyboard and mouse combo",
+            },
+        )
+        for item in CATALOG_ITEMS:
+            with self.subTest(item=item.item_id):
+                self.assertTrue(item.item_id)
+                self.assertTrue(item.display_name)
+                self.assertTrue(item.normalized_item_name)
+                self.assertTrue(item.aliases_en)
+                self.assertTrue(item.aliases_vi)
+                self.assertTrue(item.demo_only)
+
+    def test_catalog_alias_normalization_english_and_vietnamese(self) -> None:
+        examples = {
+            "business laptop": "Standard business laptop",
+            "máy tính xách tay": "Standard business laptop",
+            "desktop pc": "Business desktop PC",
+            "máy tính để bàn": "Business desktop PC",
+            "office monitor": "Office monitor",
+            "màn hình văn phòng": "Office monitor",
+            "hp printer": "Office printer",
+            "máy in hp": "Office printer",
+            "wireless keyboard and mouse": "Wireless keyboard and mouse combo",
+            "bộ bàn phím chuột": "Wireless keyboard and mouse combo",
+        }
+        for alias, expected_name in examples.items():
+            with self.subTest(alias=alias):
+                item = find_catalog_item(alias)
+                self.assertIsNotNone(item)
+                assert item is not None
+                self.assertEqual(item.normalized_item_name, expected_name)
+
+    def test_catalog_addon_compatibility(self) -> None:
+        laptop = get_catalog_item_by_name("Standard business laptop")
+        desktop = get_catalog_item_by_name("Business desktop PC")
+        monitor = get_catalog_item_by_name("Office monitor")
+        assert laptop is not None
+        assert desktop is not None
+        assert monitor is not None
+
+        self.assertTrue(compatible_addons(laptop, (OFFICE_365_ADDON_ID,)))
+        self.assertTrue(compatible_addons(desktop, (OFFICE_365_ADDON_ID,)))
+        self.assertFalse(compatible_addons(monitor, (OFFICE_365_ADDON_ID,)))
 
 
 class TelegramInboundBridgeParserTests(unittest.TestCase):
@@ -168,7 +231,7 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
         self.assertEqual(payload["metadata"]["attributes"]["requested_addons"], [])
         self.assertEqual(
             payload["metadata"]["attributes"]["parser_version"],
-            "telegram-demo-parser-v3",
+            "telegram-demo-parser-v4",
         )
         self.assertEqual(
             payload["metadata"]["attributes"]["extraction_mode"],
@@ -181,6 +244,16 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
         self.assertEqual(
             payload["metadata"]["attributes"]["telegram_message_id"],
             "67890",
+        )
+        self.assertEqual(
+            payload["metadata"]["attributes"]["catalog"],
+            {
+                "catalog_version": CATALOG_VERSION,
+                "item_id": "standard_business_laptop",
+                "normalized_item_name": "Standard business laptop",
+                "item_family": "business_laptop",
+                "requested_addons": [],
+            },
         )
 
     def test_vietnamese_payload_includes_language_and_requested_addons(self) -> None:
@@ -235,9 +308,59 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
         self.assertIn("Options: Office 365", reply)
         self.assertIn("Human approval is required before resume", reply)
 
-    def test_mixed_laptop_and_printer_request_does_not_create_workflow(self) -> None:
+    def test_supported_catalog_item_examples_create_requests(self) -> None:
+        examples = [
+            ("báo giá 20 máy tính bàn văn phòng", 20, "Business desktop PC", "vi"),
+            ("báo giá 10 màn hình văn phòng", 10, "Office monitor", "vi"),
+            ("báo giá 5 máy in văn phòng", 5, "Office printer", "vi"),
+            (
+                "báo giá 30 bộ bàn phím chuột không dây",
+                30,
+                "Wireless keyboard and mouse combo",
+                "vi",
+            ),
+            ("quote 15 business desktop PCs", 15, "Business desktop PC", "en"),
+            ("quote 12 office monitors", 12, "Office monitor", "en"),
+            ("quote 3 office printers", 3, "Office printer", "en"),
+            (
+                "quote 25 wireless keyboard and mouse combos",
+                25,
+                "Wireless keyboard and mouse combo",
+                "en",
+            ),
+        ]
+        for text, quantity, item_name, language in examples:
+            with self.subTest(text=text):
+                parsed = parse_customer_request(text)
+                self.assertIsNotNone(parsed)
+                assert parsed is not None
+                self.assertEqual(parsed.quantity, quantity)
+                self.assertEqual(parsed.item_name, item_name)
+                self.assertEqual(parsed.language, language)
+
+    def test_laptop_van_phong_with_office_365_still_creates_request(self) -> None:
+        parsed = parse_customer_request("báo giá 20 laptop văn phòng kèm office 365")
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.quantity, 20)
+        self.assertEqual(parsed.item_name, "Standard business laptop")
+        self.assertEqual(parsed.requested_addons, ("office_365",))
+
+    def test_incompatible_addon_request_does_not_create_workflow(self) -> None:
+        self.assertIsNone(parse_customer_request("báo giá 10 màn hình kèm office 365"))
+
+    def test_printer_is_now_supported_catalog_item(self) -> None:
+        parsed = extract_customer_request("báo giá 5 máy in hp", self.config())
+
+        self.assertIsInstance(parsed, ParsedCustomerRequest)
+        assert isinstance(parsed, ParsedCustomerRequest)
+        self.assertEqual(parsed.quantity, 5)
+        self.assertEqual(parsed.item_name, "Office printer")
+
+    def test_mixed_laptop_and_projector_request_does_not_create_workflow(self) -> None:
         parsed = extract_customer_request(
-            "báo giá 20 cái laptop và 5 cái máy in hp",
+            "báo giá 20 laptop và 3 máy chiếu",
             self.config(),
         )
 
@@ -247,40 +370,40 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
         assert parsed.supported is not None
         self.assertEqual(parsed.supported.quantity, 20)
         self.assertEqual(parsed.supported.item_name, "Standard business laptop")
-        self.assertEqual(parsed.unsupported_summary, "5 x máy in HP")
+        self.assertEqual(parsed.unsupported_summary, "3 x projector")
 
     def test_technical_mixed_item_reply_mentions_supported_and_unsupported(self) -> None:
         parsed = extract_customer_request(
-            "báo giá 20 cái laptop và 5 cái máy in hp",
+            "quote 10 monitors and 2 servers",
             self.config(),
         )
         assert isinstance(parsed, UnsupportedMixedRequest)
 
         reply = unsupported_mixed_item_message(self.config(), parsed)
 
-        self.assertIn("Supported: 20 x Standard business laptop", reply)
-        self.assertIn("Unsupported: 5 x máy in HP", reply)
+        self.assertIn("Supported: 10 x Office monitor", reply)
+        self.assertIn("Unsupported: 2 x server", reply)
         self.assertIn("Please send a request with supported items only", reply)
-        self.assertIn("laptop quotation only", reply)
+        self.assertIn("office printers", reply)
 
     def test_sales_mixed_item_reply_is_customer_friendly(self) -> None:
         parsed = extract_customer_request(
-            "báo giá 20 cái laptop và 5 cái máy in hp",
+            "báo giá 5 máy in và 2 máy chủ",
             self.config(sales=True),
         )
         assert isinstance(parsed, UnsupportedMixedRequest)
 
         reply = unsupported_mixed_item_message(self.config(sales=True), parsed)
 
-        self.assertIn("Em đã nhận được yêu cầu gồm 20 x laptop", reply)
-        self.assertIn("5 x máy in HP", reply)
-        self.assertIn("demo chỉ hỗ trợ xử lý báo giá laptop", reply)
+        self.assertIn("Em đã nhận được yêu cầu gồm 5 x máy in văn phòng", reply)
+        self.assertIn("2 x server", reply)
+        self.assertIn("catalog demo chỉ hỗ trợ laptop", reply)
         self.assertIn("chưa tạo báo giá để tránh thiếu thông tin", reply)
         self.assertIn("báo giá 20 laptop văn phòng tiêu chuẩn", reply)
 
-    def test_llm_laptop_only_result_is_blocked_when_original_mentions_printer(self) -> None:
+    def test_llm_supported_only_result_is_blocked_when_original_mentions_server(self) -> None:
         llm_only_laptop = ParsedCustomerRequest(
-            original_text="báo giá 20 cái laptop và 5 cái máy in hp",
+            original_text="báo giá 20 cái laptop và 5 máy chủ",
             quantity=20,
             item_name="Standard business laptop",
             language="vi",
@@ -290,7 +413,7 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
         )
 
         parsed = extract_customer_request(
-            "báo giá 20 cái laptop và 5 cái máy in hp",
+            "báo giá 20 cái laptop và 5 máy chủ",
             self.config(llm=True),
             llm_extractor=lambda _text, _config: llm_only_laptop,
         )
@@ -298,7 +421,11 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
         self.assertIsInstance(parsed, UnsupportedMixedRequest)
         assert isinstance(parsed, UnsupportedMixedRequest)
         self.assertEqual(parsed.supported_summary, "20 x Standard business laptop")
-        self.assertEqual(parsed.unsupported_summary, "5 x máy in HP")
+        self.assertEqual(parsed.unsupported_summary, "5 x server")
+
+    def test_unsupported_only_item_does_not_create_workflow(self) -> None:
+        self.assertIsNone(extract_customer_request("báo giá 3 máy chiếu", self.config()))
+        self.assertIsNone(extract_customer_request("quote 2 servers", self.config()))
 
     def test_laptop_only_vietnamese_request_still_creates_request(self) -> None:
         parsed = extract_customer_request("báo giá 20 laptop", self.config())
@@ -326,7 +453,7 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
 
     def test_mixed_item_reply_does_not_expose_raw_llm_or_provider_payload(self) -> None:
         parsed = extract_customer_request(
-            "báo giá 20 cái laptop và 5 cái máy in hp",
+            "báo giá 20 cái laptop và 5 máy chủ",
             self.config(sales=True),
         )
         assert isinstance(parsed, UnsupportedMixedRequest)
