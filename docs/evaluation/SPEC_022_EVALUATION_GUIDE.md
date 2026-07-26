@@ -2,9 +2,14 @@
 
 ## Purpose
 
-This guide explains the deterministic SPEC-022 Sprint 1 evaluation foundation.
-It benchmarks the local Telegram RFQ parser against a fixed English/Vietnamese
-dataset without changing product behavior.
+This guide explains the deterministic SPEC-022 evaluation foundation. It
+currently includes:
+
+- Sprint 1: local Telegram RFQ parser benchmark.
+- Sprint 2: workflow lifecycle, approval/outbound gate, reference evidence,
+  catalog metadata, and safe-default benchmark.
+
+Both runners use fixed local datasets without changing product behavior.
 
 The benchmark is intentionally narrow:
 
@@ -16,7 +21,7 @@ The benchmark is intentionally narrow:
 - no workflow mutation;
 - no email sending.
 
-## What Is Evaluated
+## What Is Evaluated In Sprint 1
 
 The Sprint 1 benchmark evaluates deterministic parser behavior for:
 
@@ -82,6 +87,69 @@ python3 -m unittest scripts.evaluation.test_evaluate_telegram_parser
 python3 -m py_compile scripts/evaluation/evaluate_telegram_parser.py
 ```
 
+## What Is Evaluated In Sprint 2
+
+The Sprint 2 benchmark evaluates deterministic safety boundaries for:
+
+- workflow lifecycle transitions;
+- invalid transition rejection;
+- approval/resume/outbound preview gates;
+- no-send outbound behavior;
+- reference evidence schema safety;
+- rejected customer-ready evidence flags;
+- sensitive marker rejection in evidence warnings;
+- explicit catalog metadata presence;
+- absence of price, stock, delivery, supplier, and discount commitments in
+  catalog metadata;
+- stable no-key/default-disabled settings.
+
+Dataset:
+
+```text
+scripts/evaluation/demo_safety_cases.json
+```
+
+Runner:
+
+```text
+scripts/evaluation/evaluate_demo_safety.py
+```
+
+The runner imports current backend contracts when backend dependencies are
+available, and otherwise uses a deterministic stdlib fallback for local
+documentation/evaluation environments. It still performs no backend API calls,
+database calls, provider calls, live network calls, workflow mutation, or email
+delivery.
+
+## Run The Safety Benchmark
+
+From the repository root:
+
+```bash
+python3 scripts/evaluation/evaluate_demo_safety.py
+```
+
+Use an explicit dataset path:
+
+```bash
+python3 scripts/evaluation/evaluate_demo_safety.py \
+  --cases scripts/evaluation/demo_safety_cases.json
+```
+
+Write machine-readable metrics:
+
+```bash
+python3 scripts/evaluation/evaluate_demo_safety.py \
+  --output-json /tmp/demo_safety_metrics.json
+```
+
+Run the safety benchmark tests:
+
+```bash
+python3 -m unittest scripts.evaluation.test_evaluate_demo_safety
+python3 -m py_compile scripts/evaluation/evaluate_demo_safety.py
+```
+
 ## Interpret Metrics
 
 The metrics JSON includes:
@@ -91,12 +159,16 @@ The metrics JSON includes:
 - `failed_cases`
 - `accuracy`
 - `category_breakdown`
-- `language_breakdown`
 - `failures`
 - `generated_at`
 - `deterministic=true`
 - `provider_calls=false`
 - `live_network_calls=false`
+- `backend_api_calls=false`
+- `database_required=false`
+- `email_sent=false`
+
+The parser benchmark also includes `language_breakdown`.
 
 `accuracy` is benchmark correctness for this fixed parser dataset. It is not a
 business accuracy, market pricing, latency, coverage, or user-study metric.
@@ -170,17 +242,15 @@ Rules:
 
 ## What Is Not Evaluated
 
-Sprint 1 does not evaluate:
+The current deterministic runners do not evaluate:
 
-- backend workflow APIs;
 - database persistence;
 - frontend rendering;
 - WebSocket timeline behavior;
 - real Telegram polling;
 - optional Ollama extraction;
 - Tavily live provider verification;
-- RAG retrieval;
-- outbound preview endpoint behavior;
+- live RAG retrieval;
 - full end-to-end approval/resume flow.
 
 Those surfaces remain covered by existing tests, demo runbooks, and future

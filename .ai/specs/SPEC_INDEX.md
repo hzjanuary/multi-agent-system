@@ -49,7 +49,7 @@
 - SPEC-019 Provider Live Verification - Approved / Closed
 - SPEC-020 Approved Outbound Communication - Approved / Closed
 - SPEC-021 Catalog Governance and Provider Policy - Implemented / ready for closeout review
-- SPEC-022 Evaluation and Benchmarking - Sprint 1 implemented / ready for review
+- SPEC-022 Evaluation and Benchmarking - Sprint 2 implemented / ready for review
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,

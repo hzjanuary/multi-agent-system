@@ -28,7 +28,7 @@ Closed specs:
 Current planned spec sequence:
 
 - SPEC-021 Catalog Governance and Provider Policy - Implemented / ready for closeout review
-- SPEC-022 Evaluation and Benchmarking - Sprint 1 implemented / ready for review
+- SPEC-022 Evaluation and Benchmarking - Sprint 2 implemented / ready for review
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -264,17 +264,20 @@ Validation:
 
 Status:
 
-- Sprint 1 implemented / ready for review.
+- Sprint 2 implemented / ready for review.
 
 Scope:
 
-- Sprint 1 implements deterministic evaluation assets for the Telegram parser
-  only: dataset, local runner, metrics JSON, unit tests, evaluation guide, and
-  demo regression checklist.
-- Still plans later workflow lifecycle validation, approval/resume gate
-  validation, reference evidence safety, catalog metadata display validation,
-  outbound preview gate validation, frontend smoke automation, and future CI
-  integration boundaries.
+- Sprint 1 implements deterministic evaluation assets for the Telegram parser:
+  dataset, local runner, metrics JSON, unit tests, evaluation guide, and demo
+  regression checklist.
+- Sprint 2 implements deterministic demo-safety evaluation assets for workflow
+  lifecycle transitions, invalid transition blocking, approval/resume/outbound
+  preview gates, no-send behavior, reference evidence schemas, catalog metadata
+  safety, frontend evidence/catalog bounding assumptions, fake/manual/RAG/Tavily
+  reference fixtures, and stable no-key/default-disabled settings.
+- Frontend smoke automation and future CI integration boundaries remain future
+  SPEC-022 work unless explicitly scoped.
 - No backend, frontend, Telegram runtime, API, database, Docker/CI, provider,
   workflow runtime, outbound send, real email, live web, LLM, Tavily, or final
   quote behavior has been implemented.
@@ -289,6 +292,13 @@ Sprint 1 assets:
 - `scripts/evaluation/telegram_parser_cases.json`
 - `scripts/evaluation/evaluate_telegram_parser.py`
 - `scripts/evaluation/test_evaluate_telegram_parser.py`
+
+Sprint 2 assets:
+
+- `scripts/evaluation/demo_safety_cases.json`
+- `scripts/evaluation/evaluate_demo_safety.py`
+- `scripts/evaluation/test_evaluate_demo_safety.py`
+- Current Sprint 2 dataset contains 39 deterministic safety cases.
 - `docs/evaluation/SPEC_022_EVALUATION_GUIDE.md`
 - `docs/evaluation/DEMO_REGRESSION_CHECKLIST.md`
 
@@ -304,6 +314,10 @@ Safety:
 
 Validation:
 
+- `python3 -m unittest scripts.evaluation.test_evaluate_demo_safety`
+- `python3 -m py_compile scripts/evaluation/evaluate_demo_safety.py`
+- `python3 scripts/evaluation/evaluate_demo_safety.py`
+- `python3 scripts/evaluation/evaluate_demo_safety.py --output-json /tmp/demo_safety_metrics.json`
 - `python3 -m unittest scripts.evaluation.test_evaluate_telegram_parser`
 - `python3 -m py_compile scripts/evaluation/evaluate_telegram_parser.py`
 - `python3 scripts/evaluation/evaluate_telegram_parser.py`

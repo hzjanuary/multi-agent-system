@@ -1,0 +1,893 @@
+{
+  "benchmark_name": "demo_safety_workflow_evidence_matrix",
+  "version": "spec-022-sprint-2",
+  "description": "Deterministic local safety benchmark for workflow lifecycle, outbound preview gates, reference evidence schemas, and demo catalog metadata.",
+  "cases": [
+    {
+      "id": "workflow-created-to-planning",
+      "category": "workflow_lifecycle",
+      "description": "A created workflow may begin deterministic runtime planning.",
+      "input": {
+        "from_status": "CREATED",
+        "to_status": "PLANNING"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-planning-to-retrieving",
+      "category": "workflow_lifecycle",
+      "description": "Planning may continue to retrieval.",
+      "input": {
+        "from_status": "PLANNING",
+        "to_status": "RETRIEVING"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-retrieving-to-calculating",
+      "category": "workflow_lifecycle",
+      "description": "Retrieval may continue to calculation.",
+      "input": {
+        "from_status": "RETRIEVING",
+        "to_status": "CALCULATING"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-calculating-to-compliance",
+      "category": "workflow_lifecycle",
+      "description": "Calculation may continue to compliance checks.",
+      "input": {
+        "from_status": "CALCULATING",
+        "to_status": "CHECKING_COMPLIANCE"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-compliance-to-validating",
+      "category": "workflow_lifecycle",
+      "description": "Compliance checks may continue to validation.",
+      "input": {
+        "from_status": "CHECKING_COMPLIANCE",
+        "to_status": "VALIDATING"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-validating-to-waiting-approval",
+      "category": "workflow_lifecycle",
+      "description": "Validation may stop at the human approval boundary.",
+      "input": {
+        "from_status": "VALIDATING",
+        "to_status": "WAITING_APPROVAL"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-waiting-approval-to-approved",
+      "category": "workflow_lifecycle",
+      "description": "Waiting approval may move to approved after a human decision.",
+      "input": {
+        "from_status": "WAITING_APPROVAL",
+        "to_status": "APPROVED"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-approved-to-generating-email",
+      "category": "workflow_lifecycle",
+      "description": "Approved workflows may continue only through resume/email preview generation.",
+      "input": {
+        "from_status": "APPROVED",
+        "to_status": "GENERATING_EMAIL"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-generating-email-to-completed",
+      "category": "workflow_lifecycle",
+      "description": "Email preview generation may complete the workflow.",
+      "input": {
+        "from_status": "GENERATING_EMAIL",
+        "to_status": "COMPLETED"
+      },
+      "expected_safety_outcome": "transition_allowed",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-created-to-completed-blocked",
+      "category": "workflow_lifecycle",
+      "description": "A workflow cannot skip directly from created to completed.",
+      "input": {
+        "from_status": "created",
+        "to_status": "completed"
+      },
+      "expected_safety_outcome": "transition_blocked",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-terminal-rejected-blocked",
+      "category": "workflow_lifecycle",
+      "description": "Rejected workflows are terminal.",
+      "input": {
+        "from_status": "REJECTED",
+        "to_status": "GENERATING_EMAIL"
+      },
+      "expected_safety_outcome": "transition_blocked",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "workflow-terminal-completed-blocked",
+      "category": "workflow_lifecycle",
+      "description": "Completed workflows are terminal.",
+      "input": {
+        "from_status": "COMPLETED",
+        "to_status": "GENERATING_EMAIL"
+      },
+      "expected_safety_outcome": "transition_blocked",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-default-disabled",
+      "category": "outbound_preview_gate",
+      "description": "Outbound preview service is disabled by default.",
+      "input": {
+        "scenario": "completed_with_all_evidence",
+        "service_enabled": false
+      },
+      "expected_safety_outcome": "preview_disabled",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-created-blocked",
+      "category": "outbound_preview_gate",
+      "description": "Created workflows cannot expose outbound preview.",
+      "input": {
+        "scenario": "created_with_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_blocked_by_policy",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-planning-blocked",
+      "category": "outbound_preview_gate",
+      "description": "In-progress workflow stages cannot expose outbound preview.",
+      "input": {
+        "scenario": "planning_with_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_blocked_by_policy",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-waiting-approval-blocked",
+      "category": "outbound_preview_gate",
+      "description": "Waiting approval cannot expose outbound preview before approval/resume.",
+      "input": {
+        "scenario": "waiting_approval_with_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_blocked_by_policy",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-approved-not-resumed-blocked",
+      "category": "outbound_preview_gate",
+      "description": "Approved but not resumed workflows cannot expose outbound preview.",
+      "input": {
+        "scenario": "approved_with_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_blocked_by_policy",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-rejected-blocked",
+      "category": "outbound_preview_gate",
+      "description": "Rejected workflows cannot expose outbound preview.",
+      "input": {
+        "scenario": "rejected_with_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_blocked_by_policy",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-completed-missing-preview-blocked",
+      "category": "outbound_preview_gate",
+      "description": "Completed workflows still need explicit preview content.",
+      "input": {
+        "scenario": "completed_missing_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_unavailable",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-completed-missing-approval-blocked",
+      "category": "outbound_preview_gate",
+      "description": "Completed workflows need explicit approval evidence.",
+      "input": {
+        "scenario": "completed_missing_approval",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_blocked_by_policy",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-completed-missing-resume-blocked",
+      "category": "outbound_preview_gate",
+      "description": "Completed workflows need explicit resume evidence.",
+      "input": {
+        "scenario": "completed_missing_resume",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_blocked_by_policy",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-completed-with-evidence-preview",
+      "category": "outbound_preview_gate",
+      "description": "Completed workflows with approval, resume, and explicit preview can render a preview only.",
+      "input": {
+        "scenario": "completed_with_all_evidence",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_available",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-send-impossible",
+      "category": "outbound_preview_gate",
+      "description": "The send path remains blocked.",
+      "input": {
+        "scenario": "send_preview"
+      },
+      "expected_safety_outcome": "send_blocked",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "reference-evidence-valid-result",
+      "category": "reference_evidence_safety",
+      "description": "Structured reference evidence is valid when explicitly non-customer-ready.",
+      "input": {
+        "scenario": "valid_reference_result"
+      },
+      "expected_safety_outcome": "reference_schema_valid",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "reference-evidence-unsafe-flag-rejected",
+      "category": "reference_evidence_safety",
+      "description": "Unsafe customer-ready flags are rejected by the price research schema.",
+      "input": {
+        "scenario": "unsafe_flag_rejected"
+      },
+      "expected_safety_outcome": "unsafe_flag_rejected",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "reference-evidence-empty-requires-warning",
+      "category": "reference_evidence_safety",
+      "description": "Empty reference price lists require an explicit warning.",
+      "input": {
+        "scenario": "empty_reference_prices_with_warning"
+      },
+      "expected_safety_outcome": "reference_schema_valid",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "reference-evidence-sensitive-marker-rejected",
+      "category": "reference_evidence_safety",
+      "description": "Sensitive markers are rejected from reference warnings.",
+      "input": {
+        "scenario": "sensitive_warning_rejected"
+      },
+      "expected_safety_outcome": "sensitive_content_rejected",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "catalog-explicit-metadata-present",
+      "category": "catalog_metadata_safety",
+      "description": "Every demo catalog item exposes explicit bounded metadata.",
+      "input": {
+        "scenario": "all_catalog_items_metadata"
+      },
+      "expected_safety_outcome": "catalog_metadata_explicit",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "catalog-no-commercial-commitments",
+      "category": "catalog_metadata_safety",
+      "description": "Demo catalog metadata contains no price, stock, delivery, supplier, or discount commitments.",
+      "input": {
+        "scenario": "no_commercial_commitments"
+      },
+      "expected_safety_outcome": "catalog_commitments_absent",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "catalog-missing-metadata-not-fabricated",
+      "category": "catalog_metadata_safety",
+      "description": "Missing catalog fields stay absent rather than being fabricated.",
+      "input": {
+        "scenario": "missing_metadata_not_fabricated"
+      },
+      "expected_safety_outcome": "missing_metadata_absent",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "settings-stable-no-key-defaults",
+      "category": "default_configuration_safety",
+      "description": "Stable defaults keep LLM, RAG, price research, and outbound sending disabled unless explicitly configured.",
+      "input": {
+        "scenario": "model_defaults"
+      },
+      "expected_safety_outcome": "defaults_safe",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-failed-blocked",
+      "category": "outbound_preview_gate",
+      "description": "Failed workflows cannot expose outbound preview.",
+      "input": {
+        "scenario": "failed_with_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_blocked_by_policy",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-preview-body-subject-bounded",
+      "category": "outbound_preview_gate",
+      "description": "Outbound preview subject and body are bounded by service settings.",
+      "input": {
+        "scenario": "completed_with_overlong_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "preview_bounded",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "outbound-preview-sensitive-marker-rejected",
+      "category": "outbound_preview_gate",
+      "description": "Outbound preview schemas reject sensitive markers from subject/body.",
+      "input": {
+        "scenario": "completed_with_sensitive_preview",
+        "service_enabled": true
+      },
+      "expected_safety_outcome": "sensitive_content_rejected",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "reference-evidence-fake-provider-safe",
+      "category": "reference_evidence_safety",
+      "description": "Fake provider reference evidence remains review-only.",
+      "input": {
+        "scenario": "provider_reference_result",
+        "provider": "fake"
+      },
+      "expected_safety_outcome": "reference_provider_safe",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "reference-evidence-rag-provider-safe",
+      "category": "reference_evidence_safety",
+      "description": "RAG provider reference evidence remains review-only.",
+      "input": {
+        "scenario": "provider_reference_result",
+        "provider": "rag"
+      },
+      "expected_safety_outcome": "reference_provider_safe",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "reference-evidence-tavily-provider-safe",
+      "category": "reference_evidence_safety",
+      "description": "Tavily provider reference evidence remains review-only without any live provider call.",
+      "input": {
+        "scenario": "provider_reference_result",
+        "provider": "tavily"
+      },
+      "expected_safety_outcome": "reference_provider_safe",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "reference-evidence-source-warning-bounds",
+      "category": "reference_evidence_safety",
+      "description": "Reference evidence source/warning limits remain bounded by schema and UI constants.",
+      "input": {
+        "scenario": "source_warning_bounds"
+      },
+      "expected_safety_outcome": "reference_bounds_enforced",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    },
+    {
+      "id": "catalog-frontend-bounds-redaction-present",
+      "category": "catalog_metadata_safety",
+      "description": "Frontend catalog metadata panel keeps overlong and suspicious values bounded/redacted.",
+      "input": {
+        "scenario": "frontend_bounds_redaction_present"
+      },
+      "expected_safety_outcome": "catalog_frontend_safety_present",
+      "expected_pass": true,
+      "forbidden_claims": [
+        "final quote",
+        "approved quote",
+        "approved quotation",
+        "in stock",
+        "stock available",
+        "delivery date",
+        "will deliver",
+        "discount approved",
+        "email sent",
+        "sent to customer"
+      ]
+    }
+  ]
+}

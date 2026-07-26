@@ -2,7 +2,7 @@
 
 ## Status
 
-Sprint 1 implemented / ready for review
+Sprint 2 implemented / ready for review
 
 ## Product Objective
 
@@ -15,17 +15,30 @@ lifecycle correctness, approval/resume gates, reference evidence handling,
 catalog metadata display, outbound preview policy, frontend usability, and
 regression readiness before live demos.
 
-Sprint 1 adds deterministic evaluation assets only:
+Sprint 1 added deterministic Telegram parser evaluation assets:
 
 - `scripts/evaluation/telegram_parser_cases.json`
 - `scripts/evaluation/evaluate_telegram_parser.py`
 - `scripts/evaluation/test_evaluate_telegram_parser.py`
+
+Sprint 2 adds deterministic demo-safety evaluation assets:
+
+- `scripts/evaluation/demo_safety_cases.json`
+- `scripts/evaluation/evaluate_demo_safety.py`
+- `scripts/evaluation/test_evaluate_demo_safety.py`
 - `docs/evaluation/SPEC_022_EVALUATION_GUIDE.md`
 - `docs/evaluation/DEMO_REGRESSION_CHECKLIST.md`
 
-It does not add CI jobs, backend behavior, frontend behavior, Telegram runtime
-behavior, API endpoints, database models, provider calls, live web calls, LLM
-calls, Tavily calls, or email sending.
+The Sprint 2 benchmark covers a 39-case deterministic safety matrix for
+workflow lifecycle transitions, invalid transition blocking,
+approval/resume/outbound preview gates, reference evidence schema safety,
+fake/manual/RAG/Tavily reference evidence fixtures, catalog metadata safety,
+frontend evidence/catalog bounding assumptions, and stable no-key/default-
+disabled settings.
+
+SPEC-022 does not add CI jobs, backend behavior, frontend behavior, Telegram
+runtime behavior, API endpoints, database models, provider calls, live web
+calls, LLM calls, Tavily calls, workflow mutation, or email sending.
 
 Stable defaults remain unchanged:
 

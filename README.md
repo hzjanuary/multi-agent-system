@@ -287,6 +287,7 @@ Run from the repository root:
 
 ```bash
 python3 scripts/evaluation/evaluate_telegram_parser.py
+python3 scripts/evaluation/evaluate_demo_safety.py
 bash scripts/ci/compose-gate.sh
 bash scripts/ci/backend-gate.sh
 bash scripts/ci/frontend-gate.sh

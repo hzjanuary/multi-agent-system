@@ -3,8 +3,8 @@
 ## Purpose
 
 Use this checklist before a defense demo or evaluator walkthrough. It combines
-the new SPEC-022 deterministic parser benchmark with existing backend,
-frontend, Telegram, provider, and outbound safety checks.
+the SPEC-022 deterministic parser and demo-safety benchmarks with existing
+backend, frontend, Telegram, provider, and outbound safety checks.
 
 This checklist does not enable live providers, real email, final quotation, or
 new product behavior.
@@ -44,6 +44,33 @@ Expected:
 
 ## 3. Backend Gates
 
+## 3. Demo Safety Benchmark
+
+```bash
+python3 -m unittest scripts.evaluation.test_evaluate_demo_safety
+python3 -m py_compile scripts/evaluation/evaluate_demo_safety.py
+python3 scripts/evaluation/evaluate_demo_safety.py
+python3 scripts/evaluation/evaluate_demo_safety.py \
+  --output-json /tmp/demo_safety_metrics.json
+```
+
+Expected:
+
+- workflow lifecycle transition cases pass;
+- invalid transitions are blocked;
+- outbound preview remains disabled by default;
+- outbound preview is available only for completed workflows with explicit
+  approval, resume, and preview evidence;
+- outbound send remains impossible;
+- reference evidence schemas reject unsafe customer-ready flags and sensitive
+  markers;
+- catalog metadata contains no price, stock, delivery, supplier, or discount
+  commitments;
+- stable defaults remain no-key and disabled for runtime LLM, RAG, price
+  research, outbound preview, and outbound send.
+
+## 4. Backend Gates
+
 For a lightweight pre-demo check:
 
 ```bash
@@ -63,7 +90,7 @@ Expected:
 - no live provider keys are required;
 - no final quote, auto-approval, auto-resume, or real email behavior appears.
 
-## 4. Frontend Gates
+## 5. Frontend Gates
 
 ```bash
 bash scripts/ci/frontend-gate.sh
@@ -89,7 +116,7 @@ Manual smoke should confirm:
 - reference evidence appears only when explicit workflow state contains it;
 - outbound preview remains preview-only.
 
-## 5. Compose Configuration
+## 6. Compose Configuration
 
 ```bash
 docker compose config
@@ -103,7 +130,7 @@ Expected:
 - production-demo Compose config passes with placeholder env values;
 - no cloud deployment, image push, or live provider call is performed.
 
-## 6. Telegram Dry-Run And Manual Smoke
+## 7. Telegram Dry-Run And Manual Smoke
 
 Dry-run parser/payload check:
 
@@ -129,7 +156,7 @@ Expected:
 - resume is explicit;
 - no real email is sent.
 
-## 7. Provider Live Verification
+## 8. Provider Live Verification
 
 Provider live verification remains optional and manual-only:
 
@@ -152,7 +179,7 @@ Do not run live provider verification unless:
 
 Provider live smoke is not part of CI and is not required for the stable demo.
 
-## 8. Outbound Preview Boundary
+## 9. Outbound Preview Boundary
 
 Before demo:
 
@@ -168,7 +195,7 @@ Expected:
 - no customer send;
 - no email-sent claim.
 
-## 9. Safety Review
+## 10. Safety Review
 
 Confirm the demo does not claim:
 
@@ -194,7 +221,7 @@ Confirm outputs do not expose:
 - chain-of-thought;
 - real customer data.
 
-## 10. Full Gate
+## 11. Full Gate
 
 When time allows:
 
