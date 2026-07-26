@@ -11,6 +11,7 @@ import { WorkflowDetail } from "@/components/workflows/workflow-detail";
 import { WorkflowEvidencePanel } from "@/components/workflows/workflow-evidence-panel";
 import { WorkflowEventTimeline } from "@/components/workflows/workflow-event-timeline";
 import { WorkflowNextStepGuide } from "@/components/workflows/workflow-next-step-guide";
+import { WorkflowReferenceEvidencePanel } from "@/components/workflows/workflow-reference-evidence-panel";
 import { workflowErrorMessage } from "@/components/workflows/workflow-list-view";
 import { WorkflowRunPanel } from "@/components/workflows/workflow-run-panel";
 import {
@@ -133,6 +134,7 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
         />
       </div>
       <WorkflowDetail workflow={state.workflow} />
+      <WorkflowReferenceEvidencePanel workflow={state.workflow} />
       <WorkflowEvidencePanel workflow={state.workflow} events={state.events} />
       <WorkflowApprovalHistory history={state.approvalHistory} />
       <WorkflowEventTimeline

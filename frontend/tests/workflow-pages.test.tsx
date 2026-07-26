@@ -124,6 +124,59 @@ describe("workflow pages", () => {
     );
   });
 
+  it("renders workflow detail reference evidence when workflow state has it", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
+    installMockWebSocket();
+    mockFetchSequence([
+      {
+        workflow: {
+          ...sampleWorkflow("workflow-reference"),
+          reference_price_research: {
+            provider: "manual",
+            evidence_label: "reference_price_research",
+            confidence: 0.75,
+            is_final_quote: false,
+            sources: [
+              {
+                title: "Manual source",
+                url: "https://catalog.example/manual",
+              },
+            ],
+            reference_prices: [
+              {
+                label: "Manual reference",
+                amount: "12000000",
+                currency: "VND",
+              },
+            ],
+            warnings: ["Operator review required."],
+          },
+        },
+      },
+      { events: [], count: 0, limit: 25, offset: 0 },
+      {
+        workflow_id: "workflow-reference",
+        approvals: [],
+        has_final_decision: false,
+        can_resume: false,
+      },
+      {
+        documents: [],
+        count: 0,
+      },
+    ]);
+
+    await render(<WorkflowDetailView workflowId="workflow-reference" />);
+
+    expect(document.body.textContent).toContain("Reference Price Evidence");
+    expect(document.body.textContent).toContain("Provider: manual");
+    expect(document.body.textContent).toContain("Manual reference");
+    expect(document.body.textContent).toContain("12000000 VND");
+    expect(document.body.textContent).toContain("Manual source");
+    expect(document.body.textContent).toContain("Run workflow");
+    expect(document.body.textContent).toContain("Event timeline");
+  });
+
   it("renders a bounded API error", async () => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
     vi.spyOn(globalThis, "fetch").mockResolvedValue(

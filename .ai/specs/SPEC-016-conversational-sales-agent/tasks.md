@@ -314,6 +314,8 @@ git diff --check
 
 ### TASK 016.10 - Observability / Agent Monitor Evidence Polish
 
+Status: Implemented as frontend display foundation.
+
 Goal: Surface reference price and RAG evidence in Agent Monitor/workflow UI only
 when real backend evidence exists.
 
@@ -332,6 +334,31 @@ Acceptance criteria:
 - UI hides raw provider payloads, prompts, tokens, embeddings, vector payloads,
   and chain-of-thought.
 - Existing approval/resume controls remain visible.
+
+Implemented foundation:
+
+- Added `frontend/components/workflows/workflow-reference-evidence-panel.tsx`.
+- Added `extractReferenceEvidence()` to scan only explicit evidence-shaped
+  workflow fields such as `reference_price_research`, `price_research`,
+  `reference_evidence`, nested `evidence.price_research`, and `rag_evidence`
+  under the workflow root, `runtime_context`, or `outputs`.
+- Mounted the panel in selected Agent Monitor workflow view and workflow detail.
+- The panel returns `null` when no explicit evidence field exists, so no fake
+  evidence cards are rendered.
+- Evidence output is bounded to structured source/reference price/warning
+  fields, caps source/price/warning counts, strips raw HTML, redacts sensitive
+  markers, and suppresses upstream `is_final_quote=true` prices/sources behind
+  internal-review wording.
+- Existing RAG citation panel remains intact for workflow citations and
+  grounding events.
+- Added frontend tests for missing evidence, valid evidence, structured
+  reference amounts, source/warning bounds, sensitive redaction, final-quote
+  downgrade, forbidden positive claims, Agent Monitor selected workflow, and
+  workflow detail rendering.
+- No provider calls, API changes, workflow runtime changes, Telegram changes,
+  database models/migrations, Docker/Compose/CI behavior, fake evidence, final
+  quote behavior, stock/delivery/discount/approval claim, or real email
+  behavior was added.
 
 Validation:
 

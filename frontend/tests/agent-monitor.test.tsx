@@ -112,6 +112,57 @@ describe("agent monitor page", () => {
     );
   });
 
+  it("renders selected workflow reference evidence when explicitly present", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
+    window.history.pushState({}, "", "/agent-monitor?workflowId=workflow-evidence");
+    installMockWebSocket();
+    mockFetchSequence([
+      {
+        workflow: {
+          ...sampleWorkflow("workflow-evidence", "WAITING_APPROVAL"),
+          outputs: {
+            reference_price_research: {
+              provider: "rag",
+              evidence_label: "reference_price_research",
+              confidence: 0.66,
+              is_final_quote: false,
+              sources: [
+                {
+                  title: "Internal catalog source",
+                  url: "https://catalog.example/source",
+                  snippet: "Reference evidence for review.",
+                },
+              ],
+              reference_prices: [
+                {
+                  label: "Catalog reference",
+                  amount: "12000000",
+                  currency: "VND",
+                  unit: "unit",
+                },
+              ],
+              warnings: ["Manual review required."],
+            },
+          },
+        },
+      },
+      { events: [], count: 0, limit: 25, offset: 0 },
+      emptyHistory("workflow-evidence"),
+    ]);
+
+    await render(
+      await AgentMonitorPage({
+        searchParams: Promise.resolve({ workflowId: "workflow-evidence" }),
+      }),
+    );
+
+    expect(document.body.textContent).toContain("Reference Price Evidence");
+    expect(document.body.textContent).toContain("Provider: rag");
+    expect(document.body.textContent).toContain("Catalog reference");
+    expect(document.body.textContent).toContain("12000000 VND");
+    expect(document.body.textContent).toContain("Internal catalog source");
+  });
+
   it("does not render sensitive raw fields from workflow state or events", async () => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
     installMockWebSocket();

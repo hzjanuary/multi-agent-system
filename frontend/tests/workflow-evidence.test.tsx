@@ -8,6 +8,10 @@ import {
   extractWorkflowEvidence,
   WorkflowEvidencePanel,
 } from "@/components/workflows/workflow-evidence-panel";
+import {
+  extractReferenceEvidence,
+  WorkflowReferenceEvidencePanel,
+} from "@/components/workflows/workflow-reference-evidence-panel";
 import type {
   WorkflowEvent,
   WorkflowEvidenceCitation,
@@ -160,6 +164,212 @@ describe("workflow evidence UI", () => {
 
     expect(document.body.textContent).toContain("Evidence Evidence");
     expect(document.body.textContent).toContain("...");
+  });
+});
+
+describe("workflow reference evidence UI", () => {
+  it("does not fabricate reference evidence when no explicit field exists", async () => {
+    const workflow = sampleWorkflow();
+
+    expect(extractReferenceEvidence(workflow)).toBeNull();
+
+    await render(<WorkflowReferenceEvidencePanel workflow={workflow} />);
+
+    expect(document.body.textContent).not.toContain("Reference Price Evidence");
+    expect(document.body.textContent).not.toContain("Reference only");
+  });
+
+  it("renders explicit reference evidence safely", async () => {
+    await render(
+      <WorkflowReferenceEvidencePanel
+        workflow={workflowWithEvidence({
+          outputs: {
+            reference_price_research: sampleReferenceEvidence(),
+          },
+        })}
+      />,
+    );
+
+    expect(document.body.textContent).toContain("Reference Price Evidence");
+    expect(document.body.textContent).toContain("Reference evidence only");
+    expect(document.body.textContent).toContain("Provider: tavily");
+    expect(document.body.textContent).toContain("Confidence 72%");
+    expect(document.body.textContent).toContain("Supplier reference listing");
+    expect(document.body.textContent).toContain("https://supplier.example/laptops");
+    expect(document.body.textContent).toContain("Manual pricing review is required.");
+    expect(document.body.textContent).toContain(
+      "Final quotation still requires Manager/Admin approval",
+    );
+  });
+
+  it("renders explicit reference prices with review-only labeling", async () => {
+    await render(
+      <WorkflowReferenceEvidencePanel
+        workflow={workflowWithEvidence({
+          reference_price_research: {
+            ...sampleReferenceEvidence(),
+            reference_prices: [
+              {
+                label: "Unit reference",
+                amount: "12000000",
+                currency: "VND",
+                unit: "unit",
+                quantity_basis: 1,
+              },
+            ],
+          },
+        })}
+      />,
+    );
+
+    expect(document.body.textContent).toContain("Unit reference");
+    expect(document.body.textContent).toContain("12000000 VND");
+    expect(document.body.textContent).toContain(
+      "Reference only. Not customer-ready pricing.",
+    );
+    expect(document.body.textContent?.toLowerCase()).not.toContain(
+      "approved quote",
+    );
+  });
+
+  it("downgrades is_final_quote evidence and does not display amount", async () => {
+    await render(
+      <WorkflowReferenceEvidencePanel
+        workflow={workflowWithEvidence({
+          reference_price_research: {
+            provider: "manual",
+            evidence_label: "reference_price_research",
+            is_final_quote: true,
+            reference_prices: [
+              {
+                label: "Approved final quote",
+                amount: "12000000",
+                currency: "VND",
+              },
+            ],
+          },
+        })}
+      />,
+    );
+
+    expect(document.body.textContent).toContain(
+      "Evidence requires internal review",
+    );
+    expect(document.body.textContent).not.toContain("Approved final quote");
+    expect(document.body.textContent).not.toContain("12000000");
+  });
+
+  it("bounds source list, titles, URLs, and warnings", async () => {
+    await render(
+      <WorkflowReferenceEvidencePanel
+        workflow={workflowWithEvidence({
+          runtime_context: {
+            price_research: {
+              ...sampleReferenceEvidence(),
+              sources: [
+                {
+                  title: "Supplier " + "very long ".repeat(80),
+                  url: "https://supplier.example/" + "path/".repeat(90),
+                  snippet: "<strong>Safe snippet</strong>",
+                },
+                { title: "Second source", url: "https://supplier.example/2" },
+                { title: "Third source", url: "https://supplier.example/3" },
+                {
+                  title: "Fourth source should not render",
+                  url: "https://supplier.example/4",
+                },
+              ],
+              warnings: [
+                "Warning ".repeat(80),
+                "Second warning",
+                "Third warning",
+                "Fourth warning should not render",
+              ],
+            },
+          },
+        })}
+      />,
+    );
+
+    expect(document.body.textContent).toContain("Second source");
+    expect(document.body.textContent).toContain("Third source");
+    expect(document.body.textContent).not.toContain(
+      "Fourth source should not render",
+    );
+    expect(document.body.textContent).not.toContain(
+      "Fourth warning should not render",
+    );
+    expect(document.body.textContent).not.toContain("<strong>");
+    expect(document.body.textContent).toContain("...");
+  });
+
+  it("redacts sensitive values and skips sensitive source objects", async () => {
+    await render(
+      <WorkflowReferenceEvidencePanel
+        workflow={workflowWithEvidence({
+          reference_evidence: {
+            provider: "tavily",
+            evidence_label: "reference_price_research",
+            reference_prices: [
+              {
+                label: "raw_prompt chain-of-thought",
+                amount: "12000000",
+                currency: "VND",
+              },
+            ],
+            sources: [
+              {
+                title: "provider_payload raw_response secret token",
+                url: "https://supplier.example/?api_key=secret",
+              },
+              {
+                title: "Unsafe object",
+                provider_payload: { raw: true },
+                url: "https://hidden.example",
+              },
+            ],
+            warnings: ["authorization bearer token raw_provider"],
+            confidence: 0.9,
+          },
+        })}
+      />,
+    );
+
+    const text = document.body.textContent?.toLowerCase() ?? "";
+    expect(text).toContain("[redacted]");
+    expect(text).not.toContain("provider_payload");
+    expect(text).not.toContain("raw_response");
+    expect(text).not.toContain("raw_prompt");
+    expect(text).not.toContain("api_key");
+    expect(text).not.toContain("authorization");
+    expect(text).not.toContain("bearer");
+    expect(text).not.toContain("chain-of-thought");
+    expect(text).not.toContain("https://hidden.example");
+  });
+
+  it("does not render forbidden positive claims from safe evidence UI", async () => {
+    await render(
+      <WorkflowReferenceEvidencePanel
+        workflow={workflowWithEvidence({
+          reference_price_research: sampleReferenceEvidence(),
+        })}
+      />,
+    );
+
+    const text = document.body.textContent?.toLowerCase() ?? "";
+    const forbidden = [
+      "approved quote",
+      "approved quotation",
+      "in stock",
+      "stock available",
+      "delivery date",
+      "will deliver",
+      "discount approved",
+      "email sent",
+    ];
+    for (const claim of forbidden) {
+      expect(text).not.toContain(claim);
+    }
   });
 });
 
@@ -318,6 +528,32 @@ function sampleWorkflow(): WorkflowState {
     retry_count: 0,
     created_at: "2026-07-13T10:00:00Z",
     updated_at: "2026-07-13T10:00:00Z",
+  };
+}
+
+function workflowWithEvidence(extra: Record<string, unknown>): WorkflowState {
+  return {
+    ...sampleWorkflow(),
+    ...extra,
+  } as WorkflowState;
+}
+
+function sampleReferenceEvidence() {
+  return {
+    provider: "tavily",
+    evidence_label: "reference_price_research",
+    confidence: 0.72,
+    retrieved_at: "2026-07-26T10:00:00Z",
+    is_final_quote: false,
+    sources: [
+      {
+        title: "Supplier reference listing",
+        url: "https://supplier.example/laptops",
+        snippet: "Reference source for manual review.",
+      },
+    ],
+    reference_prices: [],
+    warnings: ["Manual pricing review is required."],
   };
 }
 

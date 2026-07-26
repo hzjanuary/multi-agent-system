@@ -113,6 +113,27 @@ Implemented:
     explicit reference amounts, bounded citations, low confidence, final-quote
     downgrade, redaction, forbidden claims, technical compatibility, and no
     network calls.
+- Implemented TASK 016.10 foundation:
+  - `frontend/components/workflows/workflow-reference-evidence-panel.tsx`
+    extracts and renders explicit reference evidence from existing workflow
+    state JSON only.
+  - The extractor checks explicit evidence-shaped fields such as
+    `reference_price_research`, `price_research`, `reference_evidence`,
+    nested `evidence.price_research`, and `rag_evidence` under the workflow
+    root, `runtime_context`, or `outputs`.
+  - The panel is mounted in selected Agent Monitor workflow view and workflow
+    detail. It returns `null` when no explicit field exists, so it does not
+    fabricate cards.
+  - Rendering is bounded to structured source/reference price/warning fields,
+    strips raw HTML, redacts sensitive markers, caps displayed counts, and
+    suppresses `is_final_quote=true` prices/sources behind internal-review
+    wording.
+  - Existing RAG citation rendering remains in
+    `WorkflowEvidencePanel`.
+  - Frontend tests cover missing evidence, valid evidence, structured reference
+    amounts, bounds, redaction, final-quote downgrade, forbidden positive
+    claims, Agent Monitor selected workflow rendering, and workflow detail
+    rendering.
 
 Safety:
 
@@ -139,6 +160,10 @@ Safety:
   They must never fetch live research, expose raw provider payloads, expose
   secrets, issue a final quote, claim stock/delivery/discount/approval, or
   bypass Manager approval and explicit resume.
+- Frontend reference-evidence display is optional workflow-state rendering
+  only. It must never call providers, infer prices from prose, expose raw
+  provider payloads/prompts/embeddings/vector payloads/secrets, or imply final
+  customer pricing before approval.
 - SPEC-016 keeps deterministic fallback, no raw prompts/provider payloads, no
   chain-of-thought, no unsupported silent item dropping, no fake prices, no
   stock/delivery promises, no auto-approval, no auto-resume, and no real email

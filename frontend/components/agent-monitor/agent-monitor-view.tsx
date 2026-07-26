@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { WorkflowAgentActivityPanel } from "@/components/workflows/workflow-agent-activity-panel";
 import { WorkflowEventTimeline } from "@/components/workflows/workflow-event-timeline";
 import { WorkflowNextStepGuide } from "@/components/workflows/workflow-next-step-guide";
+import { WorkflowReferenceEvidencePanel } from "@/components/workflows/workflow-reference-evidence-panel";
 import { WorkflowStatusBadge } from "@/components/workflows/workflow-status-badge";
 import { workflowErrorMessage } from "@/components/workflows/workflow-list-view";
 import { demoWorkflows } from "@/lib/demo";
@@ -249,6 +250,7 @@ function WorkflowMonitor({
         events={events}
         workflow={workflow}
       />
+      <WorkflowReferenceEvidencePanel workflow={workflow} />
       <WorkflowEventTimeline
         workflowId={workflow.workflow_id}
         persistedEvents={events}

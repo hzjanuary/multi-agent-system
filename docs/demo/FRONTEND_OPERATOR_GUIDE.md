@@ -112,6 +112,11 @@ If evidence is empty, that is expected when RAG is disabled, knowledge has not
 been ingested, or the selected workflow was not run with RAG enabled. The
 frontend does not fabricate evidence.
 
+Reference price evidence appears only when the backend workflow state already
+contains an explicit bounded reference-evidence field. It is review material,
+not a final quotation, and Manager/Admin approval is still required before any
+customer-ready quote.
+
 ## If the Workflow Is Already Completed
 
 Use the completed workflow as read-only proof, or return to `/demo` and choose
