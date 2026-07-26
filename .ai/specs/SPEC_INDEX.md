@@ -39,17 +39,20 @@
 - SPEC-014 Production Deployment and Observability
 - SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets
 - SPEC-016 Conversational Sales Agent and External Price Research
+- SPEC-017 Frontend Visual Redesign
 - Future agent/tool specs: Calculator Tool, Compliance Agent, Validation Agent,
   and Email Agent should be assigned non-conflicting SPEC numbers when planned.
 
-## Phase 6 - Expanded Frontend
+## Phase 6 - Post-Demo Product Roadmap
 
-- SPEC-017 Frontend Bootstrap Follow-up
-- SPEC-018 Authentication UI Follow-up
-- SPEC-019 Dashboard Follow-up
-- SPEC-020 Workflow Detail Follow-up
-- SPEC-021 Agent Monitor
-- SPEC-022 Document Management
+- Planned: SPEC-018 Catalog Expansion
+- Planned: SPEC-019 Provider Live Verification
+- Planned: SPEC-020 Approved Outbound Communication
+
+Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
+avoid number conflicts with the approved post-demo roadmap. Future frontend,
+agent-monitor, and document-management specs should use non-conflicting SPEC
+numbers.
 
 ## Phase 7 - Observability
 

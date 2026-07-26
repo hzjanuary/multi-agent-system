@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented / ready for closeout review
+Approved / Closed
 
 ## Product Objective
 

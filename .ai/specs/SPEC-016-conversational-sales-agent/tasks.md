@@ -373,7 +373,7 @@ git diff --check
 
 ### TASK 016.11 - Final Validation And Docs
 
-Status: Implemented / ready for closeout review.
+Status: Approved / Closed.
 
 Goal: Validate SPEC-016 implementation, update runbooks, and document the safe
 post-demo conversational sales workflow.

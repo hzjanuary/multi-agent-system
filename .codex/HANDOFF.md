@@ -18,16 +18,21 @@ Closed specs:
 - SPEC-012 Human Approval and Workflow Resume - Approved / Closed
 - SPEC-013 RAG and Document Knowledge Base - Approved / Closed
 - SPEC-014 Production Deployment and Observability - Approved / Closed
+- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - Approved / Closed
+- SPEC-016 Conversational Sales Agent and External Price Research - Approved / Closed
+- SPEC-017 Frontend Visual Redesign - Approved / Closed
 
-Current active spec:
+Current planned spec sequence:
 
-- SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - closed / final-graduation-ready
+- SPEC-018 Catalog Expansion - planned / ready for review before implementation
+- SPEC-019 Provider Live Verification - planned / ready for review before implementation
+- SPEC-020 Approved Outbound Communication - planned / ready for review before implementation
 
 ## Current SPEC-016 Conversational Sales Agent State
 
 Scope:
 
-- SPEC-016 is implemented and ready for closeout review.
+- SPEC-016 is implemented and closed for roadmap planning purposes.
 - Current implementation includes the local Telegram/Ollama conversational
   sales bridge work, backend reference price research contracts/providers,
   passive Telegram reference-evidence reply rendering, and frontend reference
@@ -211,12 +216,43 @@ Last known SPEC-016 validation:
 
 Recommended next work after SPEC-016:
 
-- SPEC-018 or later catalog expansion and product governance for supported
-  items beyond the laptop demo.
-- Private live verification of Tavily/provider behavior with real keys outside
-  CI, including rate limits, caching, and citation quality controls.
-- Approved customer communication integration after Manager/Admin approval.
+- SPEC-018 Catalog Expansion and product governance for supported items beyond
+  the laptop demo.
+- SPEC-019 Provider Live Verification for Tavily/provider behavior with real
+  keys outside CI, including rate limits, caching, and citation quality
+  controls.
+- SPEC-020 Approved Outbound Communication after Manager/Admin approval.
 - Provider observability and policy controls for live external research.
+
+## Planned Post-Demo Specs
+
+Planning docs created:
+
+- `.ai/specs/SPEC-018-catalog-expansion/spec.md`
+- `.ai/specs/SPEC-018-catalog-expansion/tasks.md`
+- `.ai/specs/SPEC-019-provider-live-verification/spec.md`
+- `.ai/specs/SPEC-019-provider-live-verification/tasks.md`
+- `.ai/specs/SPEC-020-approved-outbound-communication/spec.md`
+- `.ai/specs/SPEC-020-approved-outbound-communication/tasks.md`
+
+Recommended implementation sequence:
+
+1. SPEC-018 Catalog Expansion.
+2. SPEC-019 Provider Live Verification.
+3. SPEC-020 Approved Outbound Communication.
+
+Default demo safety remains unchanged across all three planned specs:
+
+- `LLM_PROVIDER=fake`
+- `LLM_RUNTIME_ENABLED=false`
+- `PRICE_RESEARCH_ENABLED=false`
+- `RAG_ENABLED=false` unless explicitly enabled for a RAG demo
+- no live provider calls in CI
+- no Telegram automatic live price research
+- no auto-approval
+- no auto-resume
+- no real email
+- no final quote before Manager/Admin approval
 
 ## Current SPEC-017 Frontend Visual Redesign State
 
