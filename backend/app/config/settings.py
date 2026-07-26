@@ -212,6 +212,40 @@ class Settings(BaseSettings):
         default="basic",
         alias="TAVILY_SEARCH_DEPTH",
     )
+    outbound_communication_enabled: bool = Field(
+        default=False,
+        alias="OUTBOUND_COMMUNICATION_ENABLED",
+    )
+    outbound_send_enabled: bool = Field(
+        default=False,
+        alias="OUTBOUND_SEND_ENABLED",
+    )
+    outbound_provider: Literal["preview", "file", "gmail_future"] = Field(
+        default="preview",
+        alias="OUTBOUND_PROVIDER",
+    )
+    outbound_require_approval: bool = Field(
+        default=True,
+        alias="OUTBOUND_REQUIRE_APPROVAL",
+    )
+    outbound_max_body_chars: int = Field(
+        default=5000,
+        ge=100,
+        le=20000,
+        alias="OUTBOUND_MAX_BODY_CHARS",
+    )
+    outbound_max_subject_chars: int = Field(
+        default=180,
+        ge=20,
+        le=500,
+        alias="OUTBOUND_MAX_SUBJECT_CHARS",
+    )
+    outbound_max_recipients: int = Field(
+        default=10,
+        ge=1,
+        le=50,
+        alias="OUTBOUND_MAX_RECIPIENTS",
+    )
     readiness_timeout_seconds: float = Field(
         default=2.0,
         ge=0.1,
@@ -313,6 +347,12 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_tavily_search_depth(cls, value: str) -> str:
         """Normalize Tavily search depth."""
+        return str(value).strip().lower()
+
+    @field_validator("outbound_provider", mode="before")
+    @classmethod
+    def normalize_outbound_provider(cls, value: str) -> str:
+        """Normalize outbound provider names loaded from environment."""
         return str(value).strip().lower()
 
 

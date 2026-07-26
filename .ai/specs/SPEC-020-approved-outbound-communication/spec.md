@@ -2,7 +2,47 @@
 
 ## Status
 
-Planned / ready for review before implementation
+Sprint 1 implemented / ready for review
+
+## Sprint 1 Implementation Summary
+
+SPEC-020 Sprint 1 adds backend-only approved outbound communication contracts
+and a preview-only service foundation.
+
+Implemented:
+
+- `backend/app/outbound/`
+  - typed preview-only schemas
+  - disabled/send-blocked exceptions
+  - pure approval/resume policy helpers
+  - `OutboundCommunicationService.build_preview(...)`
+- Safe outbound settings in `backend/app/config/settings.py`:
+  - `OUTBOUND_COMMUNICATION_ENABLED=false`
+  - `OUTBOUND_SEND_ENABLED=false`
+  - `OUTBOUND_PROVIDER=preview`
+  - `OUTBOUND_REQUIRE_APPROVAL=true`
+  - bounded subject/body/recipient limits
+- Focused tests:
+  - `backend/app/tests/test_outbound_communication_schemas.py`
+  - `backend/app/tests/test_outbound_communication_service.py`
+  - outbound defaults/overrides in `backend/app/tests/test_settings.py`
+
+Sprint 1 does not add API endpoints, frontend behavior, Telegram behavior,
+workflow runtime behavior, database models/migrations, provider calls, Gmail
+integration, or real email sending.
+
+Preview generation is blocked unless:
+
+- outbound communication is explicitly enabled in the service constructor;
+- sending remains disabled;
+- the workflow is `COMPLETED`;
+- workflow state contains an approve decision for the same workflow;
+- workflow state contains explicit resume completion evidence; and
+- workflow state contains explicit preview content such as `email_preview` with
+  subject and body.
+
+The service never synthesizes customer-ready content from arbitrary prose,
+events, agent summaries, RAG, Tavily, LLM output, or Telegram messages.
 
 ## Product Objective
 

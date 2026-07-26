@@ -26,7 +26,7 @@ Current planned spec sequence:
 
 - SPEC-018 Catalog Expansion - implemented / ready for closeout review
 - SPEC-019 Provider Live Verification - implemented / ready for closeout review
-- SPEC-020 Approved Outbound Communication - planned / ready for review before implementation
+- SPEC-020 Approved Outbound Communication - Sprint 1 implemented / ready for review
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -396,6 +396,82 @@ Last known validation:
 Remaining SPEC-019 work:
 
 - Await review/approval for SPEC-019 closeout.
+
+## Current SPEC-020 Approved Outbound Communication State
+
+Status:
+
+- Sprint 1 implemented / ready for review.
+
+Scope implemented:
+
+- Added backend preview-only outbound communication package:
+  - `backend/app/outbound/__init__.py`
+  - `backend/app/outbound/exceptions.py`
+  - `backend/app/outbound/schemas.py`
+  - `backend/app/outbound/policies.py`
+  - `backend/app/outbound/service.py`
+- Added safe disabled-by-default settings in `backend/app/config/settings.py`:
+  - `OUTBOUND_COMMUNICATION_ENABLED=false`
+  - `OUTBOUND_SEND_ENABLED=false`
+  - `OUTBOUND_PROVIDER=preview`
+  - `OUTBOUND_REQUIRE_APPROVAL=true`
+  - bounded subject/body/recipient limits
+- Added focused backend tests:
+  - `backend/app/tests/test_outbound_communication_schemas.py`
+  - `backend/app/tests/test_outbound_communication_service.py`
+  - outbound settings assertions in `backend/app/tests/test_settings.py`
+- Updated `.ai/specs/SPEC-020-approved-outbound-communication/spec.md` and
+  `tasks.md` with Sprint 1 implementation details and closeout checklist.
+
+Behavior:
+
+- `OutboundCommunicationService` is disabled by default.
+- Preview generation requires explicit service enablement, send disabled,
+  provider `preview`, workflow status `COMPLETED`, explicit approve decision
+  evidence for the same workflow, explicit resume completion evidence, and an
+  explicit preview state field such as `email_preview` with subject/body.
+- Preview extraction is deterministic and uses existing workflow state only.
+- `send_preview(...)` is present only as a hard-disabled placeholder that
+  raises `OutboundSendDisabledError`.
+
+Out of scope / unchanged:
+
+- No API endpoints.
+- No frontend changes.
+- No Telegram changes.
+- No workflow runtime changes.
+- No database models or migrations.
+- No Docker/Compose/CI behavior changes.
+- No LLM, Tavily, RAG, Gmail, SMTP, provider, or network calls.
+- No real email, auto-send, auto-approval, auto-resume, or final quote
+  behavior.
+
+Last known validation:
+
+- `docker compose build backend-test` passed.
+- `docker compose run --rm backend-test pytest app/tests/test_outbound_communication_schemas.py app/tests/test_outbound_communication_service.py app/tests/test_settings.py -q` passed:
+  28 passed.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+- `docker compose run --rm backend-test pytest app/tests/test_outbound_communication_schemas.py app/tests/test_outbound_communication_service.py -q` passed:
+  24 passed.
+- `docker compose run --rm backend-test pytest -q` passed:
+  776 passed, 1 skipped.
+- `docker compose run --rm backend-test ruff check app/outbound app/tests/test_outbound_communication_schemas.py app/tests/test_outbound_communication_service.py app/tests/test_settings.py` passed.
+- `docker compose run --rm backend-test black --check app/outbound app/tests/test_outbound_communication_schemas.py app/tests/test_outbound_communication_service.py app/tests/test_settings.py` passed.
+- `docker compose run --rm backend-test mypy app` passed:
+  no issues in 222 source files.
+- `docker compose run --rm backend-test ruff check .` passed.
+- `docker compose run --rm backend-test black --check .` passed.
+- `bash scripts/ci/backend-gate.sh` passed.
+- `bash scripts/ci/all-gates.sh` passed, including frontend gate,
+  production-demo image build, and whitespace check.
+- `git diff --check` passed.
+
+Remaining SPEC-020 Sprint 1 work:
+
+- Await review.
 
 ## Current SPEC-017 Frontend Visual Redesign State
 

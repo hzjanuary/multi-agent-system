@@ -41,6 +41,13 @@ def test_settings_load_default_development_values() -> None:
     assert settings.tavily_max_results == 5
     assert settings.tavily_include_raw_content is False
     assert settings.tavily_search_depth == "basic"
+    assert settings.outbound_communication_enabled is False
+    assert settings.outbound_send_enabled is False
+    assert settings.outbound_provider == "preview"
+    assert settings.outbound_require_approval is True
+    assert settings.outbound_max_body_chars == 5000
+    assert settings.outbound_max_subject_chars == 180
+    assert settings.outbound_max_recipients == 10
     assert settings.readiness_timeout_seconds == 2.0
 
 
@@ -96,6 +103,13 @@ def test_settings_can_be_overridden_by_environment(
     monkeypatch.setenv("TAVILY_MAX_RESULTS", "7")
     monkeypatch.setenv("TAVILY_INCLUDE_RAW_CONTENT", "true")
     monkeypatch.setenv("TAVILY_SEARCH_DEPTH", "ADVANCED")
+    monkeypatch.setenv("OUTBOUND_COMMUNICATION_ENABLED", "true")
+    monkeypatch.setenv("OUTBOUND_SEND_ENABLED", "false")
+    monkeypatch.setenv("OUTBOUND_PROVIDER", "FILE")
+    monkeypatch.setenv("OUTBOUND_REQUIRE_APPROVAL", "true")
+    monkeypatch.setenv("OUTBOUND_MAX_BODY_CHARS", "2500")
+    monkeypatch.setenv("OUTBOUND_MAX_SUBJECT_CHARS", "120")
+    monkeypatch.setenv("OUTBOUND_MAX_RECIPIENTS", "4")
     monkeypatch.setenv("READINESS_TIMEOUT_SECONDS", "5.5")
 
     settings = Settings()
@@ -149,6 +163,13 @@ def test_settings_can_be_overridden_by_environment(
     assert settings.tavily_max_results == 7
     assert settings.tavily_include_raw_content is True
     assert settings.tavily_search_depth == "advanced"
+    assert settings.outbound_communication_enabled is True
+    assert settings.outbound_send_enabled is False
+    assert settings.outbound_provider == "file"
+    assert settings.outbound_require_approval is True
+    assert settings.outbound_max_body_chars == 2500
+    assert settings.outbound_max_subject_chars == 120
+    assert settings.outbound_max_recipients == 4
     assert settings.readiness_timeout_seconds == 5.5
 
 
