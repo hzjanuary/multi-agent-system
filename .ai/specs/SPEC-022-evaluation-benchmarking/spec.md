@@ -2,7 +2,7 @@
 
 ## Status
 
-Planning / ready for review
+Sprint 1 implemented / ready for review
 
 ## Product Objective
 
@@ -15,9 +15,17 @@ lifecycle correctness, approval/resume gates, reference evidence handling,
 catalog metadata display, outbound preview policy, frontend usability, and
 regression readiness before live demos.
 
-This is planning only. It does not add tests, benchmark datasets, automation
-scripts, CI jobs, backend behavior, frontend behavior, Telegram behavior, API
-endpoints, database models, provider calls, live web calls, or email sending.
+Sprint 1 adds deterministic evaluation assets only:
+
+- `scripts/evaluation/telegram_parser_cases.json`
+- `scripts/evaluation/evaluate_telegram_parser.py`
+- `scripts/evaluation/test_evaluate_telegram_parser.py`
+- `docs/evaluation/SPEC_022_EVALUATION_GUIDE.md`
+- `docs/evaluation/DEMO_REGRESSION_CHECKLIST.md`
+
+It does not add CI jobs, backend behavior, frontend behavior, Telegram runtime
+behavior, API endpoints, database models, provider calls, live web calls, LLM
+calls, Tavily calls, or email sending.
 
 Stable defaults remain unchanged:
 

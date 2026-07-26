@@ -139,6 +139,7 @@ backend/                  FastAPI backend, runtime, APIs, services, tests
 frontend/                 Next.js operations console and frontend tests
 docs/demo/                Demo runbooks, Telegram bridge docs, operator guide
 docs/deployment/          Env docs, production-demo runbook, smoke, troubleshooting
+docs/evaluation/          SPEC-022 benchmark guide and demo regression checklist
 docs/final/               Final evaluation, demo validation, release assets
 docs/governance/          Catalog, provider evidence, approval, and outbound policy
 docs/report/              Graduation report narrative assets
@@ -285,6 +286,7 @@ and agent-thought streaming.
 Run from the repository root:
 
 ```bash
+python3 scripts/evaluation/evaluate_telegram_parser.py
 bash scripts/ci/compose-gate.sh
 bash scripts/ci/backend-gate.sh
 bash scripts/ci/frontend-gate.sh
@@ -307,6 +309,8 @@ validation requires explicit `--confirm-local-demo`.
 
 ## Final Evaluation And Report Assets
 
+- [SPEC-022 evaluation guide](docs/evaluation/SPEC_022_EVALUATION_GUIDE.md)
+- [Demo regression checklist](docs/evaluation/DEMO_REGRESSION_CHECKLIST.md)
 - [Final docs index](docs/final/README.md)
 - [Evaluation matrix](docs/final/EVALUATION_MATRIX.md)
 - [Acceptance evidence plan](docs/final/ACCEPTANCE_EVIDENCE_PLAN.md)

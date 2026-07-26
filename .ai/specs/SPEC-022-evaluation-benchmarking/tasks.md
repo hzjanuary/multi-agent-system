@@ -4,7 +4,7 @@
 
 ### TASK 022.1 - Evaluation Scope And Metrics Contract
 
-Status: Planned.
+Status: Implemented in Sprint 1.
 
 Goal: Define the evaluation dimensions, metric names, benchmark result format,
 and safety violation categories before adding benchmark data or automation.
@@ -30,13 +30,26 @@ Acceptance criteria:
 Planned validation:
 
 ```bash
+python3 -m unittest scripts.evaluation.test_evaluate_telegram_parser
+python3 -m py_compile scripts/evaluation/evaluate_telegram_parser.py
+python3 scripts/evaluation/evaluate_telegram_parser.py
+python3 scripts/evaluation/evaluate_telegram_parser.py --output-json /tmp/telegram_eval_metrics.json
 git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added deterministic benchmark result format in
+  `scripts/evaluation/evaluate_telegram_parser.py`.
+- Added stable metrics fields for total, passed, failed, accuracy, category
+  breakdown, language breakdown, failures, deterministic mode, provider call
+  flag, and live network call flag.
+- Added tests for stable metrics shape and forbidden-claim-free output.
+
 ### TASK 022.2 - Telegram Parser Benchmark Dataset Plan
 
-Status: Planned.
+Status: Implemented in Sprint 1.
 
 Goal: Plan the English/Vietnamese RFQ dataset used to measure parser and
 normalization behavior.
@@ -62,13 +75,24 @@ Acceptance criteria:
 Planned validation:
 
 ```bash
+python3 -m unittest scripts.evaluation.test_evaluate_telegram_parser
+python3 scripts/evaluation/evaluate_telegram_parser.py
 git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `scripts/evaluation/telegram_parser_cases.json` with 25 deterministic
+  English/Vietnamese parser cases covering supported catalog items, Office 365
+  add-ons, unsupported items, mixed requests, missing quantity, missing item,
+  greetings, and benchmark output safety.
+- Added dataset schema/coverage tests in
+  `scripts/evaluation/test_evaluate_telegram_parser.py`.
+
 ### TASK 022.3 - Workflow Lifecycle And Approval Gate Benchmark Plan
 
-Status: Planned.
+Status: Planned for a later sprint.
 
 Goal: Plan validation for the deterministic workflow path and human approval
 boundary.
@@ -99,7 +123,7 @@ git status --short
 
 ### TASK 022.4 - Evidence, Catalog Metadata, And Outbound Preview Safety Plan
 
-Status: Planned.
+Status: Planned for a later sprint.
 
 Goal: Plan benchmark checks for reference evidence, catalog metadata, and
 approved outbound preview surfaces.
@@ -129,7 +153,7 @@ git status --short
 
 ### TASK 022.5 - Frontend Smoke And Pre-Demo Regression Checklist
 
-Status: Planned.
+Status: Implemented in Sprint 1 as documentation.
 
 Goal: Plan a repeatable UI smoke checklist and demo-regression routine.
 
@@ -153,13 +177,21 @@ Acceptance criteria:
 Planned validation:
 
 ```bash
+python3 -m unittest scripts.evaluation.test_evaluate_telegram_parser
+python3 scripts/evaluation/evaluate_telegram_parser.py
 git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/evaluation/DEMO_REGRESSION_CHECKLIST.md` with parser benchmark,
+  backend, frontend, Compose, Telegram dry-run/manual smoke, provider live
+  verification, outbound preview, safety, and full-gate sections.
+
 ### TASK 022.6 - Future Automation And CI Boundary Plan
 
-Status: Planned.
+Status: Implemented in Sprint 1 as documentation.
 
 Goal: Define which benchmark checks can later become automated local/CI gates
 and which must remain manual-only.
@@ -187,9 +219,16 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/evaluation/SPEC_022_EVALUATION_GUIDE.md` documenting the
+  deterministic/no-key parser benchmark, metrics interpretation, safe case
+  additions, and future CI boundary.
+- No Docker/Compose/GitHub Actions changes were made.
+
 ### TASK 022.7 - Documentation, Validation, And Closeout
 
-Status: Planned.
+Status: Implemented in Sprint 1 / ready for review.
 
 Goal: Close SPEC-022 planning with updated index, handoff, and validation
 evidence.
@@ -211,9 +250,19 @@ Acceptance criteria:
 Validation:
 
 ```bash
+python3 -m unittest scripts.evaluation.test_evaluate_telegram_parser
+python3 -m py_compile scripts/evaluation/evaluate_telegram_parser.py
+python3 scripts/evaluation/evaluate_telegram_parser.py
+python3 scripts/evaluation/evaluate_telegram_parser.py --output-json /tmp/telegram_eval_metrics.json
 git diff --check
 git status --short
 ```
+
+Implementation:
+
+- Updated SPEC-022 status for Sprint 1.
+- Updated `.codex/HANDOFF.md`.
+- Added evaluation docs under `docs/evaluation/`.
 
 ## SPEC-022 Planning Closeout Checklist
 

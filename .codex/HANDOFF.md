@@ -28,7 +28,7 @@ Closed specs:
 Current planned spec sequence:
 
 - SPEC-021 Catalog Governance and Provider Policy - Implemented / ready for closeout review
-- SPEC-022 Evaluation and Benchmarking - Planning / ready for review
+- SPEC-022 Evaluation and Benchmarking - Sprint 1 implemented / ready for review
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -219,8 +219,8 @@ Last known SPEC-016 validation:
 Recommended next work after SPEC-021 planning:
 
 - Review SPEC-021 closeout before any product implementation.
-- Review SPEC-022 planning docs before adding benchmark datasets, tests,
-  scripts, or CI gates.
+- Review SPEC-022 Sprint 1 before adding workflow lifecycle benchmarks,
+  frontend smoke automation, or CI gates.
 - Keep catalog governance, provider operations, outbound send-provider
   behavior, and production communication policy planning-only until a specific
   SPEC-021 task is approved for implementation.
@@ -264,25 +264,33 @@ Validation:
 
 Status:
 
-- Planning / ready for review.
+- Sprint 1 implemented / ready for review.
 
 Scope:
 
-- Plans deterministic demo evaluation, Telegram parser benchmark dataset,
-  English/Vietnamese RFQ test matrix, supported-item accuracy, unsupported-item
-  rejection accuracy, mixed supported/unsupported safety, workflow lifecycle
-  validation, approval/resume gate validation, reference evidence safety,
-  catalog metadata display validation, outbound preview gate validation,
-  frontend smoke checklist, pre-demo regression checklist, benchmark metrics
-  format, and future CI integration boundaries.
-- Planning only. No backend, frontend, Telegram, API, database, Docker/CI,
-  provider, workflow runtime, outbound send, real email, test, script, or live
-  provider behavior has been implemented.
+- Sprint 1 implements deterministic evaluation assets for the Telegram parser
+  only: dataset, local runner, metrics JSON, unit tests, evaluation guide, and
+  demo regression checklist.
+- Still plans later workflow lifecycle validation, approval/resume gate
+  validation, reference evidence safety, catalog metadata display validation,
+  outbound preview gate validation, frontend smoke automation, and future CI
+  integration boundaries.
+- No backend, frontend, Telegram runtime, API, database, Docker/CI, provider,
+  workflow runtime, outbound send, real email, live web, LLM, Tavily, or final
+  quote behavior has been implemented.
 
 Planning docs:
 
 - `.ai/specs/SPEC-022-evaluation-benchmarking/spec.md`
 - `.ai/specs/SPEC-022-evaluation-benchmarking/tasks.md`
+
+Sprint 1 assets:
+
+- `scripts/evaluation/telegram_parser_cases.json`
+- `scripts/evaluation/evaluate_telegram_parser.py`
+- `scripts/evaluation/test_evaluate_telegram_parser.py`
+- `docs/evaluation/SPEC_022_EVALUATION_GUIDE.md`
+- `docs/evaluation/DEMO_REGRESSION_CHECKLIST.md`
 
 Safety:
 
@@ -296,6 +304,10 @@ Safety:
 
 Validation:
 
+- `python3 -m unittest scripts.evaluation.test_evaluate_telegram_parser`
+- `python3 -m py_compile scripts/evaluation/evaluate_telegram_parser.py`
+- `python3 scripts/evaluation/evaluate_telegram_parser.py`
+- `python3 scripts/evaluation/evaluate_telegram_parser.py --output-json /tmp/telegram_eval_metrics.json`
 - `git diff --check`
 - `git status --short`
 
