@@ -28,6 +28,7 @@ Closed specs:
 Current planned spec sequence:
 
 - SPEC-021 Catalog Governance and Provider Policy - Implemented / ready for closeout review
+- SPEC-022 Evaluation and Benchmarking - Planning / ready for review
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -218,6 +219,8 @@ Last known SPEC-016 validation:
 Recommended next work after SPEC-021 planning:
 
 - Review SPEC-021 closeout before any product implementation.
+- Review SPEC-022 planning docs before adding benchmark datasets, tests,
+  scripts, or CI gates.
 - Keep catalog governance, provider operations, outbound send-provider
   behavior, and production communication policy planning-only until a specific
   SPEC-021 task is approved for implementation.
@@ -256,6 +259,45 @@ Validation:
 - `git status --short`
 - `docker compose config`
 - `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+
+## Current SPEC-022 Evaluation and Benchmarking State
+
+Status:
+
+- Planning / ready for review.
+
+Scope:
+
+- Plans deterministic demo evaluation, Telegram parser benchmark dataset,
+  English/Vietnamese RFQ test matrix, supported-item accuracy, unsupported-item
+  rejection accuracy, mixed supported/unsupported safety, workflow lifecycle
+  validation, approval/resume gate validation, reference evidence safety,
+  catalog metadata display validation, outbound preview gate validation,
+  frontend smoke checklist, pre-demo regression checklist, benchmark metrics
+  format, and future CI integration boundaries.
+- Planning only. No backend, frontend, Telegram, API, database, Docker/CI,
+  provider, workflow runtime, outbound send, real email, test, script, or live
+  provider behavior has been implemented.
+
+Planning docs:
+
+- `.ai/specs/SPEC-022-evaluation-benchmarking/spec.md`
+- `.ai/specs/SPEC-022-evaluation-benchmarking/tasks.md`
+
+Safety:
+
+- Stable defaults remain deterministic and no-key:
+  `LLM_PROVIDER=fake`, `LLM_RUNTIME_ENABLED=false`,
+  `PRICE_RESEARCH_ENABLED=false`, `RAG_ENABLED=false`,
+  `OUTBOUND_COMMUNICATION_ENABLED=false`, and `OUTBOUND_SEND_ENABLED=false`.
+- Future benchmark work must not require Tavily/live provider keys in CI, must
+  not call live web providers by default, must not infer prices from prose,
+  must not generate final quotes, and must not send real email.
+
+Validation:
+
+- `git diff --check`
+- `git status --short`
 
 ## Closed Post-Demo Specs
 
