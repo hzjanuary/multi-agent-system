@@ -65,6 +65,20 @@ Implemented:
   - tests for deterministic fake output, manual no-data/manual fixture output,
     provider factory behavior, service delegation, no network calls, and no
     stock/delivery/final-quote claims
+- Implemented TASK 016.7 foundation:
+  - `backend/app/price_research/rag_provider.py`
+  - `RAGPriceResearchProvider` maps injected internal knowledge search results
+    into `PriceResearchSource(source_type="rag")` reference evidence
+  - `ReferencePrice` values are created only from explicit structured metadata
+    such as `observed_price` or `amount`
+  - prose-only RAG evidence returns sources plus manual-review warnings without
+    fabricating amounts
+  - no-result RAG searches return empty sources/prices with safe warnings
+  - provider factory rejects `rag` unless a caller injects the knowledge search
+    dependency through `PriceResearchService(provider=...)`
+  - `backend/app/tests/test_price_research_rag_provider.py` covers structured
+    metadata, unstructured-only evidence, no evidence, dependency rejection,
+    service injection, fake/manual continuity, and no network calls
 
 Safety:
 
@@ -78,6 +92,11 @@ Safety:
 - Fake/manual providers perform no external network calls. Fake results are
   deterministic demo reference evidence and manual results require explicit
   constructor data before returning prices.
+- RAG price research performs no external network calls and does not instantiate
+  Qdrant, embedding, or LLM clients by itself. It uses injected existing
+  knowledge search output as bounded reference evidence only and never issues a
+  final quote, stock promise, delivery promise, approval decision, or autonomous
+  customer response.
 - SPEC-016 keeps deterministic fallback, no raw prompts/provider payloads, no
   chain-of-thought, no unsupported silent item dropping, no fake prices, no
   stock/delivery promises, no auto-approval, no auto-resume, and no real email

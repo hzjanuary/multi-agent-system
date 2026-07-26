@@ -12,6 +12,7 @@ from app.price_research.providers import (
     PriceResearchProvider,
     get_price_research_provider,
 )
+from app.price_research.rag_provider import RAGPriceResearchProvider
 from app.price_research.schemas import (
     PriceResearchRequest,
     PriceResearchResult,
@@ -34,6 +35,7 @@ __all__ = [
     "PriceResearchSource",
     "PriceResearchSourceType",
     "PriceResearchValidationError",
+    "RAGPriceResearchProvider",
     "ReferencePrice",
     "get_price_research_provider",
 ]

@@ -39,6 +39,11 @@ def get_price_research_provider(provider_name: str) -> PriceResearchProvider:
         from app.price_research.manual_provider import ManualPriceResearchProvider
 
         return ManualPriceResearchProvider()
+    if normalized == "rag":
+        raise PriceResearchProviderError(
+            "RAG price research provider requires an injected knowledge search "
+            "dependency",
+        )
     raise PriceResearchProviderError(
         f"Unsupported price research provider: {provider_name}",
     )

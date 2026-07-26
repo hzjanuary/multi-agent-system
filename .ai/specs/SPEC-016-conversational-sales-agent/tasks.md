@@ -139,26 +139,49 @@ git diff --check
 
 ### TASK 016.7 - RAG Evidence Integration For Price References
 
+Status: Implemented as backend provider foundation.
+
 Goal: Integrate internal catalog/RAG evidence with reference price research
 results while preserving bounded citation contracts.
 
 Scope:
 
-- Add integration path from internal knowledge retrieval to price research
-  evidence when `RAG_ENABLED=true`.
-- Attach bounded citation DTOs to workflow state/events where appropriate.
-- Keep empty evidence states honest when RAG is disabled or ingestion has not
-  run.
-- Add tests for RAG-enabled and RAG-disabled behavior.
+- Add an injected internal knowledge retrieval provider for price research
+  evidence.
+- Map bounded knowledge citations/results into `PriceResearchSource` entries
+  with `source_type="rag"`.
+- Create `ReferencePrice` values only from explicit structured price metadata,
+  not from prose extraction.
+- Keep empty evidence states honest when internal knowledge has no matching
+  evidence or no structured price metadata.
+- Add tests for RAG evidence, unstructured-only evidence, empty evidence, and
+  service/provider dependency boundaries.
 - Do not expose raw documents, chunks beyond bounds, embeddings, vector
   payloads, raw prompts, or provider payloads.
+- Do not integrate with workflow runtime, Telegram, frontend, API endpoints, web
+  search, or database persistence in this task.
+
+Implemented foundation:
+
+- Added `backend/app/price_research/rag_provider.py`.
+- Added `RAGPriceResearchProvider` with an injected `KnowledgeSearchRequest ->
+  KnowledgeSearchResponse` callable.
+- Added safe warnings:
+  - `RAG evidence is reference material, not a final quote.`
+  - `No structured price metadata found; manual pricing review is required.`
+  - `No internal knowledge evidence found for this item.`
+- Updated provider exports and the provider factory so `rag` cannot be
+  constructed without an injected knowledge dependency.
+- Added `backend/app/tests/test_price_research_rag_provider.py`.
 
 Acceptance criteria:
 
-- Internal catalog/RAG evidence can support reference price review when
-  explicitly enabled.
-- Evidence includes source/citation metadata.
-- Workflow state remains bounded.
+- Internal catalog/RAG evidence can support reference price review when a caller
+  explicitly injects the knowledge search dependency and enables the service.
+- Evidence includes bounded source/citation metadata.
+- Prose-only evidence never fabricates a price.
+- `rag` provider selection fails safely without an injected knowledge
+  dependency.
 - Stable no-key default remains unchanged.
 
 Validation:
