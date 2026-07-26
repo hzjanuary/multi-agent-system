@@ -27,8 +27,7 @@ Closed specs:
 
 Current planned spec sequence:
 
-- No active post-demo spec is open. Next work should start as a new bounded
-  planning spec before implementation.
+- SPEC-021 Catalog Governance and Provider Policy - Planning / Draft
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -216,13 +215,36 @@ Last known SPEC-016 validation:
   - `bash scripts/ci/all-gates.sh` passed, including production-demo image build and whitespace check.
   - `git diff --check` passed.
 
-Recommended next work after the closed SPEC-018 through SPEC-020 wave:
+Recommended next work after SPEC-021 planning:
 
-- Start a new bounded planning spec before expanding catalog governance,
-  provider operations, outbound send-provider behavior, or production
-  communication policy.
+- Review SPEC-021 before implementation.
+- Keep catalog governance, provider operations, outbound send-provider
+  behavior, and production communication policy planning-only until a specific
+  SPEC-021 task is approved for implementation.
 - Keep provider observability and live external research controls future-scoped
-  until a new spec defines safety, audit, and validation requirements.
+  until safety, audit, and validation requirements are approved.
+
+## Current SPEC-021 Catalog Governance and Provider Policy State
+
+Status:
+
+- Planning / Draft.
+
+Scope:
+
+- Defines future catalog versioning, supported/unsupported item governance,
+  alias review, add-on compatibility, provider evidence trust levels,
+  reference evidence boundaries, approval/resume policy, outbound preview/send
+  policy, audit requirements, future live provider policy, and future real
+  email/send policy.
+- Planning only. No backend, frontend, Telegram, API, database, Docker/CI,
+  provider, workflow runtime, outbound send, or real email behavior has been
+  implemented.
+
+Planned docs:
+
+- `.ai/specs/SPEC-021-catalog-governance-provider-policy/spec.md`
+- `.ai/specs/SPEC-021-catalog-governance-provider-policy/tasks.md`
 
 ## Closed Post-Demo Specs
 

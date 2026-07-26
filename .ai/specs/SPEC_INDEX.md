@@ -48,6 +48,7 @@
 - SPEC-018 Catalog Expansion - Approved / Closed
 - SPEC-019 Provider Live Verification - Approved / Closed
 - SPEC-020 Approved Outbound Communication - Approved / Closed
+- SPEC-021 Catalog Governance and Provider Policy - Planning / Draft
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,
