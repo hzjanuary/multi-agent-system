@@ -260,6 +260,8 @@ git diff --check
 
 ### TASK 016.9 - Telegram Sales Reply Uses Reference Evidence Safely
 
+Status: Implemented as reply-rendering foundation.
+
 Goal: Let Telegram sales replies mention available reference evidence without
 issuing a final quote or overclaiming.
 
@@ -279,6 +281,28 @@ Acceptance criteria:
 - Customer replies never invent price, discount, stock, or delivery.
 - Missing evidence produces a safe pending/review message.
 - Sales and technical modes remain separately testable.
+
+Implemented foundation:
+
+- Added local Telegram bridge summary dataclasses for explicitly supplied
+  reference evidence:
+  - `ReferenceEvidenceSummary`
+  - `ReferenceEvidenceSourceSummary`
+  - `ReferenceEvidencePriceSummary`
+- Sales-style replies can render bounded provider/source/confidence/reference
+  amount summaries only when an evidence object is passed to the renderer.
+- Evidence rendering is passive: the Telegram bridge does not call Tavily,
+  backend price research services, RAG providers, or any external network path
+  for evidence.
+- Empty, absent, low-confidence, warning-only, or `is_final_quote=true`
+  evidence is downgraded to manual/internal-review wording.
+- Technical reply mode remains compatible and ignores evidence summaries.
+- Added unit tests covering absent evidence, explicit reference prices, bounded
+  citations, low confidence, final-quote downgrade, redaction, forbidden claims,
+  technical mode compatibility, and no network calls.
+- No workflow runtime integration, backend API change, frontend change,
+  database model/migration, provider call, final quote, stock/delivery/discount
+  claim, auto-approval, auto-resume, or real email behavior was added.
 
 Validation:
 

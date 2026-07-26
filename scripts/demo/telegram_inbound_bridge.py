@@ -36,6 +36,9 @@ EXAMPLE_MESSAGE = (
     "your best quotation with the applicable discount."
 )
 MAX_TEXT_LENGTH = 2000
+MAX_EVIDENCE_TEXT_LENGTH = 220
+MAX_EVIDENCE_URL_LENGTH = 300
+MAX_EVIDENCE_ITEMS = 2
 HTTP_TIMEOUT_SECONDS = 15
 PARSER_VERSION = "telegram-demo-parser-v3"
 SUPPORTED_ITEM_NAME = "Standard business laptop"
@@ -121,6 +124,32 @@ class UnsupportedMixedRequest:
 class WorkflowCreationResult:
     workflow_id: str
     status: str
+
+
+@dataclass(frozen=True)
+class ReferenceEvidenceSourceSummary:
+    title: str
+    url: str | None = None
+
+
+@dataclass(frozen=True)
+class ReferenceEvidencePriceSummary:
+    label: str
+    amount: str | None = None
+    currency: str | None = None
+    unit: str | None = None
+
+
+@dataclass(frozen=True)
+class ReferenceEvidenceSummary:
+    provider: str
+    evidence_label: str
+    reference_prices: tuple[ReferenceEvidencePriceSummary, ...] = ()
+    sources: tuple[ReferenceEvidenceSourceSummary, ...] = ()
+    confidence: float | None = None
+    warnings: tuple[str, ...] = ()
+    retrieved_at: str | None = None
+    is_final_quote: bool = False
 
 
 class BridgeError(Exception):
@@ -1004,6 +1033,7 @@ def telegram_workflow_reply(
     workflow_id: str,
     status: str,
     auto_run: bool,
+    evidence: ReferenceEvidenceSummary | None = None,
 ) -> str:
     if config.sales_replies_enabled:
         return telegram_sales_workflow_reply(
@@ -1012,6 +1042,7 @@ def telegram_workflow_reply(
             workflow_id=workflow_id,
             status=status,
             auto_run=auto_run,
+            evidence=evidence,
         )
     workflow_url = f"{config.frontend_base_url}/workflows/{workflow_id}"
     monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow_id}"
@@ -1073,12 +1104,14 @@ def telegram_sales_workflow_reply(
     workflow_id: str,
     status: str,
     auto_run: bool,
+    evidence: ReferenceEvidenceSummary | None = None,
 ) -> str:
     workflow_url = f"{config.frontend_base_url}/workflows/{workflow_id}"
     monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow_id}"
     options = (
         f" kèm {parsed.options_summary}" if parsed.options_summary else ""
     )
+    evidence_text = format_sales_reference_evidence(evidence, parsed.language)
     if parsed.language == "vi":
         processing = (
             "Yêu cầu đã được chuyển vào hệ thống xử lý báo giá nội bộ để kiểm tra "
@@ -1091,6 +1124,7 @@ def telegram_sales_workflow_reply(
         return (
             f"Cảm ơn anh/chị. Em đã ghi nhận nhu cầu {parsed.summary}{options}.\n\n"
             f"{processing}\n\n"
+            f"{evidence_text}"
             f"Mã yêu cầu: {workflow_id}\n"
             f"Trạng thái: {status} — đang chờ quản lý phê duyệt nếu đã chạy tới "
             "ranh giới phê duyệt.\n"
@@ -1105,13 +1139,174 @@ def telegram_sales_workflow_reply(
         "The request has been transferred into the internal quotation workflow "
         "to check pricing policy, contract/discount rules, compliance, and "
         "approval requirements.\n\n"
+        f"{evidence_text}"
         f"Request id: {workflow_id}\n"
         f"Status: {status}\n"
         f"Internal workflow: {workflow_url}\n"
         f"Agent Monitor: {monitor_url}\n\n"
-        "Note: this is not a final quote. The quotation is completed only after "
-        "manager approval. The system does not auto-approve, auto-resume, or send "
-        "real email."
+        "Note: this is not a customer-ready quotation. The quotation is completed "
+        "only after manager approval. The system does not auto-approve, "
+        "auto-resume, or send real email."
+    )
+
+
+def format_sales_reference_evidence(
+    evidence: ReferenceEvidenceSummary | None,
+    language: str,
+) -> str:
+    """Render bounded reference evidence for sales replies without fetching it."""
+    if evidence is None:
+        return ""
+    provider = safe_evidence_text(evidence.provider, limit=80) or "unknown"
+    if evidence.is_final_quote:
+        return (
+            "Tham khảo giá: bằng chứng cần được rà soát nội bộ trước khi phản hồi "
+            "khách hàng. Chưa phát hành báo giá.\n\n"
+            if language == "vi"
+            else (
+                "Reference evidence requires internal review before customer "
+                "response. No customer-ready quotation has been issued.\n\n"
+            )
+        )
+
+    prices = safe_reference_prices(evidence.reference_prices)
+    sources = safe_reference_sources(evidence.sources)
+    warnings = safe_evidence_warnings(evidence.warnings)
+    confidence = normalized_confidence(evidence.confidence)
+    has_usable_evidence = bool(prices or sources) and (
+        confidence is None or confidence >= 0.5
+    )
+
+    if not has_usable_evidence:
+        caution = low_confidence_text(confidence, language)
+        warning_text = f" {warnings[0]}" if warnings else ""
+        if language == "vi":
+            return (
+                "Tham khảo giá: đang chờ rà soát thủ công; chưa có bằng chứng "
+                f"đủ tin cậy để hiển thị cho báo giá.{caution}{warning_text}\n\n"
+            )
+        return (
+            "Reference evidence: pending manual pricing review; no reliable "
+            f"customer-ready pricing evidence is available.{caution}{warning_text}\n\n"
+        )
+
+    source_count = len(evidence.sources)
+    confidence_text = (
+        f", confidence {confidence:.2f}" if confidence is not None else ""
+    )
+    if language == "vi":
+        lines = [
+            "Tham khảo giá nội bộ: đã có bằng chứng tham khảo để quản lý rà soát "
+            f"(provider: {provider}, sources: {source_count}{confidence_text})."
+        ]
+        lines.extend(f"- Giá tham khảo: {price}" for price in prices)
+        lines.extend(f"- Nguồn: {source}" for source in sources)
+        lines.append("Tất cả số tiền chỉ là tham khảo, không phải báo giá cuối cùng.")
+    else:
+        lines = [
+            "Reference evidence is available for internal review "
+            f"(provider: {provider}, sources: {source_count}{confidence_text})."
+        ]
+        lines.extend(f"- Reference only: {price}" for price in prices)
+        lines.extend(f"- Source: {source}" for source in sources)
+        lines.append("All amounts are reference only, not final quotation.")
+    if warnings:
+        lines.append(f"Warning: {warnings[0]}")
+    return "\n".join(lines) + "\n\n"
+
+
+def safe_reference_prices(
+    prices: tuple[ReferenceEvidencePriceSummary, ...],
+) -> list[str]:
+    safe_prices: list[str] = []
+    for price in prices[:MAX_EVIDENCE_ITEMS]:
+        label = safe_evidence_text(price.label, limit=80) or "reference price"
+        amount = safe_evidence_text(price.amount or "", limit=80)
+        currency = safe_evidence_text(price.currency or "", limit=12)
+        unit = safe_evidence_text(price.unit or "", limit=40)
+        amount_parts = [part for part in (amount, currency) if part]
+        amount_text = " ".join(amount_parts)
+        suffix = f" / {unit}" if unit else ""
+        if amount_text:
+            safe_prices.append(f"{label}: {amount_text}{suffix}")
+        else:
+            safe_prices.append(label)
+    return safe_prices
+
+
+def safe_reference_sources(
+    sources: tuple[ReferenceEvidenceSourceSummary, ...],
+) -> list[str]:
+    safe_sources: list[str] = []
+    for source in sources[:MAX_EVIDENCE_ITEMS]:
+        title = safe_evidence_text(source.title) or "reference source"
+        url = safe_evidence_url(source.url)
+        safe_sources.append(f"{title} ({url})" if url else title)
+    return safe_sources
+
+
+def safe_evidence_warnings(warnings: tuple[str, ...]) -> list[str]:
+    return [
+        warning
+        for warning in (
+            safe_evidence_text(value, limit=180)
+            for value in warnings[:MAX_EVIDENCE_ITEMS]
+        )
+        if warning
+    ]
+
+
+def normalized_confidence(value: float | None) -> float | None:
+    if value is None:
+        return None
+    if value < 0:
+        return 0.0
+    if value > 1:
+        return 1.0
+    return value
+
+
+def low_confidence_text(confidence: float | None, language: str) -> str:
+    if confidence is None or confidence >= 0.5:
+        return ""
+    if language == "vi":
+        return f" Độ tin cậy thấp ({confidence:.2f})."
+    return f" Low confidence ({confidence:.2f})."
+
+
+def safe_evidence_url(value: str | None) -> str | None:
+    safe = safe_evidence_text(value or "", limit=MAX_EVIDENCE_URL_LENGTH)
+    if not safe:
+        return None
+    if contains_sensitive_marker(safe):
+        return None
+    return safe
+
+
+def safe_evidence_text(
+    value: str | None,
+    *,
+    limit: int = MAX_EVIDENCE_TEXT_LENGTH,
+) -> str | None:
+    if value is None:
+        return None
+    normalized = re.sub(r"<[^>]*>", " ", value)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    if not normalized:
+        return None
+    if contains_sensitive_marker(normalized):
+        return "[redacted]"
+    return normalized[:limit].strip()
+
+
+def contains_sensitive_marker(value: str) -> bool:
+    return bool(
+        re.search(
+            r"(?i)(api[_-]?key|authorization|bearer|cookie|jwt|password|"
+            r"provider_payload|raw_prompt|raw_provider|secret|token|"
+            r"chain[-_ ]?of[-_ ]?thought)",
+            value,
+        )
     )
 
 
@@ -1147,7 +1342,8 @@ def telegram_sales_run_failed_reply(
         f"Current status: {workflow.status}\n"
         f"Internal workflow: {workflow_url}\n"
         f"Agent Monitor: {monitor_url}\n\n"
-        "Note: this is not a final quote and no manager approval has been issued."
+        "Note: this is not a customer-ready quotation and no manager approval has "
+        "been issued."
     )
 
 

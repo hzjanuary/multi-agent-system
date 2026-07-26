@@ -95,6 +95,24 @@ Implemented:
   - The adapter does not infer prices from snippets/prose, does not create
     final quotes, and adds manual-review warnings when only external web
     sources are available.
+- Implemented TASK 016.9 foundation:
+  - `scripts/demo/telegram_inbound_bridge.py` now has local
+    `ReferenceEvidenceSummary`, `ReferenceEvidenceSourceSummary`, and
+    `ReferenceEvidencePriceSummary` dataclasses for explicitly supplied
+    evidence summaries.
+  - Sales-style Telegram replies can render bounded provider/source/confidence
+    and explicit reference amount summaries when a future caller passes an
+    evidence object into the reply renderer.
+  - Evidence rendering is passive. The Telegram bridge does not call Tavily,
+    backend price research services, RAG providers, or external network paths
+    for evidence.
+  - Empty, absent, low-confidence, warning-only, or `is_final_quote=true`
+    evidence downgrades to manual/internal-review wording.
+  - Technical reply mode remains compatible and ignores evidence summaries.
+  - `scripts/demo/test_telegram_inbound_bridge.py` covers absent evidence,
+    explicit reference amounts, bounded citations, low confidence, final-quote
+    downgrade, redaction, forbidden claims, technical compatibility, and no
+    network calls.
 
 Safety:
 
@@ -117,6 +135,10 @@ Safety:
   builds sanitized bounded queries, does not include raw customer context or
   chat history, does not store raw provider payloads, does not expose API keys,
   and never infers prices from prose.
+- Telegram reference-evidence replies are optional display summaries only.
+  They must never fetch live research, expose raw provider payloads, expose
+  secrets, issue a final quote, claim stock/delivery/discount/approval, or
+  bypass Manager approval and explicit resume.
 - SPEC-016 keeps deterministic fallback, no raw prompts/provider payloads, no
   chain-of-thought, no unsupported silent item dropping, no fake prices, no
   stock/delivery promises, no auto-approval, no auto-resume, and no real email

@@ -345,6 +345,21 @@ When sales replies are disabled, the bridge keeps the technical demo reply
 style with parsed fields, workflow id, status, URLs, and bounded technical run
 errors.
 
+### Optional Reference Evidence Wording
+
+Sales-style replies can render bounded reference-evidence summaries only when a
+future integration explicitly supplies those summaries to the reply renderer.
+The current stable Telegram demo does not call Tavily, does not call backend
+price research providers, and does not perform live price lookup from
+Telegram.
+
+If reference evidence is supplied later, it must be labeled for internal review
+only. Source titles, URLs, warnings, confidence, and explicit reference amounts
+must remain bounded. Empty, low-confidence, warning-only, or final-quote-marked
+evidence must fall back to manual review wording. No Telegram reply may issue a
+final quotation before Manager approval, claim stock or delivery, claim a
+discount, auto-approve, auto-resume, or say that real email was sent.
+
 ## Board Demo Script
 
 1. Start backend infrastructure.

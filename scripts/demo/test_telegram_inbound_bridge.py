@@ -7,6 +7,9 @@ from scripts.demo.telegram_inbound_bridge import (
     EXAMPLE_MESSAGE,
     LLMExtractionError,
     ParsedCustomerRequest,
+    ReferenceEvidencePriceSummary,
+    ReferenceEvidenceSourceSummary,
+    ReferenceEvidenceSummary,
     UnsupportedMixedRequest,
     WorkflowCreationResult,
     build_workflow_create_payload,
@@ -590,6 +593,285 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
         )
         self.assertIn("Đây chưa phải báo giá cuối cùng", reply)
 
+    def test_sales_reply_with_no_evidence_is_semantically_unchanged(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+        )
+
+        self.assertNotIn("Tham khảo giá nội bộ", reply)
+        self.assertIn("Cảm ơn anh/chị", reply)
+        self.assertIn("WAITING_APPROVAL", reply)
+
+    def test_sales_reply_with_evidence_mentions_reference_evidence_only(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+        evidence = ReferenceEvidenceSummary(
+            provider="tavily",
+            evidence_label="reference_price_research",
+            sources=(
+                ReferenceEvidenceSourceSummary(
+                    title="Supplier reference listing",
+                    url="https://supplier.example/laptops",
+                ),
+            ),
+            confidence=0.72,
+            warnings=("Manual pricing review is required.",),
+            is_final_quote=False,
+        )
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+            evidence=evidence,
+        )
+
+        self.assertIn("Tham khảo giá nội bộ", reply)
+        self.assertIn("provider: tavily", reply)
+        self.assertIn("sources: 1", reply)
+        self.assertIn("confidence 0.72", reply)
+        self.assertIn("Supplier reference listing", reply)
+        self.assertIn("https://supplier.example/laptops", reply)
+        self.assertIn("không phải báo giá cuối cùng", reply)
+
+    def test_sales_reply_with_reference_price_labels_amount_as_reference(self) -> None:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+        evidence = ReferenceEvidenceSummary(
+            provider="manual",
+            evidence_label="reference_price_research",
+            reference_prices=(
+                ReferenceEvidencePriceSummary(
+                    label="Unit reference",
+                    amount="12000000",
+                    currency="VND",
+                    unit="unit",
+                ),
+            ),
+            sources=(
+                ReferenceEvidenceSourceSummary(
+                    title="Manual catalog reference",
+                    url="https://catalog.example/reference",
+                ),
+            ),
+            confidence=0.8,
+            is_final_quote=False,
+        )
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+            evidence=evidence,
+        )
+
+        self.assertIn("Reference evidence is available for internal review", reply)
+        self.assertIn("Reference only: Unit reference: 12000000 VND / unit", reply)
+        self.assertIn("not final quotation", reply)
+        self.assertNotIn("approved quotation", reply.lower())
+
+    def test_sales_reply_bounds_source_titles_and_urls(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+        evidence = ReferenceEvidenceSummary(
+            provider="tavily",
+            evidence_label="reference_price_research",
+            sources=(
+                ReferenceEvidenceSourceSummary(
+                    title="Supplier " + ("very long " * 80),
+                    url="https://supplier.example/" + ("path/" * 120),
+                ),
+                ReferenceEvidenceSourceSummary(
+                    title="Second source",
+                    url="https://supplier.example/second",
+                ),
+                ReferenceEvidenceSourceSummary(
+                    title="Third source should not render",
+                    url="https://supplier.example/third",
+                ),
+            ),
+            confidence=0.9,
+        )
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+            evidence=evidence,
+        )
+
+        self.assertIn("Second source", reply)
+        self.assertNotIn("Third source should not render", reply)
+        self.assertLessEqual(len(reply), 3900)
+
+    def test_empty_evidence_produces_manual_review_wording(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+        evidence = ReferenceEvidenceSummary(
+            provider="tavily",
+            evidence_label="reference_price_research",
+            warnings=("No structured price metadata found.",),
+            is_final_quote=False,
+        )
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+            evidence=evidence,
+        )
+
+        self.assertIn("đang chờ rà soát thủ công", reply)
+        self.assertNotIn("Giá tham khảo:", reply)
+
+    def test_low_confidence_evidence_produces_caution_wording(self) -> None:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+        evidence = ReferenceEvidenceSummary(
+            provider="tavily",
+            evidence_label="reference_price_research",
+            sources=(ReferenceEvidenceSourceSummary(title="Low confidence source"),),
+            confidence=0.2,
+            is_final_quote=False,
+        )
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+            evidence=evidence,
+        )
+
+        self.assertIn("pending manual pricing review", reply)
+        self.assertIn("Low confidence (0.20)", reply)
+        self.assertNotIn("Reference only:", reply)
+
+    def test_evidence_marked_final_quote_is_downgraded(self) -> None:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+        evidence = ReferenceEvidenceSummary(
+            provider="manual",
+            evidence_label="reference_price_research",
+            reference_prices=(
+                ReferenceEvidencePriceSummary(
+                    label="Approved final quote",
+                    amount="12000000",
+                    currency="VND",
+                ),
+            ),
+            is_final_quote=True,
+        )
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+            evidence=evidence,
+        ).lower()
+
+        self.assertIn("requires internal review", reply)
+        self.assertNotIn("approved final quote", reply)
+        self.assertNotIn("12000000", reply)
+
+    def test_technical_reply_ignores_evidence_and_remains_compatible(self) -> None:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+        evidence = ReferenceEvidenceSummary(
+            provider="tavily",
+            evidence_label="reference_price_research",
+            sources=(ReferenceEvidenceSourceSummary(title="Supplier source"),),
+            confidence=0.8,
+        )
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=False),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+            evidence=evidence,
+        )
+
+        self.assertIn("Parsed: 50 x Standard business laptop", reply)
+        self.assertNotIn("Supplier source", reply)
+        self.assertNotIn("Reference evidence", reply)
+
+    def test_sales_reference_evidence_redacts_secrets_and_raw_payloads(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+        evidence = ReferenceEvidenceSummary(
+            provider="tavily",
+            evidence_label="reference_price_research",
+            sources=(
+                ReferenceEvidenceSourceSummary(
+                    title="provider_payload raw_response secret token",
+                    url="https://supplier.example/?api_key=secret",
+                ),
+            ),
+            reference_prices=(
+                ReferenceEvidencePriceSummary(
+                    label="raw_prompt chain-of-thought",
+                    amount="12000000",
+                    currency="VND",
+                ),
+            ),
+            warnings=("authorization bearer token raw_provider",),
+            confidence=0.9,
+        )
+
+        reply = telegram_workflow_reply(
+            config=self.config(sales=True),
+            parsed=parsed,
+            workflow_id="workflow-123",
+            status="WAITING_APPROVAL",
+            auto_run=True,
+            evidence=evidence,
+        ).lower()
+
+        self.assertNotIn("provider_payload", reply)
+        self.assertNotIn("raw_response", reply)
+        self.assertNotIn("raw_prompt", reply)
+        self.assertNotIn("api_key", reply)
+        self.assertNotIn("authorization", reply)
+        self.assertNotIn("bearer", reply)
+        self.assertNotIn("chain-of-thought", reply)
+
+    def test_sales_evidence_reply_does_not_attempt_network(self) -> None:
+        parsed = self.vietnamese_parsed_request()
+        evidence = ReferenceEvidenceSummary(
+            provider="manual",
+            evidence_label="reference_price_research",
+            sources=(ReferenceEvidenceSourceSummary(title="Manual source"),),
+            confidence=0.8,
+        )
+
+        with patch("urllib.request.urlopen") as urlopen:
+            reply = telegram_workflow_reply(
+                config=self.config(sales=True),
+                parsed=parsed,
+                workflow_id="workflow-123",
+                status="WAITING_APPROVAL",
+                auto_run=True,
+                evidence=evidence,
+            )
+
+        urlopen.assert_not_called()
+        self.assertIn("Manual source", reply)
+
     def test_sales_run_failed_reply_hides_raw_backend_error_json(self) -> None:
         parsed = self.vietnamese_parsed_request()
         reply = telegram_run_failed_reply(
@@ -642,23 +924,41 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
 
     def test_sales_replies_do_not_contain_forbidden_claims(self) -> None:
         parsed = self.vietnamese_parsed_request()
+        evidence = ReferenceEvidenceSummary(
+            provider="manual",
+            evidence_label="reference_price_research",
+            reference_prices=(
+                ReferenceEvidencePriceSummary(
+                    label="Unit reference",
+                    amount="12000000",
+                    currency="VND",
+                    unit="unit",
+                ),
+            ),
+            sources=(ReferenceEvidenceSourceSummary(title="Manual source"),),
+            confidence=0.8,
+        )
         reply = telegram_workflow_reply(
             config=self.config(sales=True),
             parsed=parsed,
             workflow_id="workflow-123",
             status="WAITING_APPROVAL",
             auto_run=True,
+            evidence=evidence,
         ).lower()
 
         forbidden = (
+            "final quote",
             "final approved quote",
             "approved quote",
+            "approved quotation",
+            "in stock",
             "delivery date",
+            "will deliver",
             "ships by",
             "email sent",
-            "usd",
-            "$",
             "stock available",
+            "discount approved",
         )
         for claim in forbidden:
             with self.subTest(claim=claim):
