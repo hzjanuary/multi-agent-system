@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft / post-demo roadmap
+Implemented / ready for closeout review
 
 ## Product Objective
 
@@ -13,17 +13,21 @@ internal catalog, use internal RAG evidence where available, optionally collect
 external reference price evidence with citations, create existing procurement
 workflows, and preserve human approval before any final quote.
 
-SPEC-016 is a post-demo development specification. It does not change the
-current stable defense path:
+SPEC-016 is now implemented as a safe post-demo foundation for conversational
+sales intake and reference price evidence. It does not change the current
+stable defense path:
 
 ```text
 LLM_PROVIDER=fake
 LLM_RUNTIME_ENABLED=false
+PRICE_RESEARCH_ENABLED=false
+RAG_ENABLED=false
 ```
 
-The completed demo proves the channel and safety boundary. Future SPEC-016
-tasks should harden that boundary into provider-independent services and
-evidence contracts without issuing autonomous quotes.
+The completed work proves the channel and safety boundary while adding
+provider-independent reference evidence contracts. Reference price evidence is
+review material only. It is never an approved quotation, never a stock or
+delivery promise, and never a replacement for Manager/Admin approval.
 
 ## Current Completed Capabilities
 
@@ -50,8 +54,23 @@ The following SPEC-016-related capabilities already exist as local-demo work:
     workflows silently
 - Workflow creation through existing backend APIs.
 - Optional auto-run to `WAITING_APPROVAL`.
+- Sales-style replies can render explicitly supplied bounded reference evidence
+  summaries without fetching live price research.
+- Backend `app.price_research` schemas, provider interface, settings, typed
+  exceptions, and disabled-by-default service shell.
+- Deterministic fake and manual reference evidence providers.
+- Internal RAG/reference evidence provider that maps injected knowledge results
+  to citation sources and only creates reference prices from explicit
+  structured metadata.
+- Optional Tavily Search API adapter behind explicit configuration and injected
+  transport tests. It is not enabled by default and is not called by Telegram.
+- Frontend Reference Price Evidence panels in Agent Monitor and workflow detail
+  render only explicit evidence-shaped workflow state fields.
 - No auto-approval.
 - No auto-resume.
+- No live price research is triggered by Telegram in the stable demo.
+- No final quote, stock, delivery, discount approval, or real email behavior is
+  introduced.
 - Final live demo runbook:
   - `docs/demo/FINAL_LIVE_DEMO_RUNBOOK.md`
 
@@ -283,9 +302,9 @@ Rules:
 | --- | --- | --- |
 | `TELEGRAM_LLM_EXTRACTION_ENABLED` | `false` | Enables optional local LLM extraction in the Telegram bridge. |
 | `TELEGRAM_SALES_REPLY_ENABLED` | `false` | Enables customer-friendly sales reply templates. |
-| `PRICE_RESEARCH_ENABLED` | `false` | Enables future reference price research. Must remain off until provider contracts and tests exist. |
-| `PRICE_RESEARCH_PROVIDER` | `fake` or empty | Future provider selector: `fake`, `manual`, or explicit web provider name. |
-| `PRICE_RESEARCH_TIMEOUT_SECONDS` | bounded short timeout | Future timeout for reference price provider calls. |
+| `PRICE_RESEARCH_ENABLED` | `false` | Enables optional reference price research service calls. Stable demos keep it off. |
+| `PRICE_RESEARCH_PROVIDER` | `fake` | Provider selector for explicit service use: `fake`, `manual`, injected `rag`, or explicitly configured web provider such as Tavily. |
+| `PRICE_RESEARCH_TIMEOUT_SECONDS` | bounded short timeout | Timeout for future live reference price provider calls. |
 | `RAG_ENABLED` | `false` | Enables existing runtime RAG grounding after explicit knowledge ingestion. |
 | `LLM_RUNTIME_ENABLED` | `false` | Existing backend runtime flag. It stays separate from Telegram extraction and should remain false for stable workflow demos. |
 
@@ -354,7 +373,7 @@ state that no final quote has been issued.
 - Mixed supported/unsupported requests do not create partial workflows by
   default.
 - No fake price is generated.
-- No stock availability is claimed without cited evidence and approval.
+- No stock availability is claimed by SPEC-016 surfaces.
 - No delivery promise is made.
 - No final quote is issued before Manager/Admin approval.
 - No auto-approval occurs.
@@ -429,13 +448,28 @@ state that no final quote has been issued.
 
 ## Validation Strategy
 
-Planning-only validation for this formalization task:
+SPEC-016 closeout validation:
 
 ```bash
+git status --short
+docker compose config
+docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config
+python3 -m unittest scripts.demo.test_telegram_inbound_bridge
+python3 -m py_compile scripts/demo/telegram_inbound_bridge.py
+docker compose run --rm backend-test pytest -q
+docker compose run --rm backend-test ruff check .
+docker compose run --rm backend-test black --check .
+docker compose run --rm backend-test mypy app
+cd frontend && npm run lint
+cd frontend && npm run build
+cd frontend && npm run typecheck
+cd frontend && npm test
+bash scripts/ci/backend-gate.sh
+bash scripts/ci/frontend-gate.sh
+bash scripts/ci/all-gates.sh
 git diff --check
 git status --short
 ```
 
-Implementation tasks should run focused backend/script/frontend gates according
-to files changed, while keeping automated tests independent of real Telegram,
-Ollama, web search, paid providers, and external network.
+Automated tests remain independent of real Telegram, Ollama, Tavily, paid
+providers, and external network access.

@@ -117,6 +117,10 @@ contains an explicit bounded reference-evidence field. It is review material,
 not a final quotation, and Manager/Admin approval is still required before any
 customer-ready quote.
 
+If no reference evidence panel appears, the frontend is intentionally showing
+that no explicit evidence was supplied. It does not synthesize prices,
+citations, discounts, stock, delivery, approval, or email-sent claims.
+
 ## If the Workflow Is Already Completed
 
 Use the completed workflow as read-only proof, or return to `/demo` and choose

@@ -23,17 +23,23 @@ Current active spec:
 
 - SPEC-015 Final Evaluation, Demo Validation, and Graduation Report Assets - closed / final-graduation-ready
 
-## Current SPEC-016 Conversational Sales Agent Roadmap State
+## Current SPEC-016 Conversational Sales Agent State
 
 Scope:
 
-- SPEC-016 is active as a post-demo roadmap for Conversational Sales Agent and
-  External Price Research.
-- Current implementation includes backend schemas/interfaces/settings/tests for
-  reference price research only. No frontend behavior, Telegram bridge
-  behavior, workflow runtime integration, API endpoints, database
-  migrations/models, Docker/Compose behavior, CI behavior, real web search,
-  price lookup, fake evidence, or secrets changed.
+- SPEC-016 is implemented and ready for closeout review.
+- Current implementation includes the local Telegram/Ollama conversational
+  sales bridge work, backend reference price research contracts/providers,
+  passive Telegram reference-evidence reply rendering, and frontend reference
+  evidence panels.
+- Stable demo defaults remain deterministic and no-key:
+  `LLM_PROVIDER=fake`, `LLM_RUNTIME_ENABLED=false`,
+  `PRICE_RESEARCH_ENABLED=false`, and `RAG_ENABLED=false` unless a specific
+  RAG demo enables ingestion and retrieval.
+- No backend workflow runtime behavior, API endpoint contract, database
+  migrations/models, Docker/Compose behavior, CI behavior, live price lookup,
+  fake evidence, real provider key requirement, auto-approval, auto-resume, or
+  final quote behavior was added.
 
 Implemented:
 
@@ -134,6 +140,15 @@ Implemented:
     amounts, bounds, redaction, final-quote downgrade, forbidden positive
     claims, Agent Monitor selected workflow rendering, and workflow detail
     rendering.
+- Implemented TASK 016.11 closeout:
+  - Updated SPEC-016 status to implemented / ready for closeout review.
+  - Updated SPEC-016 tasks with final closeout checklist, validation commands,
+    and deferred post-SPEC-016 work.
+  - Updated Telegram and frontend operator docs to clarify that current
+    Telegram demo does not call Tavily or backend price research providers and
+    that reference evidence is not a final quotation.
+  - Updated README roadmap wording so SPEC-016 is described as an implemented
+    foundation that remains disabled by default for live price research.
 
 Safety:
 
@@ -168,6 +183,40 @@ Safety:
   chain-of-thought, no unsupported silent item dropping, no fake prices, no
   stock/delivery promises, no auto-approval, no auto-resume, and no real email
   as acceptance boundaries.
+- No committed Telegram tokens, provider keys, Tavily API keys, backend access
+  tokens, passwords, cookies, raw provider payloads, raw prompts, embeddings,
+  vector payloads, chain-of-thought, or real customer data should be introduced
+  in future work.
+
+Last known SPEC-016 validation:
+
+- TASK 016.11 closeout validation passed:
+  - `git status --short` reported only the intended docs/spec/handoff changes.
+  - `docker compose config` passed.
+  - `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
+  - `python3 -m unittest scripts.demo.test_telegram_inbound_bridge` passed:
+    49 tests.
+  - `python3 -m py_compile scripts/demo/telegram_inbound_bridge.py` passed.
+  - `docker compose run --rm backend-test pytest -q` passed:
+    752 passed, 1 skipped.
+  - `docker compose run --rm backend-test ruff check .` passed.
+  - `docker compose run --rm backend-test black --check .` passed.
+  - `docker compose run --rm backend-test mypy app` passed.
+  - `cd frontend && npm run lint && npm run build && npm run typecheck && npm test` passed:
+    83 frontend tests.
+  - `bash scripts/ci/backend-gate.sh` passed.
+  - `bash scripts/ci/frontend-gate.sh` passed.
+  - `bash scripts/ci/all-gates.sh` passed, including production-demo image build and whitespace check.
+  - `git diff --check` passed.
+
+Recommended next work after SPEC-016:
+
+- SPEC-018 or later catalog expansion and product governance for supported
+  items beyond the laptop demo.
+- Private live verification of Tavily/provider behavior with real keys outside
+  CI, including rate limits, caching, and citation quality controls.
+- Approved customer communication integration after Manager/Admin approval.
+- Provider observability and policy controls for live external research.
 
 ## Current SPEC-017 Frontend Visual Redesign State
 

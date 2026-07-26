@@ -373,6 +373,8 @@ git diff --check
 
 ### TASK 016.11 - Final Validation And Docs
 
+Status: Implemented / ready for closeout review.
+
 Goal: Validate SPEC-016 implementation, update runbooks, and document the safe
 post-demo conversational sales workflow.
 
@@ -395,16 +397,75 @@ Validation:
 
 ```bash
 git status --short
-docker-compose config
-docker-compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config
-docker-compose run --rm backend-test pytest -q
-docker-compose run --rm backend-test ruff check .
-docker-compose run --rm backend-test black --check .
-docker-compose run --rm backend-test mypy app
+docker compose config
+docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config
+python3 -m unittest scripts.demo.test_telegram_inbound_bridge
+python3 -m py_compile scripts/demo/telegram_inbound_bridge.py
+docker compose run --rm backend-test pytest -q
+docker compose run --rm backend-test ruff check .
+docker compose run --rm backend-test black --check .
+docker compose run --rm backend-test mypy app
 cd frontend && npm run lint
 cd frontend && npm run build
 cd frontend && npm run typecheck
 cd frontend && npm test
-python -m unittest scripts.demo.test_telegram_inbound_bridge
+bash scripts/ci/backend-gate.sh
+bash scripts/ci/frontend-gate.sh
+bash scripts/ci/all-gates.sh
 git diff --check
+git status --short
 ```
+
+Implemented closeout:
+
+- Updated SPEC-016 status to implemented / ready for closeout review.
+- Confirmed stable defaults remain no-key and non-research by default:
+  - `LLM_PROVIDER=fake`
+  - `LLM_RUNTIME_ENABLED=false`
+  - `PRICE_RESEARCH_ENABLED=false`
+  - `RAG_ENABLED=false` unless explicitly enabled for a RAG demo.
+- Confirmed Telegram local bridge behavior remains stable:
+  - no live Tavily/web price research call
+  - no backend price research provider call
+  - no auto-approval
+  - no auto-resume
+  - no real email
+- Confirmed optional reference evidence rendering is passive:
+  - Telegram sales replies render supplied evidence only
+  - frontend panels render explicit workflow evidence fields only
+  - neither surface fabricates evidence or calls providers.
+- Confirmed optional Tavily adapter is disabled by default, requires explicit
+  configuration/injection, and is tested with mocked/injected transport only.
+- Confirmed reference evidence is always review material, not an approved
+  customer quote.
+- Updated closeout docs and handoff with final validation expectations and
+  next recommended post-SPEC-016 work.
+
+## SPEC-016 Closeout Checklist
+
+- [x] Final validation commands have been run and recorded in the task handoff.
+- [x] `PRICE_RESEARCH_ENABLED` defaults to `false`.
+- [x] Tavily API key is not required in CI.
+- [x] Tavily tests use mocked/injected transports and do not call the network.
+- [x] Telegram bridge does not call Tavily or live price research providers.
+- [x] Telegram reference evidence rendering is passive and requires explicitly
+  supplied evidence.
+- [x] Frontend reference evidence panels do not fabricate evidence when workflow
+  state has no explicit evidence fields.
+- [x] Raw prompts, raw provider payloads, tokens, cookies, passwords, secrets,
+  embeddings, vector payloads, and chain-of-thought are not rendered.
+- [x] Sales replies and frontend panels avoid stock, delivery, discount
+  approval, final quote, approval, and email-sent claims.
+- [x] Manager/Admin approval remains the final quotation boundary.
+- [x] Stable no-key demo remains unchanged.
+
+## Deferred After SPEC-016
+
+- Live provider verification for Tavily with a real key in a private local
+  environment.
+- Catalog expansion beyond the laptop demo item.
+- Safe integration of approved reference evidence into workflow state, if a
+  future product spec authorizes it.
+- Approved customer communication/email integration after workflow completion.
+- Provider observability, caching, rate limits, and policy controls for live
+  external research.

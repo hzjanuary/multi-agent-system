@@ -19,9 +19,10 @@ checklist.
 
 Post-demo roadmap: `.ai/specs/SPEC-016-conversational-sales-agent/spec.md`
 formalizes the Conversational Sales Agent direction, including safe catalog/RAG
-evidence and future external reference price research. That spec is a roadmap;
-this local bridge still does not perform real web search, price lookup,
-auto-approval, auto-resume, or final quote issuance.
+evidence and optional external reference price research foundations. The local
+bridge still does not call Tavily, does not perform real web search or live
+price lookup from Telegram, does not call backend price research providers,
+does not auto-approve, does not auto-resume, and does not issue final quotes.
 
 ## Why Polling
 
@@ -359,6 +360,9 @@ must remain bounded. Empty, low-confidence, warning-only, or final-quote-marked
 evidence must fall back to manual review wording. No Telegram reply may issue a
 final quotation before Manager approval, claim stock or delivery, claim a
 discount, auto-approve, auto-resume, or say that real email was sent.
+
+Reference evidence is not a customer quotation. Manager/Admin approval remains
+the final boundary before any customer-ready quote or communication.
 
 ## Board Demo Script
 
