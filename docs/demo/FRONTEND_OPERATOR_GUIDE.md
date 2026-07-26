@@ -42,6 +42,9 @@ notes. Use it when you want to show a customer request arriving from Telegram,
 being converted into a workflow, running to `WAITING_APPROVAL`, and then being
 approved/resumed through the normal frontend UI.
 
+Governance checklists for future catalog, evidence, approval, and outbound
+changes live under `docs/governance/`.
+
 The Telegram bridge accepts the English board-demo request and bounded
 Vietnamese laptop RFQ messages such as:
 

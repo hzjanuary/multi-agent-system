@@ -27,7 +27,7 @@ Closed specs:
 
 Current planned spec sequence:
 
-- SPEC-021 Catalog Governance and Provider Policy - Planning / Draft
+- SPEC-021 Catalog Governance and Provider Policy - Implemented / ready for closeout review
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -217,7 +217,7 @@ Last known SPEC-016 validation:
 
 Recommended next work after SPEC-021 planning:
 
-- Review SPEC-021 before implementation.
+- Review SPEC-021 closeout before any product implementation.
 - Keep catalog governance, provider operations, outbound send-provider
   behavior, and production communication policy planning-only until a specific
   SPEC-021 task is approved for implementation.
@@ -228,23 +228,34 @@ Recommended next work after SPEC-021 planning:
 
 Status:
 
-- Planning / Draft.
+- Implemented / ready for closeout review.
 
 Scope:
 
-- Defines future catalog versioning, supported/unsupported item governance,
-  alias review, add-on compatibility, provider evidence trust levels,
-  reference evidence boundaries, approval/resume policy, outbound preview/send
-  policy, audit requirements, future live provider policy, and future real
-  email/send policy.
+- Defines operational catalog versioning, supported/unsupported item
+  governance, alias review, add-on compatibility, provider evidence trust
+  levels, reference evidence boundaries, approval/resume policy, outbound
+  preview/send policy, audit requirements, future live provider policy, and
+  future real email/send policy.
 - Planning only. No backend, frontend, Telegram, API, database, Docker/CI,
   provider, workflow runtime, outbound send, or real email behavior has been
   implemented.
 
-Planned docs:
+Implemented docs:
 
 - `.ai/specs/SPEC-021-catalog-governance-provider-policy/spec.md`
 - `.ai/specs/SPEC-021-catalog-governance-provider-policy/tasks.md`
+- `docs/governance/CATALOG_GOVERNANCE_POLICY.md`
+- `docs/governance/PROVIDER_EVIDENCE_POLICY.md`
+- `docs/governance/APPROVAL_OUTBOUND_POLICY.md`
+- `docs/governance/GOVERNANCE_CHANGE_CHECKLIST.md`
+
+Validation:
+
+- `git diff --check`
+- `git status --short`
+- `docker compose config`
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
 
 ## Closed Post-Demo Specs
 

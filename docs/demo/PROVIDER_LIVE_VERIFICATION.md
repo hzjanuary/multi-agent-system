@@ -10,6 +10,9 @@ demo, and not connected to Telegram, workflows, frontend pages, approval,
 resume, or email. It only verifies that a local operator can call the Tavily
 adapter and receive bounded reference evidence JSON.
 
+Operational provider evidence policy and future-change checklists live under
+`docs/governance/`.
+
 ## Safety Rules
 
 - Run live verification manually only.

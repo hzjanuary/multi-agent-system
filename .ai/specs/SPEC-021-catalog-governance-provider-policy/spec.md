@@ -2,7 +2,7 @@
 
 ## Status
 
-Planning / Draft
+Implemented / ready for closeout review
 
 ## Product Objective
 
@@ -10,10 +10,10 @@ Define the policy layer that governs future catalog expansion, provider
 evidence usage, trust levels, manual review requirements, approval boundaries,
 and outbound communication safety.
 
-SPEC-021 is a planning specification only. It does not implement catalog
-persistence, live provider calls, workflow integration, Telegram integration,
-frontend behavior, API endpoints, database migrations, Docker/CI behavior, or
-email sending.
+SPEC-021 has been implemented as operational governance documentation and
+checklists only. It does not implement catalog persistence, live provider
+calls, workflow integration, Telegram integration, frontend behavior, API
+endpoints, database migrations, Docker/CI behavior, or email sending.
 
 The stable demo defaults remain unchanged:
 
@@ -42,6 +42,13 @@ SPEC-021 turns those foundations into a governed future roadmap. Its purpose is
 to define what must be true before the system expands catalog support, consumes
 provider evidence in product flows, or introduces approved outbound send
 integrations.
+
+## Implemented Governance Documents
+
+- `docs/governance/CATALOG_GOVERNANCE_POLICY.md`
+- `docs/governance/PROVIDER_EVIDENCE_POLICY.md`
+- `docs/governance/APPROVAL_OUTBOUND_POLICY.md`
+- `docs/governance/GOVERNANCE_CHANGE_CHECKLIST.md`
 
 ## Governance Principles
 

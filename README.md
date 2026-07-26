@@ -140,6 +140,7 @@ frontend/                 Next.js operations console and frontend tests
 docs/demo/                Demo runbooks, Telegram bridge docs, operator guide
 docs/deployment/          Env docs, production-demo runbook, smoke, troubleshooting
 docs/final/               Final evaluation, demo validation, release assets
+docs/governance/          Catalog, provider evidence, approval, and outbound policy
 docs/report/              Graduation report narrative assets
 docs/report/diagrams/     Mermaid architecture diagram sources
 docs/llm/                 Provider setup and local Ollama smoke docs

@@ -4,7 +4,7 @@
 
 ### TASK 021.1 - Catalog Governance Policy And Version Contract
 
-Status: Planned.
+Status: Implemented as documentation.
 
 Goal: Define the catalog governance model before any future catalog expansion
 or persistence work.
@@ -31,9 +31,15 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/governance/CATALOG_GOVERNANCE_POLICY.md` with catalog versioning,
+  item family approval, slug naming, unsupported/mixed request handling,
+  add-on compatibility, required tests, and rollback guidance.
+
 ### TASK 021.2 - Alias And Add-On Review Checklist
 
-Status: Planned.
+Status: Implemented as documentation.
 
 Goal: Create a review checklist for customer-facing aliases and add-on
 compatibility rules.
@@ -59,9 +65,16 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added alias and add-on review rules in
+  `docs/governance/CATALOG_GOVERNANCE_POLICY.md`.
+- Added future-change checklist items in
+  `docs/governance/GOVERNANCE_CHANGE_CHECKLIST.md`.
+
 ### TASK 021.3 - Provider Evidence Trust-Level Policy
 
-Status: Planned.
+Status: Implemented as documentation.
 
 Goal: Define trust levels for fake, manual, RAG, Tavily, and future provider
 evidence.
@@ -87,9 +100,15 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/governance/PROVIDER_EVIDENCE_POLICY.md` covering trust levels,
+  fake/manual/RAG/Tavily policies, no CI live key policy, no price inference
+  from prose, bounding/redaction, and provider degradation.
+
 ### TASK 021.4 - Manual Review And Approval Boundary Policy
 
-Status: Planned.
+Status: Implemented as documentation.
 
 Goal: Document how catalog/provider evidence interacts with Manager/Admin
 approval and explicit resume.
@@ -116,9 +135,16 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added approval and resume boundaries in
+  `docs/governance/APPROVAL_OUTBOUND_POLICY.md`.
+- Added manual review and lifecycle checks in
+  `docs/governance/GOVERNANCE_CHANGE_CHECKLIST.md`.
+
 ### TASK 021.5 - Outbound Preview/Send Governance Policy
 
-Status: Planned.
+Status: Implemented as documentation.
 
 Goal: Define governance required before approved outbound preview can evolve
 into real send-provider behavior.
@@ -143,9 +169,15 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/governance/APPROVAL_OUTBOUND_POLICY.md` covering preview-only
+  current state, no send endpoint/button, future send requirements, audit,
+  recipient/content safety, Telegram boundary, and no real email default.
+
 ### TASK 021.6 - Audit Event Requirements Planning
 
-Status: Planned.
+Status: Implemented as documentation.
 
 Goal: Plan audit/event requirements for future catalog, evidence, review, and
 outbound governance actions.
@@ -171,9 +203,17 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added audit/event requirements in
+  `docs/governance/APPROVAL_OUTBOUND_POLICY.md`.
+- Added catalog/provider audit expectations in
+  `docs/governance/CATALOG_GOVERNANCE_POLICY.md` and
+  `docs/governance/PROVIDER_EVIDENCE_POLICY.md`.
+
 ### TASK 021.7 - Documentation, Validation, And Closeout
 
-Status: Planned.
+Status: Implemented / ready for closeout review.
 
 Goal: Close SPEC-021 planning with updated index, handoff, and validation
 evidence.
@@ -192,6 +232,7 @@ Acceptance criteria:
 - SPEC index references SPEC-021 without reopening closed specs.
 - Handoff points to SPEC-021 as the active planning spec.
 - No product behavior is implemented.
+- Governance docs exist under `docs/governance/`.
 
 Validation:
 
@@ -199,6 +240,12 @@ Validation:
 git diff --check
 git status --short
 ```
+
+Implementation:
+
+- Updated SPEC-021 status to implemented / ready for closeout review.
+- Updated `.codex/HANDOFF.md` with governance docs and validation scope.
+- Added a concise README link to the governance docs.
 
 ## SPEC-021 Planning Closeout Checklist
 
