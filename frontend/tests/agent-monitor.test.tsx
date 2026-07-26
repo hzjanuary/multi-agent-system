@@ -163,6 +163,38 @@ describe("agent monitor page", () => {
     expect(document.body.textContent).toContain("Internal catalog source");
   });
 
+  it("renders selected workflow catalog metadata when explicitly present", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
+    window.history.pushState({}, "", "/agent-monitor?workflowId=workflow-catalog");
+    installMockWebSocket();
+    mockFetchSequence([
+      {
+        workflow: {
+          ...sampleWorkflow("workflow-catalog", "WAITING_APPROVAL"),
+          metadata: {
+            attributes: {
+              catalog: sampleCatalogMetadata(),
+            },
+          },
+        },
+      },
+      { events: [], count: 0, limit: 25, offset: 0 },
+      emptyHistory("workflow-catalog"),
+    ]);
+
+    await render(
+      await AgentMonitorPage({
+        searchParams: Promise.resolve({ workflowId: "workflow-catalog" }),
+      }),
+    );
+
+    expect(document.body.textContent).toContain("Catalog Metadata");
+    expect(document.body.textContent).toContain("Office printer");
+    expect(document.body.textContent).toContain("office_printer");
+    expect(document.body.textContent).toContain("Demo catalog");
+    expect(document.body.textContent).toContain("not a final quotation");
+  });
+
   it("does not render sensitive raw fields from workflow state or events", async () => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
     installMockWebSocket();
@@ -280,6 +312,19 @@ function sampleWorkflow(workflowId: string, status: WorkflowStatus) {
     retry_count: 0,
     created_at: "2026-07-13T10:00:00Z",
     updated_at: "2026-07-13T10:00:00Z",
+  };
+}
+
+function sampleCatalogMetadata() {
+  return {
+    catalog_version: "demo-catalog-v1",
+    item_id: "office_printer",
+    display_name: "Office printer",
+    normalized_item_name: "Office printer",
+    item_family: "office_printer",
+    unit: "unit",
+    demo_only: true,
+    requested_addons: [],
   };
 }
 

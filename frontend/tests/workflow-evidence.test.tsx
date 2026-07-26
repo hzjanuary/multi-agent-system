@@ -5,6 +5,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { KnowledgeDocumentList } from "@/components/knowledge/knowledge-document-list";
 import { KnowledgeSearchPanel } from "@/components/knowledge/knowledge-search-panel";
 import {
+  extractWorkflowCatalogMetadata,
+  WorkflowCatalogMetadataPanel,
+} from "@/components/workflows/workflow-catalog-metadata-panel";
+import {
   extractWorkflowEvidence,
   WorkflowEvidencePanel,
 } from "@/components/workflows/workflow-evidence-panel";
@@ -373,6 +377,149 @@ describe("workflow reference evidence UI", () => {
   });
 });
 
+describe("workflow catalog metadata UI", () => {
+  it("does not fabricate catalog metadata when no explicit field exists", async () => {
+    const workflow = sampleWorkflow();
+
+    expect(extractWorkflowCatalogMetadata(workflow)).toBeNull();
+
+    await render(<WorkflowCatalogMetadataPanel workflow={workflow} />);
+
+    expect(document.body.textContent).not.toContain("Catalog Metadata");
+    expect(document.body.textContent).not.toContain("Catalog match");
+  });
+
+  it("renders explicit catalog metadata safely", async () => {
+    await render(
+      <WorkflowCatalogMetadataPanel
+        workflow={workflowWithEvidence({
+          metadata: {
+            attributes: {
+              catalog: sampleCatalogMetadata(),
+            },
+          },
+        })}
+      />,
+    );
+
+    expect(document.body.textContent).toContain("Catalog Metadata");
+    expect(document.body.textContent).toContain(
+      "Deterministic catalog match",
+    );
+    expect(document.body.textContent).toContain("demo-catalog-v1");
+    expect(document.body.textContent).toContain("Standard business laptop");
+    expect(document.body.textContent).toContain("business_laptop");
+    expect(document.body.textContent).toContain("Office 365");
+    expect(document.body.textContent).toContain("not a final quotation");
+    expect(document.body.textContent).toContain(
+      "Manager/Admin approval",
+    );
+  });
+
+  it("renders Agent Monitor-compatible catalog candidate paths", async () => {
+    const catalog = extractWorkflowCatalogMetadata(
+      workflowWithEvidence({
+        request: {
+          catalog_metadata: {
+            itemId: "office_monitor",
+            displayName: "Office monitor",
+            itemFamily: "office_monitor",
+            supportedAddons: [],
+            catalogVersion: "demo-catalog-v1",
+          },
+        },
+      }),
+    );
+
+    expect(catalog?.itemId).toBe("office_monitor");
+    expect(catalog?.displayName).toBe("Office monitor");
+    expect(catalog?.catalogVersion).toBe("demo-catalog-v1");
+  });
+
+  it("bounds and redacts catalog metadata values", async () => {
+    await render(
+      <WorkflowCatalogMetadataPanel
+        workflow={workflowWithEvidence({
+          metadata: {
+            catalog: {
+              catalog_version: "demo-catalog-v1",
+              item_id: "business_desktop_pc",
+              display_name: "Business desktop PC " + "safe ".repeat(80),
+              normalized_item_name: "<strong>Business desktop PC</strong>",
+              item_family: "business_desktop_pc",
+              requested_addons: [
+                "office_365",
+                "microsoft_365",
+                "raw_prompt secret token",
+                "extra_addon_1",
+                "extra_addon_2",
+                "extra_addon_3",
+                "extra_addon_4",
+              ],
+            },
+          },
+        })}
+      />,
+    );
+
+    const text = document.body.textContent?.toLowerCase() ?? "";
+    expect(text).toContain("business desktop pc");
+    expect(text).toContain("...");
+    expect(text).toContain("[redacted]");
+    expect(text).not.toContain("<strong>");
+    expect(text).not.toContain("raw_prompt");
+    expect(text).not.toContain("secret");
+    expect(text).not.toContain("token");
+    expect(text).not.toContain("extra_addon_4");
+  });
+
+  it("does not render secret-shaped catalog objects", async () => {
+    await render(
+      <WorkflowCatalogMetadataPanel
+        workflow={workflowWithEvidence({
+          catalog: {
+            item_id: "standard_business_laptop",
+            display_name: "Standard business laptop",
+            provider_payload: { raw: true },
+          },
+        })}
+      />,
+    );
+
+    expect(document.body.textContent).not.toContain("Catalog Metadata");
+    expect(document.body.textContent).not.toContain("provider_payload");
+  });
+
+  it("does not render forbidden positive claims from catalog metadata UI", async () => {
+    await render(
+      <WorkflowCatalogMetadataPanel
+        workflow={workflowWithEvidence({
+          metadata: {
+            attributes: {
+              catalog: sampleCatalogMetadata(),
+            },
+          },
+        })}
+      />,
+    );
+
+    const text = document.body.textContent?.toLowerCase() ?? "";
+    const forbidden = [
+      "final quote",
+      "approved quote",
+      "in stock",
+      "stock available",
+      "delivery date",
+      "will deliver",
+      "discount approved",
+      "email sent",
+    ];
+    for (const claim of forbidden) {
+      expect(text).not.toContain(claim);
+    }
+  });
+});
+
 describe("knowledge search and catalog UI", () => {
   it("renders knowledge search success and empty states", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
@@ -554,6 +701,20 @@ function sampleReferenceEvidence() {
     ],
     reference_prices: [],
     warnings: ["Manual pricing review is required."],
+  };
+}
+
+function sampleCatalogMetadata() {
+  return {
+    catalog_version: "demo-catalog-v1",
+    item_id: "standard_business_laptop",
+    display_name: "Standard business laptop",
+    normalized_item_name: "Standard business laptop",
+    item_family: "business_laptop",
+    unit: "unit",
+    demo_only: true,
+    requested_addons: ["office_365"],
+    supported_addons: ["office_365"],
   };
 }
 

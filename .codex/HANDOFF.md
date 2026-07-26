@@ -256,7 +256,11 @@ Default demo safety remains unchanged across all three planned specs:
 
 ## Current SPEC-018 Catalog Expansion State
 
-Scope implemented in Sprint 1:
+Status:
+
+- Implemented / ready for closeout review.
+
+Scope implemented:
 
 - Added deterministic local-demo catalog contract and fixture:
   - `scripts/demo/catalog.py`
@@ -284,25 +288,47 @@ Scope implemented in Sprint 1:
   parsing, unsupported-only messages, mixed supported/unsupported blocking,
   sales/technical replies, LLM fallback safety, and no fake price/stock/final
   quote claims.
+- Added frontend catalog metadata display:
+  - `frontend/components/workflows/workflow-catalog-metadata-panel.tsx`
+- Integrated the catalog panel into workflow detail and selected Agent Monitor
+  views.
+- The frontend renders only explicit catalog-shaped workflow fields such as
+  `metadata.attributes.catalog`, `metadata.catalog`, and `request.catalog`;
+  it does not infer catalog matches from prose, events, agent summaries, or
+  generic item rows.
+- Added frontend tests for no-fabrication behavior, workflow detail rendering,
+  Agent Monitor rendering, add-on display, redaction/bounding, and forbidden
+  claim absence.
+- Updated SPEC-018 status/tasks and demo/operator docs for final closeout.
 
 Out of scope / unchanged:
 
 - No backend API endpoint changes.
 - No database models or migrations.
 - No workflow runtime changes.
-- No frontend changes.
 - No Tavily/web/provider calls.
 - No price lookup.
 - No outbound communication/email behavior.
 - No final quote, stock, delivery, discount approval, auto-approval, or
   auto-resume behavior.
 
+Last known validation:
+
+- `npm test -- workflow-evidence.test.tsx workflow-pages.test.tsx agent-monitor.test.tsx`
+  passed.
+- Full Sprint 2 validation passed:
+  - frontend lint/build/typecheck/test
+  - parser unittest and py_compile
+  - local and production-demo Compose config
+  - backend pytest/Ruff/Black/MyPy
+  - `scripts/ci/frontend-gate.sh`
+  - `scripts/ci/backend-gate.sh`
+  - `scripts/ci/all-gates.sh`
+  - `git diff --check`
+
 Remaining SPEC-018 work:
 
-- Broader workflow metadata design remains planned under TASK 018.5.
-- Frontend catalog display polish remains planned only if future workflow state
-  exposes catalog metadata that should be rendered.
-- Final SPEC-018 closeout remains future work after Sprint 1 review.
+- Await review/approval for SPEC-018 closeout.
 
 ## Current SPEC-017 Frontend Visual Redesign State
 

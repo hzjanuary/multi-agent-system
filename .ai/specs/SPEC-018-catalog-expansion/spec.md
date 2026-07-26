@@ -2,7 +2,28 @@
 
 ## Status
 
-Planned / ready for review before implementation
+Implemented / ready for closeout review
+
+## Implementation Summary
+
+SPEC-018 has been implemented as a bounded deterministic demo catalog expansion.
+The implementation adds:
+
+- deterministic local-demo catalog data under `scripts/demo/catalog.py`;
+- English and Vietnamese alias normalization for laptop, desktop PC, monitor,
+  printer, and keyboard/mouse combo requests;
+- Office 365 / Microsoft 365 add-on detection and compatibility checks;
+- mixed supported/unsupported item safety that blocks partial workflows;
+- bounded catalog metadata in existing Telegram workflow payload metadata when
+  the parser has an explicit catalog match;
+- frontend catalog metadata display in workflow detail and Agent Monitor when
+  explicit catalog metadata already exists in workflow state;
+- parser, catalog, frontend, and safety tests.
+
+The implementation does not add backend API endpoints, database models,
+migrations, workflow runtime behavior, Telegram provider calls, Tavily/web
+lookups, live price lookup, auto-approval, auto-resume, or final quotation
+behavior.
 
 ## Product Objective
 

@@ -7,6 +7,7 @@ import { KnowledgeSearchPanel } from "@/components/knowledge/knowledge-search-pa
 import { WorkflowAgentActivityPanel } from "@/components/workflows/workflow-agent-activity-panel";
 import { WorkflowApprovalHistory } from "@/components/workflows/workflow-approval-history";
 import { WorkflowApprovalPanel } from "@/components/workflows/workflow-approval-panel";
+import { WorkflowCatalogMetadataPanel } from "@/components/workflows/workflow-catalog-metadata-panel";
 import { WorkflowDetail } from "@/components/workflows/workflow-detail";
 import { WorkflowEvidencePanel } from "@/components/workflows/workflow-evidence-panel";
 import { WorkflowEventTimeline } from "@/components/workflows/workflow-event-timeline";
@@ -134,6 +135,7 @@ export function WorkflowDetailView({ workflowId }: WorkflowDetailViewProps) {
         />
       </div>
       <WorkflowDetail workflow={state.workflow} />
+      <WorkflowCatalogMetadataPanel workflow={state.workflow} />
       <WorkflowReferenceEvidencePanel workflow={state.workflow} />
       <WorkflowEvidencePanel workflow={state.workflow} events={state.events} />
       <WorkflowApprovalHistory history={state.approvalHistory} />

@@ -166,9 +166,7 @@ Sprint 1 implementation:
 
 ### TASK 018.5 - Workflow Payload Catalog Metadata
 
-Status: Planned. Sprint 1 added bounded catalog metadata to existing Telegram
-workflow payload attributes only; broader workflow metadata design remains
-planned.
+Status: Implemented in Sprint 1.
 
 Goal: Attach bounded catalog metadata to workflow create payloads when parser
 normalization succeeds.
@@ -196,9 +194,19 @@ docker compose run --rm backend-test pytest -q
 git diff --check
 ```
 
+Sprint 1 implementation:
+
+- Added bounded catalog metadata to existing Telegram workflow payload
+  `metadata.attributes.catalog` only when deterministic or normalized LLM
+  extraction produced an explicit catalog match.
+- Metadata includes catalog version, item id, normalized item name, item family,
+  and requested add-ons.
+- Did not change backend API contracts, workflow schemas, database models, or
+  runtime behavior.
+
 ### TASK 018.6 - Frontend Catalog Display Polish If Needed
 
-Status: Planned.
+Status: Implemented in Sprint 2.
 
 Goal: Show normalized catalog metadata where it already exists in workflow
 state without fabricating catalog data.
@@ -225,9 +233,22 @@ cd frontend && npm test
 git diff --check
 ```
 
+Sprint 2 implementation:
+
+- Added `WorkflowCatalogMetadataPanel` for explicit catalog-shaped workflow
+  metadata only.
+- Integrated the panel into workflow detail and selected Agent Monitor views.
+- The panel recognizes explicit catalog paths such as
+  `metadata.attributes.catalog`, `metadata.catalog`, `request.catalog`, and
+  related explicit catalog metadata fields without inferring from prose,
+  timeline events, agent summaries, or item text.
+- Added frontend tests for no-fabrication behavior, safe rendering, add-on
+  display, redaction/bounding, forbidden claim absence, workflow detail render,
+  and Agent Monitor render.
+
 ### TASK 018.7 - Final Validation And Docs
 
-Status: Planned.
+Status: Implemented in Sprint 2.
 
 Goal: Close SPEC-018 with updated docs, runbooks, and full validation.
 
@@ -261,3 +282,32 @@ cd frontend && npm test
 bash scripts/ci/all-gates.sh
 git diff --check
 ```
+
+Sprint 2 implementation:
+
+- Updated SPEC-018 status to implemented / ready for closeout review.
+- Updated demo/operator docs to describe explicit catalog metadata display as
+  intake evidence only.
+- Updated `.codex/HANDOFF.md` with final SPEC-018 state and validation.
+
+## SPEC-018 Closeout Checklist
+
+- [x] Deterministic demo catalog only; no live catalog or web lookup.
+- [x] Supported item families are explicit and tested.
+- [x] Office 365 / Microsoft 365 remains an add-on with compatibility rules.
+- [x] Mixed supported/unsupported requests are blocked by default.
+- [x] Unsupported items are not silently dropped.
+- [x] Workflow payload catalog metadata is bounded and JSON-safe.
+- [x] Frontend displays catalog metadata only when explicit workflow metadata
+  exists.
+- [x] Frontend does not fabricate catalog metadata, prices, citations, stock,
+  delivery, discount, approval, or email-sent claims.
+- [x] No fake external prices were introduced.
+- [x] No stock or delivery claims were introduced.
+- [x] No final quotation before Manager/Admin approval was introduced.
+- [x] No backend API endpoint changes.
+- [x] No database models or migrations.
+- [x] No workflow runtime changes.
+- [x] No Telegram behavior changes.
+- [x] No provider/Tavily/web calls.
+- [x] Stable deterministic demo path remains preserved.

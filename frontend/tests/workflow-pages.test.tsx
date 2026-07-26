@@ -177,6 +177,42 @@ describe("workflow pages", () => {
     expect(document.body.textContent).toContain("Event timeline");
   });
 
+  it("renders workflow detail catalog metadata when workflow state has it", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
+    installMockWebSocket();
+    mockFetchSequence([
+      {
+        workflow: {
+          ...sampleWorkflow("workflow-catalog"),
+          metadata: {
+            attributes: {
+              catalog: sampleCatalogMetadata(),
+            },
+          },
+        },
+      },
+      { events: [], count: 0, limit: 25, offset: 0 },
+      {
+        workflow_id: "workflow-catalog",
+        approvals: [],
+        has_final_decision: false,
+        can_resume: false,
+      },
+      {
+        documents: [],
+        count: 0,
+      },
+    ]);
+
+    await render(<WorkflowDetailView workflowId="workflow-catalog" />);
+
+    expect(document.body.textContent).toContain("Catalog Metadata");
+    expect(document.body.textContent).toContain("Standard business laptop");
+    expect(document.body.textContent).toContain("business_laptop");
+    expect(document.body.textContent).toContain("Office 365");
+    expect(document.body.textContent).toContain("not a final quotation");
+  });
+
   it("renders a bounded API error", async () => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "access-token");
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
@@ -240,6 +276,19 @@ function sampleWorkflow(workflowId: string) {
     retry_count: 0,
     created_at: "2026-07-13T10:00:00Z",
     updated_at: "2026-07-13T10:00:00Z",
+  };
+}
+
+function sampleCatalogMetadata() {
+  return {
+    catalog_version: "demo-catalog-v1",
+    item_id: "standard_business_laptop",
+    display_name: "Standard business laptop",
+    normalized_item_name: "Standard business laptop",
+    item_family: "business_laptop",
+    unit: "unit",
+    demo_only: true,
+    requested_addons: ["office_365"],
   };
 }
 

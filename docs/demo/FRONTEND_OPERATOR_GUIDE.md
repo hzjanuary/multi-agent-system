@@ -121,6 +121,19 @@ If no reference evidence panel appears, the frontend is intentionally showing
 that no explicit evidence was supplied. It does not synthesize prices,
 citations, discounts, stock, delivery, approval, or email-sent claims.
 
+## Catalog Metadata
+
+Workflow detail and Agent Monitor may show a **Catalog Metadata** panel when
+the workflow state already contains explicit catalog metadata from a supported
+Telegram/demo catalog match. The panel is deterministic intake evidence only:
+it can show the normalized item family, item id, catalog version, and requested
+add-ons such as Office 365.
+
+If the catalog panel is absent, the frontend is intentionally showing that no
+explicit catalog metadata was supplied. It does not infer catalog matches from
+workflow prose, events, agent summaries, or item text. Catalog support is not a
+price, stock, delivery, discount, approval, or final quotation claim.
+
 ## If the Workflow Is Already Completed
 
 Use the completed workflow as read-only proof, or return to `/demo` and choose

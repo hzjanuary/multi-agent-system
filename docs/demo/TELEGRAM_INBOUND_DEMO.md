@@ -245,6 +245,13 @@ Detected Office phrases are stored as `office_365` in the workflow request and
 metadata. Office 365 is an add-on, not a price or final quote. The demo catalog
 currently treats Office 365 as compatible with laptop and desktop requests.
 
+When a Telegram request produces an explicit catalog match, the bridge attaches
+bounded catalog metadata to the workflow create payload under existing metadata
+attributes. Workflow detail and Agent Monitor can display that metadata as a
+deterministic catalog match. The frontend does not infer catalog data from
+prose, events, or agent summaries, and catalog metadata is not pricing,
+availability, delivery, discount, approval, or final quotation evidence.
+
 Greeting-only messages such as `xin chào`, `hello`, and `hi` do not create a
 workflow. The bridge replies with English and Vietnamese examples.
 

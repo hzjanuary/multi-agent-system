@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { WorkflowAgentActivityPanel } from "@/components/workflows/workflow-agent-activity-panel";
+import { WorkflowCatalogMetadataPanel } from "@/components/workflows/workflow-catalog-metadata-panel";
 import { WorkflowEventTimeline } from "@/components/workflows/workflow-event-timeline";
 import { WorkflowNextStepGuide } from "@/components/workflows/workflow-next-step-guide";
 import { WorkflowReferenceEvidencePanel } from "@/components/workflows/workflow-reference-evidence-panel";
@@ -250,6 +251,7 @@ function WorkflowMonitor({
         events={events}
         workflow={workflow}
       />
+      <WorkflowCatalogMetadataPanel workflow={workflow} />
       <WorkflowReferenceEvidencePanel workflow={workflow} />
       <WorkflowEventTimeline
         workflowId={workflow.workflow_id}
