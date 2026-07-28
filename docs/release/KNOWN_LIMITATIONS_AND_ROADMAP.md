@@ -157,6 +157,8 @@ SPEC-026 starts production-hardening planning with:
 - `docs/production/SECRETS_AND_PROVIDER_KEYS_RUNBOOK.md`
 - `docs/production/BACKUP_RESTORE_AND_MIGRATION_RUNBOOK.md`
 - `docs/production/OBSERVABILITY_AND_INCIDENT_RESPONSE_RUNBOOK.md`
+- `docs/production/PRODUCTION_SMOKE_TEST_CHECKLIST.md`
+- `docs/production/PRODUCTION_HARDENING_CLOSEOUT.md`
 
 Future production work should add:
 

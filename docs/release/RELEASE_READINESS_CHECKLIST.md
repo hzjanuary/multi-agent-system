@@ -85,6 +85,12 @@ Expected:
 - production-demo Compose config is valid with placeholder values;
 - no cloud deployment, image push, live provider call, or email send occurs.
 
+Production hardening references:
+
+- `docs/production/PRODUCTION_ENVIRONMENT_CHECKLIST.md`
+- `docs/production/PRODUCTION_SMOKE_TEST_CHECKLIST.md`
+- `docs/production/PRODUCTION_HARDENING_CLOSEOUT.md`
+
 ## 5. Backend Gate
 
 Run:

@@ -33,7 +33,8 @@ Closed specs:
 
 Current planned spec sequence:
 
-- SPEC-026 Production Hardening Sprint 2 is implemented / ready for review.
+- SPEC-026 Production Hardening Sprint 3 is implemented / ready for closeout
+  review.
 - Future production hardening work must remain docs/checklist/runbook work until
   an approved implementation task explicitly authorizes behavior,
   infrastructure, dependency, Docker/Compose, CI, provider, outbound email, or
@@ -43,7 +44,7 @@ Current planned spec sequence:
 
 Status:
 
-- Sprint 2 implemented / ready for review.
+- Sprint 3 implemented / ready for closeout review.
 
 Scope:
 
@@ -57,7 +58,8 @@ Scope:
   and secrets/provider key handling.
 - Sprint 2 added documentation/runbooks for backup/restore and migration
   safety, plus observability and incident response.
-- Sprint 2 does not change backend code, frontend code, Telegram behavior, API
+- Sprint 3 added production smoke and closeout documentation.
+- Sprint 3 does not change backend code, frontend code, Telegram behavior, API
   contracts, database models/migrations, Docker/Compose/CI behavior,
   dependencies, provider calls, runtime defaults, outbound email behavior, or
   final quote behavior.
@@ -76,6 +78,11 @@ Sprint 2 docs:
 
 - `docs/production/BACKUP_RESTORE_AND_MIGRATION_RUNBOOK.md`
 - `docs/production/OBSERVABILITY_AND_INCIDENT_RESPONSE_RUNBOOK.md`
+
+Sprint 3 docs:
+
+- `docs/production/PRODUCTION_SMOKE_TEST_CHECKLIST.md`
+- `docs/production/PRODUCTION_HARDENING_CLOSEOUT.md`
 
 Stable defaults to preserve:
 
@@ -103,10 +110,29 @@ Safety:
 
 Next recommended work:
 
-- Review SPEC-026 Sprint 2.
-- If approved, continue with the remaining tasks in order:
-  - TASK 026.5 Production Smoke Checklist.
-  - TASK 026.6 Final Validation And Closeout.
+- Review SPEC-026 Sprint 3 closeout.
+- If approved, mark SPEC-026 closed.
+- Open a future explicit spec before implementing production deployment
+  automation, backup automation, monitoring/alerting automation, managed
+  secrets, enterprise SSO, dependency/security remediation, provider
+  automation, outbound send, or runtime-default changes.
+
+Last SPEC-026 Sprint 3 validation results:
+
+- `git diff --check` passed.
+- `git status --short` reported only intended SPEC-026 docs/spec/index/handoff
+  and release-doc link changes plus new production docs.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
+- `python3 scripts/evaluation/evaluate_telegram_parser.py` passed: 25/25
+  cases, accuracy 1.0000, 0 safety violations.
+- `python3 scripts/evaluation/evaluate_demo_safety.py` passed: 39/39 cases,
+  accuracy 1.0000, 0 safety violations.
+- Optional `bash scripts/ci/all-gates.sh` passed, including backend pytest
+  `788 passed, 1 skipped`, Ruff, Black, MyPy, backend dry-run checks,
+  frontend lint/build/typecheck/tests `93 passed`, production-demo image build,
+  and whitespace check.
 
 ## Current SPEC-025 Controlled Dependency Upgrade Remediation State
 

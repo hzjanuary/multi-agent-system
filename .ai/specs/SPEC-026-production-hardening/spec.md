@@ -2,7 +2,7 @@
 
 ## Status
 
-Sprint 2 implemented / ready for review
+Sprint 3 implemented / ready for closeout review
 
 ## Product Objective
 
@@ -42,6 +42,8 @@ The repository currently includes:
 - release-readiness docs and final package docs;
 - dependency/security triage with remaining npm audit findings documented and
   deferred.
+- production environment, secrets, backup/restore, observability, smoke, and
+  closeout runbooks under `docs/production/`.
 
 ## Stable Defaults To Preserve
 
@@ -52,6 +54,7 @@ unless a future approved implementation spec changes them:
 LLM_PROVIDER=fake
 LLM_RUNTIME_ENABLED=false
 PRICE_RESEARCH_ENABLED=false
+EMBEDDING_PROVIDER=fake
 RAG_ENABLED=false
 OUTBOUND_COMMUNICATION_ENABLED=false
 OUTBOUND_SEND_ENABLED=false
@@ -79,8 +82,10 @@ SPEC-026 covers planning for:
 - deployment hardening;
 - database and storage hardening;
 - observability and operational response;
+- production smoke validation;
 - security maintenance carryover;
 - demo versus production boundaries;
+- final closeout review;
 - hardening user stories;
 - acceptance criteria;
 - implementation task sequence;
@@ -378,6 +383,23 @@ Acceptance evidence:
 - audit trail expectations are documented;
 - metrics and logs safety boundaries are documented.
 
+### Release Reviewer Running Production Smoke
+
+As a release reviewer, I want a production smoke checklist so that I can verify
+Compose config, deterministic evaluation runners, backend health/readiness,
+frontend routes, workflow approval/resume, optional Telegram smoke, optional
+provider verification, and safety boundaries without adding automation or
+requiring live providers.
+
+Acceptance evidence:
+
+- production smoke checklist exists;
+- required deterministic commands are listed;
+- optional/manual provider and Telegram paths are separated from required
+  checks;
+- no provider call, real email, auto-approval, auto-resume, or final quote
+  behavior is introduced.
+
 ## Acceptance Criteria
 
 - SPEC-026 planning docs exist.
@@ -389,6 +411,8 @@ Acceptance evidence:
 - Deployment hardening scope is complete and actionable.
 - Backup/restore and migration safety scope is complete and actionable.
 - Observability/incident response scope is complete and actionable.
+- Production smoke checklist is complete and actionable.
+- SPEC-026 closeout checklist is complete and actionable.
 - Security maintenance carryover from SPEC-024/SPEC-025 is documented.
 - Demo versus production boundary is explicit.
 - Stable no-key defaults remain documented.
@@ -434,6 +458,20 @@ bash scripts/ci/all-gates.sh
 Future implementation task validation should expand to the specific surface
 being documented or hardened, but must preserve deterministic/no-key defaults
 unless explicitly changed by an approved future spec.
+
+## Implemented Deliverables
+
+- `docs/production/PRODUCTION_ENVIRONMENT_CHECKLIST.md`
+- `docs/production/SECRETS_AND_PROVIDER_KEYS_RUNBOOK.md`
+- `docs/production/BACKUP_RESTORE_AND_MIGRATION_RUNBOOK.md`
+- `docs/production/OBSERVABILITY_AND_INCIDENT_RESPONSE_RUNBOOK.md`
+- `docs/production/PRODUCTION_SMOKE_TEST_CHECKLIST.md`
+- `docs/production/PRODUCTION_HARDENING_CLOSEOUT.md`
+
+Sprint 3 added production smoke and closeout documentation only. It did not
+change product behavior, backend/frontend code, Telegram behavior, APIs,
+database schema or migrations, Docker/Compose, CI, dependencies, provider
+behavior, runtime defaults, outbound email behavior, or final quote behavior.
 
 ## Future Roadmap After SPEC-026
 

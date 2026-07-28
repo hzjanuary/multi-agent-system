@@ -194,7 +194,7 @@ Implementation:
 
 ### TASK 026.5 - Production Smoke Checklist
 
-Status: Planned.
+Status: Implemented / ready for review.
 
 Goal: Create a production-demo smoke checklist that verifies environment,
 service health, readiness, core workflow behavior, and safety boundaries without
@@ -237,9 +237,23 @@ Optional validation:
 bash scripts/ci/all-gates.sh
 ```
 
+Implementation:
+
+- Added `docs/production/PRODUCTION_SMOKE_TEST_CHECKLIST.md`.
+- Documented preconditions, Compose config validation, deterministic evaluation
+  commands, all-gates, backend health/live/ready checks, optional protected
+  metrics review, frontend route smoke checks, workflow run/approval/resume
+  smoke, optional/manual Telegram smoke, optional/manual provider live
+  verification, failure handling, and sign-off checklist.
+- Kept required smoke deterministic and no-key. Optional Telegram and provider
+  checks remain manual/local and outside CI.
+- No backend, frontend, Telegram, API, database, Docker/Compose, CI,
+  dependency, provider, outbound email, runtime-default, or final quote behavior
+  changed.
+
 ### TASK 026.6 - Final Validation And Closeout
 
-Status: Planned.
+Status: Implemented / ready for review.
 
 Goal: Verify SPEC-026 deliverables, update status, and recommend approval or
 rejection.
@@ -282,6 +296,22 @@ Optional validation:
 bash scripts/ci/all-gates.sh
 ```
 
+Implementation:
+
+- Added `docs/production/PRODUCTION_HARDENING_CLOSEOUT.md`.
+- Summarized TASK 026.1 through TASK 026.6 deliverables, validation evidence
+  placeholders, stable safety boundaries, remaining limitations, recommended
+  future specs, and final closeout checklist.
+- Updated SPEC-026 status, task status, SPEC index, and handoff for Sprint 3
+  closeout review.
+- No active production hardening implementation task remains open in SPEC-026.
+- Sprint 3 validation passed: `git diff --check`, `docker compose config`,
+  production-demo Compose config, Telegram parser benchmark `25/25`, demo
+  safety benchmark `39/39`, and optional `bash scripts/ci/all-gates.sh`.
+- Kept closeout documentation-only. No product behavior, dependency,
+  Docker/Compose, CI, API, database, Telegram, provider, outbound email, or
+  final quote behavior changed.
+
 ## SPEC-026 Closeout Checklist
 
 Before closing SPEC-026, confirm:
@@ -306,3 +336,5 @@ Before closing SPEC-026, confirm:
 - No backend/frontend/API/database/Telegram/provider behavior changed.
 - No real secrets, provider keys, tokens, cookies, JWTs, or customer data were
   added.
+- `docs/production/PRODUCTION_SMOKE_TEST_CHECKLIST.md` exists.
+- `docs/production/PRODUCTION_HARDENING_CLOSEOUT.md` exists.
