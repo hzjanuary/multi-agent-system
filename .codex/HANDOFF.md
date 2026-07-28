@@ -27,19 +27,21 @@ Closed specs:
 - SPEC-021 Catalog Governance and Provider Policy - Approved / Closed
 - SPEC-022 Evaluation and Benchmarking - Approved / Closed
 - SPEC-023 Release Readiness and Final Packaging - Approved / Closed
+- SPEC-024 Dependency and Security Maintenance - Approved / Closed with
+  deferred npm audit findings
 
 Current planned spec sequence:
 
-- SPEC-024 Dependency and Security Maintenance Sprint 2 is implemented / ready
-  for closeout review.
-- Dependency upgrades remain future work and must be opened as a bounded
-  maintenance sprint before changing manifests or lockfiles.
+- No active implementation spec is open in the handoff.
+- Future dependency upgrades remain future work and must be opened as a bounded
+  security/dependency maintenance sprint before changing manifests or
+  lockfiles.
 
 ## Current SPEC-024 Dependency and Security Maintenance State
 
 Status:
 
-- Implemented / ready for closeout review.
+- Approved / Closed with deferred npm audit findings.
 
 Scope:
 
@@ -47,6 +49,8 @@ Scope:
   `v1.0.0-demo-release`.
 - SPEC-024 Sprint 2 applies bounded frontend patch updates for selected direct
   packages and records before/after audit results.
+- SPEC-024 is closed with the remaining 12 high npm audit findings documented
+  and deferred.
 - No `npm audit fix`, no `npm audit fix --force`, no broad update sweep, and no
   product behavior changes.
 
@@ -76,13 +80,15 @@ Audit summary:
 - Sprint 2 validation passed: `npm ci`, frontend lint/build/typecheck/tests,
   `docker compose config`, production-demo Compose config,
   `bash scripts/ci/frontend-gate.sh`, and `bash scripts/ci/all-gates.sh`.
+- Final closeout validation passed: `git diff --check`,
+  `cd frontend && npm audit || true` with the expected 12 high findings,
+  local/prod Compose config validation, and `bash scripts/ci/all-gates.sh`.
 - Host `poetry` command was unavailable, so backend outdated review is deferred
   to a future environment with Poetry.
 - No fix command was run.
 
-Next recommended step:
+Next recommended work:
 
-- Review SPEC-024 Sprint 2 results.
 - Open a future major/framework remediation spec if the remaining npm audit
   findings must be eliminated.
 - Use a separate major upgrade spec for Next 16, ESLint 10, Tailwind 4,

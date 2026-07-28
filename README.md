@@ -12,8 +12,8 @@ decision.
 
 - Final graduation-ready project.
 - SPEC-001 through SPEC-023 completed and approved.
-- SPEC-024 dependency/security maintenance documents current npm audit findings,
-  applies bounded frontend patch updates, and tracks remaining remediation
+- SPEC-024 dependency/security maintenance is closed with bounded frontend
+  patch updates applied and remaining npm audit findings documented/deferred
   without changing demo behavior.
 - Frontend demo surfaces use the **Violet Operations Console** dark command
   center design.

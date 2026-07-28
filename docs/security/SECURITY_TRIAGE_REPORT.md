@@ -227,3 +227,53 @@ Sprint 2 boundaries:
 - No frontend feature or UI behavior change.
 - No backend, Telegram, API, database, Docker/Compose/CI, provider, real email,
   or final quote behavior change.
+
+## Final SPEC-024 Closeout
+
+Status:
+
+```text
+Approved / Closed with deferred npm audit findings
+```
+
+Final after-remediation audit summary:
+
+- total vulnerabilities: 12
+- high: 12
+- moderate/low/critical: 0
+- remaining affected names: `@eslint/config-array`, `@eslint/eslintrc`,
+  `brace-expansion`, `eslint`, `eslint-config-next`, `eslint-plugin-import`,
+  `eslint-plugin-jsx-a11y`, `eslint-plugin-react`, `minimatch`, `next`,
+  `postcss`, and `sharp`
+
+Bounded remediation completed:
+
+- `next` updated from `15.5.20` to `15.5.22`.
+- `eslint-config-next` updated to `15.5.22`.
+- direct `postcss` updated to `8.5.23`.
+
+Deferred rationale:
+
+- Remaining npm findings require force/breaking or nested framework/tooling
+  remediation paths.
+- No safe non-breaking remediation was available inside the approved Sprint 2
+  scope.
+- `npm audit fix`, `npm audit fix --force`, broad `npm update`, and major
+  framework/tooling upgrades were intentionally not run.
+
+Future recommendation:
+
+- Open a separate dependency/security upgrade spec before changing dependency
+  manifests again.
+- Prioritize a reviewed compatibility path for unresolved Next nested
+  PostCSS/Sharp findings.
+- Treat the ESLint/minimatch development-tooling chain as a separate reviewed
+  tooling remediation path unless project risk changes.
+- Rerun backend dependency review in an environment where Poetry is available.
+
+Closeout validation:
+
+- `git diff --check` passed.
+- `cd frontend && npm audit || true` still reports 12 high vulnerabilities.
+- local and production-demo Compose config validation passed.
+- `bash scripts/ci/all-gates.sh` passed.

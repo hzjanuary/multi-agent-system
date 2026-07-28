@@ -74,9 +74,11 @@ implemented in the current repository.
 ### Dependency And Security Maintenance
 
 - Frontend `npm audit` currently reports tracked high-severity findings.
-- SPEC-024 Sprint 1 documents triage and maintenance policy only.
+- SPEC-024 Sprint 1 documents triage and maintenance policy.
 - SPEC-024 Sprint 2 applies bounded frontend patch updates for `next`,
   `eslint-config-next`, and `postcss`.
+- SPEC-024 is closed with the remaining 12 high npm audit findings documented
+  and deferred.
 - `npm audit fix` and `npm audit fix --force` require a separate reviewed
   maintenance sprint.
 - Remaining audit findings require force/major or nested framework remediation

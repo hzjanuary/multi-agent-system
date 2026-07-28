@@ -112,10 +112,11 @@ Sprint 2 outcome:
 
 ### TASK 024.5 - Final Validation and Closeout
 
-Status: Implemented / ready for closeout review.
+Status: Approved / Closed with deferred npm audit findings.
 
-Goal: Validate Sprint 1 docs and confirm no behavior/dependency changes were
-introduced.
+Goal: Close SPEC-024 after Sprint 1 audit/triage and Sprint 2 bounded targeted
+remediation, with remaining npm audit findings explicitly documented and
+deferred.
 
 Required validation:
 
@@ -141,11 +142,15 @@ Closeout checklist:
 - Security maintenance docs exist.
 - Security triage report exists.
 - README/security/release/handoff links are present.
-- No dependency files changed.
+- Sprint 2 dependency file changes are limited to the documented targeted
+  frontend patch updates.
+- Final closeout adds no further dependency file changes.
 - No `npm audit fix` was run.
+- No `npm audit fix --force` or broad `npm update` was run.
 - No product behavior changed.
-- Current release remains stable/demo-ready, with dependency remediation tracked
-  as separate future work.
+- Current release remains stable/demo-ready.
+- Remaining npm audit findings are tracked as separate future
+  dependency/security upgrade work.
 
 Sprint 2 validation results:
 
@@ -163,7 +168,19 @@ Sprint 2 validation results:
 - Final `npm audit` still reports 12 high vulnerabilities; remaining
   remediation is deferred because npm requires force/breaking paths.
 
-## Sprint 1 Deliverables
+Final closeout validation results:
+
+- `git diff --check` passed.
+- `git status --short` reports only intended SPEC-024 docs/status changes.
+- `cd frontend && npm audit || true` still reports 12 high vulnerabilities.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
+- `bash scripts/ci/all-gates.sh` passed, including backend tests/static
+  checks, frontend lint/build/typecheck/tests, production-demo image build, and
+  whitespace check.
+
+## SPEC-024 Deliverables
 
 - `.ai/specs/SPEC-024-dependency-security-maintenance/spec.md`
 - `.ai/specs/SPEC-024-dependency-security-maintenance/tasks.md`
@@ -176,6 +193,12 @@ Sprint 2 validation results:
 - `frontend/package.json` targeted dependency updates
 - `frontend/package-lock.json` targeted lockfile updates
 
-No backend code, frontend feature code, Telegram behavior, API contract,
-database model/migration, Docker/Compose/CI behavior, provider call, real email,
-or final quote behavior was changed by SPEC-024 Sprint 1 or Sprint 2.
+Closeout status:
+
+- SPEC-024 is approved and closed.
+- Remaining npm audit findings are documented and deferred.
+- Future remediation requires a separate dependency/security upgrade spec or
+  reviewed maintenance sprint.
+- No backend code, frontend feature code, Telegram behavior, API contract,
+  database model/migration, Docker/Compose/CI behavior, provider call, real
+  email, or final quote behavior was changed by SPEC-024 Sprint 1 or Sprint 2.

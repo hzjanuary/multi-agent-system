@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented / ready for closeout review
+Approved / Closed with deferred npm audit findings
 
 ## Product Objective
 
@@ -14,6 +14,11 @@ known frontend npm audit findings, defines maintenance policy, and prepares a
 future bounded remediation path. Sprint 2 performs a bounded frontend
 patch-level remediation attempt for selected direct packages while preserving
 product behavior.
+
+SPEC-024 is closed with the remaining frontend npm audit findings documented
+and deferred. The final after-remediation audit still reports 12 high findings.
+No unsafe force upgrade was applied, and eliminating the remaining findings
+requires a separate dependency/security upgrade spec or maintenance sprint.
 
 ## Current Release Baseline
 
@@ -287,10 +292,12 @@ Do not revert unrelated user changes.
 - Security maintenance guidance exists.
 - Security triage report exists.
 - README links to the security maintenance docs.
-- SPEC index and handoff reference SPEC-024 Sprint 1.
+- SPEC index and handoff reference SPEC-024 as closed with deferred findings.
 - Current npm audit findings are summarized.
-- No dependency manifests or lock files are changed.
+- Sprint 2 dependency manifest/lockfile changes are explicitly documented.
+- Final closeout does not add additional dependency changes.
 - No `npm audit fix` is run.
+- No unsafe force upgrade is applied.
 - No backend code, frontend code, Telegram behavior, API, database,
   Docker/Compose/CI behavior, provider call, real email, or final quote behavior
   is changed.
@@ -329,3 +336,26 @@ Do not revert unrelated user changes.
 - Future major framework upgrade spec if Next/ESLint remediation requires
   incompatible changes.
 - Future CI enhancement for audit reporting after a reviewed policy decision.
+
+## Closeout Decision
+
+SPEC-024 is approved and closed for the current repository state.
+
+Closed scope:
+
+- Sprint 1 audit and triage completed.
+- Sprint 2 bounded targeted remediation completed.
+- Final after-remediation npm audit result remains 12 high vulnerabilities.
+- Remaining findings are deferred because available npm remediation paths
+  require force/breaking upgrades or nested framework/tooling remediation.
+- No `npm audit fix`, `npm audit fix --force`, broad dependency sweep, backend
+  dependency upgrade, product behavior change, Docker/CI change, provider call,
+  real email, or final quote behavior was introduced.
+
+Required future work:
+
+- Open a separate bounded dependency/security upgrade spec before changing
+  manifests again to address the remaining Next nested PostCSS/Sharp and
+  ESLint/minimatch audit chains.
+- Treat a Next 16, ESLint 10, Tailwind 4, TypeScript 7, or other framework
+  major upgrade as a separate reviewed compatibility sprint.
