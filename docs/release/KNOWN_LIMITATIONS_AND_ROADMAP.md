@@ -151,6 +151,11 @@ Future evaluation work should add:
 
 ### 5. Production Hardening
 
+SPEC-026 starts production-hardening planning with:
+
+- `docs/production/PRODUCTION_ENVIRONMENT_CHECKLIST.md`
+- `docs/production/SECRETS_AND_PROVIDER_KEYS_RUNBOOK.md`
+
 Future production work should add:
 
 - cloud deployment automation;

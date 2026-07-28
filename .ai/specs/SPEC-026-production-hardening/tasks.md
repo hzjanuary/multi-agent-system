@@ -4,7 +4,7 @@
 
 ### TASK 026.1 - Production Environment Checklist
 
-Status: Planned.
+Status: Implemented / ready for review.
 
 Goal: Create a production environment validation checklist for production-demo
 and future production-like deployments.
@@ -37,9 +37,20 @@ docker compose -f docker-compose.prod.yml \
   --env-file docs/deployment/.env.production.example config
 ```
 
+Implementation:
+
+- Added `docs/production/PRODUCTION_ENVIRONMENT_CHECKLIST.md`.
+- Documented stable no-key defaults, required environment files, local override
+  policy, required production checks, forbidden production defaults, feature
+  flag review, pre-deploy checklist, post-deploy smoke checklist, rollback
+  readiness checklist, known limitations, and deferred security findings.
+- Kept the checklist documentation-only. No runtime defaults, Compose config,
+  CI, backend, frontend, Telegram, provider, outbound email, or final quote
+  behavior changed.
+
 ### TASK 026.2 - Secrets And Provider Key Runbook
 
-Status: Planned.
+Status: Implemented / ready for review.
 
 Goal: Create a secrets-management runbook for local override policy, provider
 keys, Telegram tokens, JWT/database/storage secrets, and rotation.
@@ -69,6 +80,20 @@ Validation:
 git diff --check
 git status --short
 ```
+
+Implementation:
+
+- Added `docs/production/SECRETS_AND_PROVIDER_KEYS_RUNBOOK.md`.
+- Documented database, JWT/auth, MinIO, Telegram, Tavily, LLM provider,
+  future outbound/email provider, and frontend public value secret categories.
+- Documented no-committed-secret policy, local ignored override policy,
+  rotation schedule, leak response checklist, provider key policy, redaction
+  policy, CI policy, future production requirements, and quick review commands.
+- Confirmed provider keys remain local/manual and default CI/deterministic demo
+  validation requires no live provider keys.
+- Kept the runbook documentation-only. No secret store, provider automation,
+  outbound send, runtime default, Docker/Compose, CI, backend, frontend, API,
+  database, Telegram, or final quote behavior changed.
 
 ### TASK 026.3 - Backup/Restore And Migration Safety Plan
 

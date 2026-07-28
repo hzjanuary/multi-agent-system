@@ -33,7 +33,7 @@ Closed specs:
 
 Current planned spec sequence:
 
-- SPEC-026 Production Hardening is planned / ready for review.
+- SPEC-026 Production Hardening Sprint 1 is implemented / ready for review.
 - Future production hardening work must remain docs/checklist/runbook work until
   an approved implementation task explicitly authorizes behavior,
   infrastructure, dependency, Docker/Compose, CI, provider, outbound email, or
@@ -43,7 +43,7 @@ Current planned spec sequence:
 
 Status:
 
-- Planning / ready for review.
+- Sprint 1 implemented / ready for review.
 
 Scope:
 
@@ -53,15 +53,22 @@ Scope:
   deployment hardening, database/storage hardening, observability and incident
   response, security maintenance carryover, demo-versus-production boundaries,
   user stories, acceptance criteria, and a future task sequence.
-- This planning task does not change backend code, frontend code, Telegram
-  behavior, API contracts, database models/migrations, Docker/Compose/CI
-  behavior, dependencies, provider calls, runtime defaults, outbound email
-  behavior, or final quote behavior.
+- Sprint 1 added documentation/runbooks for production environment validation
+  and secrets/provider key handling.
+- Sprint 1 does not change backend code, frontend code, Telegram behavior, API
+  contracts, database models/migrations, Docker/Compose/CI behavior,
+  dependencies, provider calls, runtime defaults, outbound email behavior, or
+  final quote behavior.
 
 Spec docs:
 
 - `.ai/specs/SPEC-026-production-hardening/spec.md`
 - `.ai/specs/SPEC-026-production-hardening/tasks.md`
+
+Sprint 1 docs:
+
+- `docs/production/PRODUCTION_ENVIRONMENT_CHECKLIST.md`
+- `docs/production/SECRETS_AND_PROVIDER_KEYS_RUNBOOK.md`
 
 Stable defaults to preserve:
 
@@ -89,10 +96,8 @@ Safety:
 
 Next recommended work:
 
-- Review SPEC-026 planning.
-- If approved, implement the planned tasks in order:
-  - TASK 026.1 Production Environment Checklist.
-  - TASK 026.2 Secrets And Provider Key Runbook.
+- Review SPEC-026 Sprint 1.
+- If approved, continue with the remaining tasks in order:
   - TASK 026.3 Backup/Restore And Migration Safety Plan.
   - TASK 026.4 Observability And Incident Response Runbook.
   - TASK 026.5 Production Smoke Checklist.

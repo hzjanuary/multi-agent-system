@@ -145,6 +145,7 @@ docs/deployment/          Env docs, production-demo runbook, smoke, troubleshoot
 docs/evaluation/          SPEC-022 benchmark guide and demo regression checklist
 docs/final/               Final evaluation, demo validation, release assets
 docs/governance/          Catalog, provider evidence, approval, and outbound policy
+docs/production/          Production hardening checklists and secrets runbook
 docs/release/             Final release-readiness package and command checklist
 docs/security/            Dependency/security maintenance and triage docs
 docs/report/              Graduation report narrative assets
