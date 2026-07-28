@@ -32,10 +32,50 @@ Closed specs:
 
 Current planned spec sequence:
 
-- No active implementation spec is open in the handoff.
-- Future dependency upgrades remain future work and must be opened as a bounded
-  security/dependency maintenance sprint before changing manifests or
-  lockfiles.
+- SPEC-025 Controlled Dependency Upgrade Remediation is planning / ready for
+  review.
+- Future dependency upgrades remain future work and must be implemented only
+  through approved SPEC-025 tasks before changing manifests or lockfiles.
+
+## Current SPEC-025 Controlled Dependency Upgrade Remediation State
+
+Status:
+
+- Planning / Ready for review.
+
+Scope:
+
+- Planning-only dependency remediation spec created after SPEC-024 closed with
+  deferred npm audit findings.
+- SPEC-025 separates runtime framework remediation for the Next nested
+  PostCSS/Sharp chain from development-tooling remediation for the
+  ESLint/minimatch chain.
+- SPEC-025 defines audit refresh, compatibility investigation, stop gates,
+  rollback, validation, backend Poetry review, and closeout documentation
+  requirements.
+- No dependency manifests, lockfiles, backend code, frontend code, Telegram
+  behavior, API contract, database model/migration, Docker/Compose/CI behavior,
+  provider call, real email, or final quote behavior changed in the planning
+  task.
+
+Spec docs:
+
+- `.ai/specs/SPEC-025-controlled-dependency-upgrade-remediation/spec.md`
+- `.ai/specs/SPEC-025-controlled-dependency-upgrade-remediation/tasks.md`
+
+Safety:
+
+- Do not run `npm audit fix`, `npm audit fix --force`, broad `npm update`, or
+  package upgrades until a specific SPEC-025 implementation task is approved.
+- Treat Next 16, ESLint 10, Tailwind 4, TypeScript 7, or other force/major
+  movements as compatibility sprints with full validation.
+- Stable deterministic demo defaults must remain unchanged.
+
+Next recommended work:
+
+- Review SPEC-025 planning docs.
+- If approved, start TASK 025.1 audit refresh and dependency graph review
+  without mutation.
 
 ## Current SPEC-024 Dependency and Security Maintenance State
 

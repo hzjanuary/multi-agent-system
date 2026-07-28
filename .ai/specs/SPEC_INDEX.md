@@ -52,6 +52,7 @@
 - SPEC-022 Evaluation and Benchmarking - Approved / Closed
 - SPEC-023 Release Readiness and Final Packaging - Approved / Closed
 - SPEC-024 Dependency and Security Maintenance - Approved / Closed with deferred npm audit findings
+- SPEC-025 Controlled Dependency Upgrade Remediation - Planning / Ready for review
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,
@@ -66,7 +67,9 @@ numbers.
 - Retired placeholder: SPEC-024 Analytics. SPEC-024 is now assigned to
   Dependency and Security Maintenance. Future analytics work should use a
   non-conflicting SPEC number.
-- SPEC-025 End-to-End Demo Flow
+- Retired placeholder: SPEC-025 End-to-End Demo Flow. SPEC-025 is now assigned
+  to Controlled Dependency Upgrade Remediation. Future E2E demo-flow work
+  should use a non-conflicting SPEC number.
 
 ## Phase 8 - Deployment
 
