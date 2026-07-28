@@ -2,7 +2,7 @@
 
 ## Status
 
-Sprint 1 implemented / ready for review
+Sprint 2 implemented / ready for review
 
 ## Product Objective
 

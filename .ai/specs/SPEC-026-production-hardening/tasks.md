@@ -97,7 +97,7 @@ Implementation:
 
 ### TASK 026.3 - Backup/Restore And Migration Safety Plan
 
-Status: Planned.
+Status: Implemented / ready for review.
 
 Goal: Define backup, restore, and migration-safety planning for stateful
 services.
@@ -131,9 +131,23 @@ docker compose -f docker-compose.prod.yml \
   --env-file docs/deployment/.env.production.example config
 ```
 
+Implementation:
+
+- Added `docs/production/BACKUP_RESTORE_AND_MIGRATION_RUNBOOK.md`.
+- Documented Postgres, Redis, MinIO, and Qdrant storage responsibilities,
+  backup planning, restore order, restore validation, rollback criteria,
+  Alembic migration review, pre-migration backup, migration dry-run checks,
+  downgrade/rollback expectations, data retention/privacy notes, demo versus
+  production data boundaries, disaster recovery checklist, and operator-reviewed
+  command examples.
+- Kept backup, restore, migration, and disaster recovery guidance
+  documentation-only. No automation, scripts, database schema, migrations,
+  Docker/Compose, CI, backend, frontend, Telegram, provider, outbound email, or
+  final quote behavior changed.
+
 ### TASK 026.4 - Observability And Incident Response Runbook
 
-Status: Planned.
+Status: Implemented / ready for review.
 
 Goal: Create an operations runbook for logs, request IDs, metrics, readiness,
 workflow events, approval history, and incident response.
@@ -163,6 +177,20 @@ Validation:
 git diff --check
 git status --short
 ```
+
+Implementation:
+
+- Added `docs/production/OBSERVABILITY_AND_INCIDENT_RESPONSE_RUNBOOK.md`.
+- Documented existing observability surfaces: request IDs, structured logs,
+  redaction, `/health`, `/live`, `/ready`, protected in-process metrics,
+  workflow events, approval history, and audit logs.
+- Documented operational checks, incident categories, response checklist,
+  logging/redaction policy, audit trail expectations, owner placeholders,
+  post-incident review template, limitations, and future work.
+- Kept observability and incident-response guidance documentation-only. No
+  monitoring infrastructure, alerting, external telemetry, backend, frontend,
+  Docker/Compose, CI, API, database, Telegram, provider, outbound email, or
+  final quote behavior changed.
 
 ### TASK 026.5 - Production Smoke Checklist
 

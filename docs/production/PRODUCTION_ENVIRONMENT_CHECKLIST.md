@@ -66,6 +66,12 @@ Local override policy:
   passwords, MinIO secrets, cookies, or access tokens into tracked docs;
 - review screenshots and copied command output before committing evidence.
 
+Related production runbooks:
+
+- `docs/production/SECRETS_AND_PROVIDER_KEYS_RUNBOOK.md`
+- `docs/production/BACKUP_RESTORE_AND_MIGRATION_RUNBOOK.md`
+- `docs/production/OBSERVABILITY_AND_INCIDENT_RESPONSE_RUNBOOK.md`
+
 ## Required Production Checks
 
 Run from the repository root unless a section says otherwise.

@@ -53,7 +53,7 @@
 - SPEC-023 Release Readiness and Final Packaging - Approved / Closed
 - SPEC-024 Dependency and Security Maintenance - Approved / Closed with deferred npm audit findings
 - SPEC-025 Controlled Dependency Upgrade Remediation - Approved / Closed
-- SPEC-026 Production Hardening - Sprint 1 implemented / Ready for review
+- SPEC-026 Production Hardening - Sprint 2 implemented / Ready for review
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,
