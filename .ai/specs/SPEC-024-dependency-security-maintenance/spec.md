@@ -11,9 +11,9 @@ Create a safe dependency and security maintenance package after
 
 SPEC-024 Sprint 1 documents the current dependency/security baseline, triages
 known frontend npm audit findings, defines maintenance policy, and prepares a
-future bounded remediation path. It does not upgrade dependencies, run
-`npm audit fix`, change lock files, or alter backend/frontend/Telegram/runtime
-behavior.
+future bounded remediation path. Sprint 2 performs a bounded frontend
+patch-level remediation attempt for selected direct packages while preserving
+product behavior.
 
 ## Current Release Baseline
 
@@ -85,6 +85,36 @@ Observed backend dependency review:
 - Backend dependency upgrade review should be rerun in a future environment with
   Poetry available, or inside a dedicated backend maintenance container if a
   future task adds such a command.
+
+## Sprint 2 Frontend Remediation Summary
+
+Sprint 2 applied targeted frontend package updates only:
+
+| Package | Before | After | Change type | Reason |
+| --- | --- | --- | --- | --- |
+| `next` | `15.5.20` | `15.5.22` | patch | Attempt to remediate Next/PostCSS/Sharp audit chain without a major upgrade. |
+| `eslint-config-next` | `15.5.21` in lockfile | `15.5.22` | patch | Align Next ESLint config with patched Next version. |
+| `postcss` | `8.5.22` in lockfile | `8.5.23` | patch | Apply direct PostCSS patch available within current major. |
+
+No React, backend, Docker/Compose/CI, API, database, Telegram, provider, real
+email, or final quote behavior was changed.
+
+Final Sprint 2 audit result:
+
+- total vulnerabilities: 12
+- high: 12
+- moderate/low/critical: 0
+
+The high count did not decrease because remaining npm remediation suggestions
+require `npm audit fix --force` / breaking paths for:
+
+- Next nested `postcss@8.4.31`;
+- Next nested optional `sharp@0.34.5`;
+- ESLint/minimatch development-tooling chain requiring major/force behavior.
+
+These are deferred to a future major/framework dependency spec or a reviewed
+maintenance sprint. Sprint 2 did not run `npm audit fix` or
+`npm audit fix --force`.
 
 ## Dependency Triage Process
 
@@ -293,8 +323,8 @@ Do not revert unrelated user changes.
 
 ## Future Tasks
 
-- SPEC-024.4: optional safe dependency patch sprint for reviewed frontend patch
-  upgrades.
+- Future major/framework dependency remediation for unresolved Next nested
+  PostCSS/Sharp and ESLint/minimatch audit chains.
 - Future backend dependency review sprint with Poetry available.
 - Future major framework upgrade spec if Next/ESLint remediation requires
   incompatible changes.

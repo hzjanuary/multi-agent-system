@@ -63,6 +63,18 @@ Do not use `npm audit fix` during:
 Do not use `npm audit fix --force` unless a spec or task explicitly approves the
 breaking changes it may introduce.
 
+## Bounded Patch Sprint Pattern
+
+For a reviewed frontend patch sprint:
+
+1. Capture before-audit JSON under `/tmp`.
+2. Identify direct package targets and exact versions.
+3. Run `npm install <package>@<version>` only for named targets.
+4. Avoid `npm update` without package names.
+5. Avoid `npm audit fix --force`.
+6. Run `npm ci`, lint, build, typecheck, tests, and after-audit.
+7. Document remaining findings if npm still requires force/major remediation.
+
 ## Dev Dependency Vulnerabilities
 
 For dev dependency chains, such as ESLint plugins or test/build tooling:
@@ -161,4 +173,3 @@ Never commit:
 
 Security reports should summarize findings without exposing secrets or local
 machine-specific tokens.
-

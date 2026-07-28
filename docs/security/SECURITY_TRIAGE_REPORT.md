@@ -1,4 +1,4 @@
-# Security Triage Report - SPEC-024 Sprint 1
+# Security Triage Report - SPEC-024
 
 ## Audit Metadata
 
@@ -16,7 +16,8 @@ commit: 838b9146a845e185d9186553fc6013d70feb65ab
 release baseline: v1.0.0-demo-release
 ```
 
-Sprint 1 is audit and documentation only. No dependency changes were made.
+Sprint 1 was audit and documentation only. Sprint 2 applied bounded frontend
+patch-level remediation for selected direct packages.
 
 ## Commands Run
 
@@ -147,3 +148,82 @@ production use.
 - No provider calls, live web calls, real email, or final quote behavior were
   introduced.
 
+## Sprint 2 Remediation Update
+
+Audit/remediation date:
+
+```text
+2026-07-28
+```
+
+Targeted packages changed:
+
+| Package | Before | After | Reason |
+| --- | --- | --- | --- |
+| `next` | `15.5.20` | `15.5.22` | Patch-level remediation attempt for Next audit chain. |
+| `eslint-config-next` | `15.5.21` lockfile version | `15.5.22` | Align ESLint config with patched Next 15 version. |
+| `postcss` | `8.5.22` lockfile version | `8.5.23` | Direct PostCSS patch within current major. |
+
+Commands used:
+
+```bash
+cd frontend
+npm install next@15.5.22 eslint-config-next@15.5.22 postcss@8.5.23
+npm ci
+npm run lint
+npm run build
+npm run typecheck
+npm test
+npm audit --json > /tmp/frontend-npm-audit-after.json || true
+npm audit || true
+npm outdated || true
+```
+
+Commands intentionally not used:
+
+```text
+npm audit fix
+npm audit fix --force
+npm update
+```
+
+Before/after audit result:
+
+| Audit point | High | Critical | Total | Affected names |
+| --- | --- | --- | --- | --- |
+| Before Sprint 2 | 12 | 0 | 12 | `@eslint/config-array`, `@eslint/eslintrc`, `brace-expansion`, `eslint`, `eslint-config-next`, `eslint-plugin-import`, `eslint-plugin-jsx-a11y`, `eslint-plugin-react`, `minimatch`, `next`, `postcss`, `sharp` |
+| After Sprint 2 | 12 | 0 | 12 | `@eslint/config-array`, `@eslint/eslintrc`, `brace-expansion`, `eslint`, `eslint-config-next`, `eslint-plugin-import`, `eslint-plugin-jsx-a11y`, `eslint-plugin-react`, `minimatch`, `next`, `postcss`, `sharp` |
+
+The high count did not decrease. npm still reports:
+
+- Next nested `postcss@8.4.31`;
+- Next nested optional `sharp@0.34.5`;
+- ESLint/minimatch development-tooling chain.
+
+Remaining findings are deferred because npm reports `npm audit fix --force`
+paths for the unresolved chains, including breaking/major behavior. Sprint 2
+keeps the accepted direct package patches but does not force framework or
+toolchain major changes.
+
+Sprint 2 validation:
+
+- `npm ci` passed.
+- `npm run lint` passed.
+- `npm run build` passed on Next `15.5.22`.
+- `npm run typecheck` passed after build completed.
+- `npm test` passed: 13 test files, 93 tests.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
+- `bash scripts/ci/frontend-gate.sh` passed.
+- `bash scripts/ci/all-gates.sh` passed, including backend gate,
+  production-demo image build, and whitespace check.
+
+Sprint 2 boundaries:
+
+- No React major upgrade.
+- No broad dependency sweep.
+- No backend dependency upgrade.
+- No frontend feature or UI behavior change.
+- No backend, Telegram, API, database, Docker/Compose/CI, provider, real email,
+  or final quote behavior change.

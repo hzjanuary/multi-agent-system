@@ -75,9 +75,12 @@ implemented in the current repository.
 
 - Frontend `npm audit` currently reports tracked high-severity findings.
 - SPEC-024 Sprint 1 documents triage and maintenance policy only.
-- No dependency upgrades were made in Sprint 1.
+- SPEC-024 Sprint 2 applies bounded frontend patch updates for `next`,
+  `eslint-config-next`, and `postcss`.
 - `npm audit fix` and `npm audit fix --force` require a separate reviewed
   maintenance sprint.
+- Remaining audit findings require force/major or nested framework remediation
+  and are deferred.
 - Backend outdated review should be rerun in an environment with Poetry
   available.
 

@@ -80,7 +80,8 @@ Implementation:
 
 ### TASK 024.4 - Optional Safe Dependency Patch Sprint
 
-Status: Deferred / future only.
+Status: Implemented for bounded Sprint 2 patch attempt; remaining force/major
+findings deferred.
 
 Goal: Apply reviewed dependency patches after triage approval.
 
@@ -92,9 +93,22 @@ Scope:
 - Update manifests/locks only in that future sprint.
 - Run full backend/frontend/all gates.
 
-Non-goal for Sprint 1:
+Sprint 2 implementation:
 
-- No dependency upgrades.
+- Updated `next` from `15.5.20` to `15.5.22`.
+- Updated `eslint-config-next` lockfile/package target to `15.5.22`.
+- Updated direct `postcss` from lockfile `8.5.22` to `8.5.23`.
+- Did not upgrade React.
+- Did not run `npm audit fix` or `npm audit fix --force`.
+- Did not apply broad `npm update`.
+
+Sprint 2 outcome:
+
+- Before audit: 12 high vulnerabilities.
+- After audit: 12 high vulnerabilities.
+- Safe direct patch updates were accepted and validated.
+- Remaining findings require force/breaking remediation paths or nested Next
+  dependency changes and are deferred.
 
 ### TASK 024.5 - Final Validation and Closeout
 
@@ -133,6 +147,22 @@ Closeout checklist:
 - Current release remains stable/demo-ready, with dependency remediation tracked
   as separate future work.
 
+Sprint 2 validation results:
+
+- `npm ci` passed.
+- `npm run lint` passed.
+- `npm run build` passed on Next `15.5.22`.
+- `npm run typecheck` passed.
+- `npm test` passed: 13 test files, 93 tests.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
+- `bash scripts/ci/frontend-gate.sh` passed.
+- `bash scripts/ci/all-gates.sh` passed, including backend gate, frontend
+  gate, production-demo image build, and whitespace check.
+- Final `npm audit` still reports 12 high vulnerabilities; remaining
+  remediation is deferred because npm requires force/breaking paths.
+
 ## Sprint 1 Deliverables
 
 - `.ai/specs/SPEC-024-dependency-security-maintenance/spec.md`
@@ -143,8 +173,9 @@ Closeout checklist:
 - `.ai/specs/SPEC_INDEX.md` update
 - `.codex/HANDOFF.md` update
 - `docs/release/KNOWN_LIMITATIONS_AND_ROADMAP.md` update
+- `frontend/package.json` targeted dependency updates
+- `frontend/package-lock.json` targeted lockfile updates
 
-No backend code, frontend code, Telegram behavior, API contract, database
-model/migration, Docker/Compose/CI behavior, provider call, real email, final
-quote behavior, package manifest, or lockfile was changed by Sprint 1.
-
+No backend code, frontend feature code, Telegram behavior, API contract,
+database model/migration, Docker/Compose/CI behavior, provider call, real email,
+or final quote behavior was changed by SPEC-024 Sprint 1 or Sprint 2.

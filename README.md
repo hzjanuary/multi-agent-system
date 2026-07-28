@@ -12,8 +12,9 @@ decision.
 
 - Final graduation-ready project.
 - SPEC-001 through SPEC-023 completed and approved.
-- SPEC-024 dependency/security maintenance Sprint 1 documents current npm audit
-  findings and remediation policy without changing demo behavior.
+- SPEC-024 dependency/security maintenance documents current npm audit findings,
+  applies bounded frontend patch updates, and tracks remaining remediation
+  without changing demo behavior.
 - Frontend demo surfaces use the **Violet Operations Console** dark command
   center design.
 - Default demo is deterministic and no-key.

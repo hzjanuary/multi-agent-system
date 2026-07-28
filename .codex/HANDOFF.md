@@ -30,7 +30,7 @@ Closed specs:
 
 Current planned spec sequence:
 
-- SPEC-024 Dependency and Security Maintenance Sprint 1 is implemented / ready
+- SPEC-024 Dependency and Security Maintenance Sprint 2 is implemented / ready
   for closeout review.
 - Dependency upgrades remain future work and must be opened as a bounded
   maintenance sprint before changing manifests or lockfiles.
@@ -43,14 +43,12 @@ Status:
 
 Scope:
 
-- SPEC-024 Sprint 1 documents dependency/security maintenance after
+- SPEC-024 Sprint 1 documented dependency/security maintenance after
   `v1.0.0-demo-release`.
-- It triages current frontend npm audit findings, defines audit/remediation
-  policy, adds security maintenance docs, updates README/release roadmap/spec
-  index, and records handoff state.
-- Documentation and audit triage only. No dependency upgrades, no
-  `npm audit fix`, no package manifest/lockfile changes, and no product
-  behavior changes.
+- SPEC-024 Sprint 2 applies bounded frontend patch updates for selected direct
+  packages and records before/after audit results.
+- No `npm audit fix`, no `npm audit fix --force`, no broad update sweep, and no
+  product behavior changes.
 
 Security docs:
 
@@ -64,23 +62,29 @@ Audit summary:
 - Audit timestamp: `2026-07-28T09:10:11+07:00`.
 - Branch/commit: `main` /
   `838b9146a845e185d9186553fc6013d70feb65ab`.
-- Frontend `npm audit` reported 12 high vulnerabilities and 0 critical,
-  moderate, or low findings.
+- Sprint 1 frontend `npm audit` reported 12 high vulnerabilities and 0
+  critical, moderate, or low findings.
 - Affected npm names: `next`, `postcss`, `sharp`, `brace-expansion`,
   `minimatch`, `eslint`, `@eslint/config-array`, `@eslint/eslintrc`,
   `eslint-config-next`, `eslint-plugin-import`, `eslint-plugin-jsx-a11y`, and
   `eslint-plugin-react`.
-- `npm outdated` reported available updates for Next/ESLint/PostCSS and other
-  frontend packages.
+- Sprint 2 updated `next` `15.5.20 -> 15.5.22`, `eslint-config-next`
+  `15.5.21 -> 15.5.22`, and direct `postcss` `8.5.22 -> 8.5.23`.
+- Sprint 2 after-audit still reports 12 high vulnerabilities due to remaining
+  Next nested `postcss@8.4.31`, Next nested optional `sharp@0.34.5`, and the
+  ESLint/minimatch tooling chain.
+- Sprint 2 validation passed: `npm ci`, frontend lint/build/typecheck/tests,
+  `docker compose config`, production-demo Compose config,
+  `bash scripts/ci/frontend-gate.sh`, and `bash scripts/ci/all-gates.sh`.
 - Host `poetry` command was unavailable, so backend outdated review is deferred
   to a future environment with Poetry.
-- No dependency files were changed and no fix command was run.
+- No fix command was run.
 
 Next recommended step:
 
-- Review SPEC-024 triage.
-- Open a bounded dependency patch sprint if remediation is approved.
-- Prioritize reviewed Next patch remediation before broader deployment.
+- Review SPEC-024 Sprint 2 results.
+- Open a future major/framework remediation spec if the remaining npm audit
+  findings must be eliminated.
 - Use a separate major upgrade spec for Next 16, ESLint 10, Tailwind 4,
   TypeScript 7, or other framework-level upgrades.
 
