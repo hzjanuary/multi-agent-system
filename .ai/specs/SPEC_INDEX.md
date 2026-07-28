@@ -50,7 +50,7 @@
 - SPEC-020 Approved Outbound Communication - Approved / Closed
 - SPEC-021 Catalog Governance and Provider Policy - Approved / Closed
 - SPEC-022 Evaluation and Benchmarking - Approved / Closed
-- SPEC-023 Release Readiness and Final Packaging - Planning / ready for review
+- SPEC-023 Release Readiness and Final Packaging - Implemented / ready for closeout review
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,

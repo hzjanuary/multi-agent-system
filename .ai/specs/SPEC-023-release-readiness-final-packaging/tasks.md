@@ -4,7 +4,7 @@
 
 ### TASK 023.1 - Release Checklist And Packaging Inventory
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Create the final release-readiness checklist and package inventory for
 source, docs, scripts, validation outputs, and optional manually captured
@@ -34,9 +34,16 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/release/RELEASE_READINESS_CHECKLIST.md`.
+- Added repository hygiene, stable default, optional feature flag,
+  gate/evaluation, no-secret, final approval, known limitation, and
+  no-send/no-final-quotation checklists.
+
 ### TASK 023.2 - Documentation Index Consistency Review
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Verify and document that README, demo docs, deployment docs, final docs,
 report docs, scripts docs, governance docs, and evaluation docs are reachable
@@ -64,9 +71,17 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added release docs links to `README.md`.
+- Added `docs/release/FINAL_PROJECT_PACKAGE.md` with docs map covering release,
+  demo, evaluation, final evidence, report, architecture, and governance docs.
+- Updated `.ai/specs/SPEC_INDEX.md` so SPEC-023 is assigned to release
+  readiness and the old audit-log placeholder is retired.
+
 ### TASK 023.3 - Demo Runbook And Manual Smoke Consistency
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Ensure the final live demo path and frontend/manual smoke guidance are
 consistent with the implemented stable demo.
@@ -96,9 +111,17 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added `docs/release/DEMO_COMMANDS.md` with copy-ready commands aligned to
+  the final live demo, Telegram inbound bridge docs, frontend operator guide,
+  evaluation guide, and existing scripts.
+- Kept Telegram/Ollama extraction optional/local, provider live verification
+  manual-only, and stable backend runtime deterministic.
+
 ### TASK 023.4 - Final Validation Command Checklist
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Consolidate the final release validation commands and expected outputs.
 
@@ -128,9 +151,16 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added final release command checklist across Compose validation,
+  backend/frontend/all gates, final quality gate, parser benchmark, demo safety
+  benchmark, Tavily dry-run, E2E help, smoke help, and safe shutdown.
+- Commands reference existing repository scripts only.
+
 ### TASK 023.5 - Stable Defaults, Feature Flags, And Safety Boundary Audit
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Produce a release audit section for stable defaults, optional feature
 flags, safety boundaries, and known limitations.
@@ -161,12 +191,19 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added stable defaults, optional feature flags, no-key/no-live-provider
+  boundaries, no-secret checklist, no-send/no-final-quotation checklist, and
+  limitations in release docs.
+- Added `docs/release/KNOWN_LIMITATIONS_AND_ROADMAP.md`.
+
 ### TASK 023.6 - Final Evidence Package Template
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Define the final evidence capture structure for release reviewers without
-capturing evidence in the planning task.
+capturing evidence during release packaging.
 
 Scope:
 
@@ -191,9 +228,16 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Added release package summary and docs map in
+  `docs/release/FINAL_PROJECT_PACKAGE.md`.
+- Referenced existing final/evaluation/screenshot/report assets rather than
+  capturing or generating new evidence files.
+
 ### TASK 023.7 - Release Closeout Review
 
-Status: Planned.
+Status: Implemented / ready for closeout review.
 
 Goal: Perform final SPEC-023 closeout review and recommend release approval or
 rejection.
@@ -230,15 +274,45 @@ python3 scripts/evaluation/evaluate_telegram_parser.py
 python3 scripts/evaluation/evaluate_demo_safety.py
 ```
 
-## SPEC-023 Planning Deliverables
+Implementation:
 
-Implemented in this planning task:
+- SPEC-023 status updated to `Implemented / ready for closeout review`.
+- `.codex/HANDOFF.md` updated with final release-readiness state and required
+  validation commands.
+- No active implementation spec remains open after SPEC-023 in the current
+  handoff state; future work is listed as bounded roadmap only.
+- Closeout validation results recorded in SPEC-023 and handoff.
+
+Closeout validation result summary:
+
+- `git diff --check` passed.
+- `git status --short` reported only intended SPEC-023 docs/spec/handoff/README
+  changes and new `docs/release/` files.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
+- `python3 scripts/evaluation/evaluate_telegram_parser.py` passed: 25/25
+  cases, accuracy 1.0000, 0 safety violations.
+- `python3 scripts/evaluation/evaluate_demo_safety.py` passed: 39/39 cases,
+  accuracy 1.0000, 0 safety violations.
+- `bash scripts/ci/all-gates.sh` passed, including backend tests/static
+  checks, frontend lint/build/typecheck/tests, production-demo image build, and
+  whitespace check.
+
+## SPEC-023 Release Deliverables
+
+Implemented in this release-readiness task:
 
 - `.ai/specs/SPEC-023-release-readiness-final-packaging/spec.md`
 - `.ai/specs/SPEC-023-release-readiness-final-packaging/tasks.md`
 - `.ai/specs/SPEC_INDEX.md` updated
 - `.codex/HANDOFF.md` updated
+- `README.md` updated with release docs links
+- `docs/release/RELEASE_READINESS_CHECKLIST.md`
+- `docs/release/FINAL_PROJECT_PACKAGE.md`
+- `docs/release/DEMO_COMMANDS.md`
+- `docs/release/KNOWN_LIMITATIONS_AND_ROADMAP.md`
 
 No backend code, frontend code, Telegram behavior, API contract, database
 model/migration, Docker/Compose/CI behavior, provider call, live web call, real
-email, or final quote behavior is changed by this planning task.
+email, or final quote behavior is changed by this release packaging work.

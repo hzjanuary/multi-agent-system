@@ -2,7 +2,7 @@
 
 ## Status
 
-Planning / ready for review
+Implemented / ready for closeout review
 
 ## Product Objective
 
@@ -15,6 +15,13 @@ features. Its purpose is to make the repository ready for final evaluator,
 teacher, demo reviewer, and future developer handoff by consolidating release
 checklists, documentation entry points, validation commands, safety boundaries,
 known limitations, and post-release roadmap guidance.
+
+Implemented release package docs:
+
+- `docs/release/RELEASE_READINESS_CHECKLIST.md`
+- `docs/release/FINAL_PROJECT_PACKAGE.md`
+- `docs/release/DEMO_COMMANDS.md`
+- `docs/release/KNOWN_LIMITATIONS_AND_ROADMAP.md`
 
 ## Context
 
@@ -40,7 +47,7 @@ post-demo specs, and executable gates are aligned before release.
 
 ## Scope
 
-SPEC-023 covers planning for:
+SPEC-023 covers release packaging docs for:
 
 - final release checklist;
 - documentation index consistency;
@@ -353,7 +360,7 @@ Recommended post-release work:
 
 - SPEC-023 spec and tasks docs exist.
 - SPEC index references SPEC-023 without number conflict.
-- Handoff points to SPEC-023 as the current planning spec.
+- Handoff points to SPEC-023 as implemented and ready for closeout review.
 - Final release checklist is defined.
 - Documentation index consistency checks are defined.
 - Demo runbook consistency checks are defined.
@@ -367,19 +374,56 @@ Recommended post-release work:
   database, Docker/Compose/CI behavior, provider call, live web call, real
   email, or final quote behavior is changed.
 
+## Implemented Deliverables
+
+- Release readiness checklist with stable defaults, optional feature flags,
+  backend/frontend/evaluation gates, Compose checks, secret/untracked override
+  review, final approval checklist, known limitations, and no-send/no-final-
+  quotation boundaries.
+- Final project package summary with purpose, architecture overview, completed
+  spec status, core user journey, stable demo path, optional Telegram/Ollama
+  path, optional provider verification path, catalog/governance/evaluation
+  layers, safety model, docs map, and future roadmap.
+- Demo command sheet with supported copy-ready commands for local services,
+  health checks, frontend dev run, demo seed, Telegram bridge dry run/manual
+  run, evaluation runners, provider dry run, quality gates, E2E help, smoke
+  help, and safe shutdown.
+- Known limitations and roadmap doc covering no real email, no outbound send
+  endpoint, no automatic live provider calls, no Telegram live price research,
+  no final quote before approval/resume, manual-only provider verification,
+  deterministic demo catalog boundaries, and bounded future roadmap.
+- README release-doc links.
+- SPEC index and handoff status updates.
+
+No backend code, frontend code, Telegram behavior, API contract, database
+model/migration, Docker/Compose/CI behavior, provider call, live web call, real
+email, or final quote behavior was changed.
+
 ## Validation
 
-Planning validation:
+Closeout validation run for SPEC-023:
 
 ```bash
 git diff --check
 git status --short
-```
-
-Optional release validation in later tasks:
-
-```bash
-bash scripts/ci/all-gates.sh
+docker compose config
+docker compose -f docker-compose.prod.yml \
+  --env-file docs/deployment/.env.production.example config
 python3 scripts/evaluation/evaluate_telegram_parser.py
 python3 scripts/evaluation/evaluate_demo_safety.py
+bash scripts/ci/all-gates.sh
 ```
+
+Observed result summary:
+
+- whitespace check passed;
+- working tree contains only intended SPEC-023 docs/spec/handoff/README changes
+  and new `docs/release/` files;
+- local and production-demo Compose config validation passed;
+- Telegram parser benchmark passed: 25/25 cases, accuracy 1.0000, 0 safety
+  violations;
+- demo safety benchmark passed: 39/39 cases, accuracy 1.0000, 0 safety
+  violations;
+- full `all-gates.sh` passed, including backend tests/static checks,
+  frontend lint/build/typecheck/tests, production-demo image build, and
+  whitespace check.

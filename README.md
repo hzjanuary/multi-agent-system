@@ -11,7 +11,8 @@ decision.
 ## Status
 
 - Final graduation-ready project.
-- SPEC-001 through SPEC-020 completed and approved.
+- SPEC-001 through SPEC-022 completed and approved; SPEC-023 release-readiness
+  docs prepared for closeout review.
 - Frontend demo surfaces use the **Violet Operations Console** dark command
   center design.
 - Default demo is deterministic and no-key.
@@ -142,6 +143,7 @@ docs/deployment/          Env docs, production-demo runbook, smoke, troubleshoot
 docs/evaluation/          SPEC-022 benchmark guide and demo regression checklist
 docs/final/               Final evaluation, demo validation, release assets
 docs/governance/          Catalog, provider evidence, approval, and outbound policy
+docs/release/             Final release-readiness package and command checklist
 docs/report/              Graduation report narrative assets
 docs/report/diagrams/     Mermaid architecture diagram sources
 docs/llm/                 Provider setup and local Ollama smoke docs
@@ -310,6 +312,10 @@ validation requires explicit `--confirm-local-demo`.
 
 ## Final Evaluation And Report Assets
 
+- [Release readiness package](docs/release/FINAL_PROJECT_PACKAGE.md)
+- [Release readiness checklist](docs/release/RELEASE_READINESS_CHECKLIST.md)
+- [Release demo commands](docs/release/DEMO_COMMANDS.md)
+- [Known limitations and roadmap](docs/release/KNOWN_LIMITATIONS_AND_ROADMAP.md)
 - [SPEC-022 evaluation guide](docs/evaluation/SPEC_022_EVALUATION_GUIDE.md)
 - [Demo regression checklist](docs/evaluation/DEMO_REGRESSION_CHECKLIST.md)
 - [Final docs index](docs/final/README.md)

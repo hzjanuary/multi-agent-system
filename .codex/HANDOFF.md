@@ -29,33 +29,40 @@ Closed specs:
 
 Current planned spec sequence:
 
-- SPEC-023 Release Readiness and Final Packaging - Planning / ready for review
+- No active implementation spec remains open after SPEC-023. Future work should
+  be opened as a new explicit spec/task.
 
 ## Current SPEC-023 Release Readiness and Final Packaging State
 
 Status:
 
-- Planning / ready for review.
+- Implemented / ready for closeout review.
 
 Scope:
 
-- SPEC-023 defines the final release-readiness package for the repository after
-  SPEC-001 through SPEC-022 are completed and approved.
-- Planning covers final release checklist, docs index consistency, demo runbook
-  consistency, evaluation command checklist, backend/frontend gate checklist,
-  stable environment defaults, optional feature flags, safety boundaries, known
-  limitations, screenshots/manual smoke references, evidence package structure,
-  future roadmap, acceptance criteria, and task sequence.
-- Planning only. No backend, frontend, Telegram runtime, API, database,
+- SPEC-023 defines and implements the final release-readiness documentation
+  package for the repository after SPEC-001 through SPEC-022 are completed and
+  approved.
+- Release package covers final release checklist, docs index consistency, demo
+  runbook consistency, evaluation command checklist, backend/frontend gate
+  checklist, stable environment defaults, optional feature flags, safety
+  boundaries, known limitations, screenshots/manual smoke references, evidence
+  package structure, future roadmap, acceptance criteria, and task sequence.
+- Documentation only. No backend, frontend, Telegram runtime, API, database,
   Docker/Compose/CI, provider, workflow runtime, outbound send, real email,
   live web, LLM, Tavily, or final quote behavior has been implemented.
 
-Planning docs:
+Release docs:
 
 - `.ai/specs/SPEC-023-release-readiness-final-packaging/spec.md`
 - `.ai/specs/SPEC-023-release-readiness-final-packaging/tasks.md`
+- `docs/release/RELEASE_READINESS_CHECKLIST.md`
+- `docs/release/FINAL_PROJECT_PACKAGE.md`
+- `docs/release/DEMO_COMMANDS.md`
+- `docs/release/KNOWN_LIMITATIONS_AND_ROADMAP.md`
+- `README.md` release docs links
 
-Planned task sequence:
+Implemented task sequence:
 
 1. TASK 023.1 - Release Checklist And Packaging Inventory.
 2. TASK 023.2 - Documentation Index Consistency Review.
@@ -81,10 +88,35 @@ Safety:
   promises, discount approval claims, unsupported silent item dropping, fake
   evidence, or committed secrets.
 
-Validation:
+Required validation commands:
 
 - `git diff --check`
 - `git status --short`
+- `docker compose config`
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+- `python3 scripts/evaluation/evaluate_telegram_parser.py`
+- `python3 scripts/evaluation/evaluate_demo_safety.py`
+
+Optional release validation:
+
+- `bash scripts/ci/all-gates.sh`
+
+Last SPEC-023 validation results:
+
+- `git diff --check` passed.
+- `git status --short` reported only intended SPEC-023 docs/spec/handoff/README
+  changes and new `docs/release/` files.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
+- `python3 scripts/evaluation/evaluate_telegram_parser.py` passed: 25/25
+  cases, accuracy 1.0000, 0 safety violations.
+- `python3 scripts/evaluation/evaluate_demo_safety.py` passed: 39/39 cases,
+  accuracy 1.0000, 0 safety violations.
+- `bash scripts/ci/all-gates.sh` passed, including backend pytest
+  `788 passed, 1 skipped`, Ruff, Black, MyPy, backend demo/knowledge dry-runs,
+  frontend lint/build/typecheck/tests `93 passed`, production-demo image build,
+  and whitespace check.
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -272,12 +304,11 @@ Last known SPEC-016 validation:
   - `bash scripts/ci/all-gates.sh` passed, including production-demo image build and whitespace check.
   - `git diff --check` passed.
 
-Recommended next work after SPEC-023 planning:
+Recommended next work after SPEC-023:
 
-- Review SPEC-023 before implementing final release-readiness docs or
-  packaging templates.
-- Keep release packaging docs-only unless a specific SPEC-023 task explicitly
-  scopes a checklist, evidence template, or command-reference update.
+- Review SPEC-023 release-readiness docs for closeout approval.
+- Open a new explicit spec/task before implementing any future release
+  packaging, evidence capture, deployment, provider, or outbound-send behavior.
 - Keep provider operations, outbound send-provider behavior, production
   communication policy, cloud deployment automation, and live external
   research controls future-scoped until safety, audit, and validation
