@@ -321,6 +321,7 @@ validation requires explicit `--confirm-local-demo`.
 - [Known limitations and roadmap](docs/release/KNOWN_LIMITATIONS_AND_ROADMAP.md)
 - [Dependency security maintenance](docs/security/DEPENDENCY_SECURITY_MAINTENANCE.md)
 - [Security triage report](docs/security/SECURITY_TRIAGE_REPORT.md)
+- [SPEC-025 remediation matrix](docs/security/SPEC_025_REMEDIATION_MATRIX.md)
 - [SPEC-022 evaluation guide](docs/evaluation/SPEC_022_EVALUATION_GUIDE.md)
 - [Demo regression checklist](docs/evaluation/DEMO_REGRESSION_CHECKLIST.md)
 - [Final docs index](docs/final/README.md)

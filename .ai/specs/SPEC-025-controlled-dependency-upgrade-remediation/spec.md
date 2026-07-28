@@ -2,7 +2,7 @@
 
 ## Status
 
-Planning / Ready for review
+Sprint 1 implemented / ready for review
 
 ## Product Objective
 
@@ -39,6 +39,9 @@ Source of truth:
 - npm currently recommends force/breaking remediation paths for unresolved
   findings, so further changes must be handled as a separate compatibility
   sprint.
+- SPEC-025 Sprint 1 refreshed the audit baseline and created the controlled
+  remediation matrix:
+  - `docs/security/SPEC_025_REMEDIATION_MATRIX.md`
 
 Reference docs:
 
@@ -283,7 +286,7 @@ After any future dependency remediation implementation:
 - SPEC-025 spec and tasks planning docs exist.
 - SPEC index assigns SPEC-025 to Controlled Dependency Upgrade Remediation and
   retires the old placeholder number conflict.
-- Handoff references SPEC-025 as planning/ready for review.
+- Handoff references SPEC-025 Sprint 1 as implemented / ready for review.
 - Current SPEC-024 deferred npm audit findings are summarized.
 - Runtime framework and development-tooling remediation paths are separated.
 - Stable deterministic demo defaults are documented.

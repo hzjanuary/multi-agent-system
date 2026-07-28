@@ -4,7 +4,7 @@
 
 ### TASK 025.1 - Audit Refresh And Dependency Graph Review
 
-Status: Planned.
+Status: Implemented.
 
 Goal: Refresh npm audit evidence and identify exact dependency paths before
 changing manifests.
@@ -34,6 +34,35 @@ git status --short
 cd frontend && npm audit || true
 cd frontend && npm outdated || true
 ```
+
+Implementation:
+
+- Refreshed audit baseline on `2026-07-28T22:42:40+07:00`.
+- Wrote raw audit JSON to `/tmp/spec025-npm-audit.json`; it was not committed.
+- Current audit remains 12 high vulnerabilities, 0 critical/moderate/low.
+- No additional finding group was discovered.
+- Added `docs/security/SPEC_025_REMEDIATION_MATRIX.md`.
+- Matrix separates:
+  - Next nested PostCSS runtime path;
+  - Next nested optional Sharp runtime path;
+  - ESLint/minimatch development-tooling path.
+- Matrix documents current installed versions, npm force/breaking remediation
+  output, decision categories, stop gates, Sprint 2 candidates, validation
+  commands, rollback commands, success criteria, and defer criteria.
+- No dependency manifests, lockfiles, backend/frontend code, Docker/CI,
+  provider, real email, or final quote behavior changed.
+
+Validation results:
+
+- `git status --short` was run before the audit refresh.
+- `npm audit --json` wrote raw output to `/tmp/spec025-npm-audit.json`.
+- `npm audit || true` reported 12 high vulnerabilities.
+- `npm outdated || true` completed and showed no newer wanted Next 15 or
+  ESLint 9 targets.
+- `git diff --check` passed.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
 
 ### TASK 025.2 - Runtime Framework Remediation Plan
 
@@ -231,6 +260,7 @@ bash scripts/ci/all-gates.sh
 
 - `.ai/specs/SPEC-025-controlled-dependency-upgrade-remediation/spec.md`
 - `.ai/specs/SPEC-025-controlled-dependency-upgrade-remediation/tasks.md`
+- `docs/security/SPEC_025_REMEDIATION_MATRIX.md`
 - `.ai/specs/SPEC_INDEX.md` update
 - `.codex/HANDOFF.md` update
 

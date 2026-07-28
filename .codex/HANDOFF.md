@@ -32,8 +32,8 @@ Closed specs:
 
 Current planned spec sequence:
 
-- SPEC-025 Controlled Dependency Upgrade Remediation is planning / ready for
-  review.
+- SPEC-025 Controlled Dependency Upgrade Remediation Sprint 1 is implemented /
+  ready for review.
 - Future dependency upgrades remain future work and must be implemented only
   through approved SPEC-025 tasks before changing manifests or lockfiles.
 
@@ -41,7 +41,7 @@ Current planned spec sequence:
 
 Status:
 
-- Planning / Ready for review.
+- Sprint 1 implemented / ready for review.
 
 Scope:
 
@@ -53,6 +53,8 @@ Scope:
 - SPEC-025 defines audit refresh, compatibility investigation, stop gates,
   rollback, validation, backend Poetry review, and closeout documentation
   requirements.
+- Sprint 1 refreshed npm audit/outdated evidence and added the controlled
+  remediation matrix.
 - No dependency manifests, lockfiles, backend code, frontend code, Telegram
   behavior, API contract, database model/migration, Docker/Compose/CI behavior,
   provider call, real email, or final quote behavior changed in the planning
@@ -62,6 +64,22 @@ Spec docs:
 
 - `.ai/specs/SPEC-025-controlled-dependency-upgrade-remediation/spec.md`
 - `.ai/specs/SPEC-025-controlled-dependency-upgrade-remediation/tasks.md`
+- `docs/security/SPEC_025_REMEDIATION_MATRIX.md`
+
+Sprint 1 audit summary:
+
+- Refreshed audit timestamp: `2026-07-28T22:42:40+07:00`.
+- Raw audit JSON stored outside the repo at `/tmp/spec025-npm-audit.json`.
+- `npm audit` still reports 12 high vulnerabilities and 0
+  critical/moderate/low findings.
+- No new finding group was discovered beyond the SPEC-024 closeout set.
+- Matrix groups remaining findings into Next/PostCSS runtime,
+  Next/Sharp optional runtime, and ESLint/minimatch development-tooling paths.
+- Current npm output still requires force/breaking remediation paths for the
+  unresolved chains.
+- Sprint 1 validation passed: `git diff --check`, `docker compose config`, and
+  `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`.
+- `git status --short` reports only intended SPEC-025 docs/status changes.
 
 Safety:
 
@@ -73,9 +91,9 @@ Safety:
 
 Next recommended work:
 
-- Review SPEC-025 planning docs.
-- If approved, start TASK 025.1 audit refresh and dependency graph review
-  without mutation.
+- Review SPEC-025 Sprint 1 remediation matrix.
+- If approved, start TASK 025.2/TASK 025.3 compatibility planning or a bounded
+  Sprint 2 remediation attempt without using force/broad updates.
 
 ## Current SPEC-024 Dependency and Security Maintenance State
 

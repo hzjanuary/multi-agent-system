@@ -265,6 +265,8 @@ Future recommendation:
 
 - Open a separate dependency/security upgrade spec before changing dependency
   manifests again.
+- Use the SPEC-025 remediation matrix for the next controlled remediation
+  sprint: `docs/security/SPEC_025_REMEDIATION_MATRIX.md`.
 - Prioritize a reviewed compatibility path for unresolved Next nested
   PostCSS/Sharp findings.
 - Treat the ESLint/minimatch development-tooling chain as a separate reviewed
