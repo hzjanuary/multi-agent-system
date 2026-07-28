@@ -325,3 +325,129 @@ as before this sprint:
 - No product behavior was changed.
 - Next safe action is a reviewed SPEC-025 Sprint 2 remediation attempt or a
   separate major compatibility spec if force/major movement is required.
+
+## Sprint 2 Controlled Trial Result
+
+Sprint 2 timestamp:
+
+```text
+2026-07-28
+```
+
+Pre-trial commands:
+
+```bash
+git status --short
+git diff --check
+cd frontend && npm audit --json > /tmp/spec025-sprint2-audit-before.json || true
+cd frontend && npm audit || true
+cd frontend && npm outdated || true
+npm view next@15 version --json
+```
+
+Note: the pre-trial audit summary was also available from
+`/tmp/spec025-npm-audit.json`. The audited baseline was unchanged: 12 high
+findings, 0 critical/moderate/low findings.
+
+### Target Selection
+
+No newer compatible Next 15 release exists beyond the installed `15.5.22`.
+Current npm metadata lists `next@16.2.12` as latest, which is a major upgrade
+and remains blocked without a separate compatibility sprint.
+
+No newer wanted ESLint 9 or `eslint-config-next` 15 target exists. Current npm
+metadata lists `eslint@10.8.0` and `eslint-config-next@16.2.12` as latest,
+which are major/tooling compatibility candidates and remain blocked.
+
+The only current-major target from the matrix was direct `postcss@8.5.24`.
+This was expected to be hygiene-only because the audit finding is for nested
+`node_modules/next/node_modules/postcss@8.4.31`.
+
+### Trial Applied
+
+```bash
+cd frontend
+npm install postcss@8.5.24
+```
+
+Observed package changes during the trial:
+
+| File | Trial change |
+| --- | --- |
+| `frontend/package.json` | `postcss` `^8.5.23` -> `^8.5.24` |
+| `frontend/package-lock.json` | direct `node_modules/postcss` `8.5.23` -> `8.5.24` |
+
+### Trial Validation
+
+Commands run with the trial change present:
+
+```bash
+cd frontend
+npm ci
+npm run lint
+npm run build
+npm run typecheck
+npm test
+npm audit --json > /tmp/spec025-sprint2-audit-after-postcss.json || true
+npm audit || true
+```
+
+Validation result:
+
+- `npm ci` passed.
+- `npm run lint` passed.
+- `npm run build` passed on Next `15.5.22`.
+- `npm run typecheck` passed.
+- `npm test` passed: 13 test files, 93 tests.
+- Post-trial audit remained 12 high vulnerabilities.
+
+Before/after audit result:
+
+| Audit point | High | Critical | Total | Decision |
+| --- | ---: | ---: | ---: | --- |
+| Before trial | 12 | 0 | 12 | Baseline from refreshed audit |
+| After `postcss@8.5.24` trial | 12 | 0 | 12 | Ineffective for nested Next PostCSS/Sharp audit path |
+
+### Revert Decision
+
+The direct `postcss@8.5.24` trial was safe but ineffective for the remaining
+audit findings. Per the Sprint 2 decision rule, it was reverted because it did
+not reduce the audit count or remove a finding group.
+
+Revert commands:
+
+```bash
+git restore frontend/package.json frontend/package-lock.json
+cd frontend
+npm ci
+npm audit --json > /tmp/spec025-sprint2-audit-after-revert.json || true
+npm audit || true
+```
+
+Final package state:
+
+- No dependency changes are kept from SPEC-025 Sprint 2.
+- `frontend/package.json` and `frontend/package-lock.json` are back to the
+  pre-trial state.
+- Audit still reports 12 high findings.
+
+Final closeout validation:
+
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
+- `bash scripts/ci/frontend-gate.sh` passed.
+- `bash scripts/ci/all-gates.sh` passed, including backend gate, frontend gate,
+  production-demo image build, and whitespace check.
+- `git diff --check` passed.
+
+### Sprint 2 Conclusion
+
+- Targeted remediation was attempted according to the matrix.
+- No `npm audit fix`, `npm audit fix --force`, broad `npm update`, package
+  manager migration, React major upgrade, Next major upgrade, backend change,
+  frontend feature change, Docker/CI behavior change, provider call, real email,
+  or final quote behavior was introduced.
+- Remaining remediation requires either a future Next 16 compatibility sprint,
+  a future ESLint/tooling compatibility sprint, or a future audited package
+  metadata change that exposes a safe non-breaking target.

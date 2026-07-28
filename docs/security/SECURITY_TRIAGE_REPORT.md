@@ -279,3 +279,37 @@ Closeout validation:
 - `cd frontend && npm audit || true` still reports 12 high vulnerabilities.
 - local and production-demo Compose config validation passed.
 - `bash scripts/ci/all-gates.sh` passed.
+
+## SPEC-025 Sprint 2 Controlled Trial
+
+SPEC-025 Sprint 2 attempted the only safe current-major direct package
+candidate from the remediation matrix:
+
+```bash
+cd frontend
+npm install postcss@8.5.24
+```
+
+Trial result:
+
+- Direct `postcss` changed from `^8.5.23` to `^8.5.24` during the trial.
+- `npm ci`, frontend lint, build, typecheck, and tests passed with the trial
+  change present.
+- Post-trial `npm audit` still reported 12 high vulnerabilities.
+- The trial did not remediate the actual audited path,
+  `node_modules/next/node_modules/postcss@8.4.31`.
+- The trial was reverted with
+  `git restore frontend/package.json frontend/package-lock.json` followed by
+  `cd frontend && npm ci`.
+
+Final SPEC-025 Sprint 2 outcome:
+
+- No dependency changes were kept.
+- Remaining npm audit findings are unchanged: 12 high, 0 critical.
+- Final validation passed: Compose config, production-demo Compose config,
+  frontend gate, full all-gates, and `git diff --check`.
+- No unsafe force, broad, major, React, Next major, package-manager migration,
+  backend, frontend feature, Docker/CI behavior, provider, real email, or final
+  quote change was made.
+- Future remediation requires a separate compatibility sprint for Next 16 and/or
+  ESLint/tooling, unless future npm metadata exposes a safe non-breaking target.

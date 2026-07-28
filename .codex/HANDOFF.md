@@ -32,7 +32,7 @@ Closed specs:
 
 Current planned spec sequence:
 
-- SPEC-025 Controlled Dependency Upgrade Remediation Sprint 1 is implemented /
+- SPEC-025 Controlled Dependency Upgrade Remediation Sprint 2 is implemented /
   ready for review.
 - Future dependency upgrades remain future work and must be implemented only
   through approved SPEC-025 tasks before changing manifests or lockfiles.
@@ -41,7 +41,7 @@ Current planned spec sequence:
 
 Status:
 
-- Sprint 1 implemented / ready for review.
+- Sprint 2 implemented / ready for review.
 
 Scope:
 
@@ -55,6 +55,9 @@ Scope:
   requirements.
 - Sprint 1 refreshed npm audit/outdated evidence and added the controlled
   remediation matrix.
+- Sprint 2 attempted a targeted direct `postcss@8.5.24` upgrade trial. The
+  change was safe under frontend validation but did not reduce `npm audit`, so
+  it was reverted.
 - No dependency manifests, lockfiles, backend code, frontend code, Telegram
   behavior, API contract, database model/migration, Docker/Compose/CI behavior,
   provider call, real email, or final quote behavior changed in the planning
@@ -81,6 +84,23 @@ Sprint 1 audit summary:
   `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`.
 - `git status --short` reports only intended SPEC-025 docs/status changes.
 
+Sprint 2 trial summary:
+
+- Baseline audit remained 12 high vulnerabilities.
+- Checked Next 15 metadata; no newer Next 15 target exists beyond `15.5.22`.
+- Checked outdated metadata; no safe wanted ESLint 9 or `eslint-config-next` 15
+  target exists.
+- Trial command: `cd frontend && npm install postcss@8.5.24`.
+- Trial validation passed: `npm ci`, lint, build, typecheck, and tests.
+- Post-trial audit remained 12 high vulnerabilities.
+- Reverted ineffective package changes with
+  `git restore frontend/package.json frontend/package-lock.json` and
+  `cd frontend && npm ci`.
+- Final package state keeps no Sprint 2 dependency changes.
+- Final closeout validation passed: `docker compose config`, production-demo
+  Compose config, `bash scripts/ci/frontend-gate.sh`,
+  `bash scripts/ci/all-gates.sh`, and `git diff --check`.
+
 Safety:
 
 - Do not run `npm audit fix`, `npm audit fix --force`, broad `npm update`, or
@@ -91,9 +111,9 @@ Safety:
 
 Next recommended work:
 
-- Review SPEC-025 Sprint 1 remediation matrix.
-- If approved, start TASK 025.2/TASK 025.3 compatibility planning or a bounded
-  Sprint 2 remediation attempt without using force/broad updates.
+- Review SPEC-025 Sprint 2 results.
+- Open a future Next 16 compatibility sprint or ESLint/tooling compatibility
+  sprint if the remaining audit findings must be eliminated.
 
 ## Current SPEC-024 Dependency and Security Maintenance State
 

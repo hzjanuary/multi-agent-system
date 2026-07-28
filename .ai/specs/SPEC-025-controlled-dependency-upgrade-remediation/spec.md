@@ -2,7 +2,7 @@
 
 ## Status
 
-Sprint 1 implemented / ready for review
+Sprint 2 implemented / ready for review
 
 ## Product Objective
 
@@ -42,6 +42,10 @@ Source of truth:
 - SPEC-025 Sprint 1 refreshed the audit baseline and created the controlled
   remediation matrix:
   - `docs/security/SPEC_025_REMEDIATION_MATRIX.md`
+- SPEC-025 Sprint 2 attempted a direct `postcss@8.5.24` targeted upgrade
+  trial. The trial passed frontend validation but did not reduce the audit
+  count, so the package changes were reverted and no Sprint 2 dependency
+  changes are kept.
 
 Reference docs:
 
@@ -303,10 +307,14 @@ After any future dependency remediation implementation:
 
 Recommended follow-up implementation sequence:
 
-1. Refresh audit and dependency graph evidence.
-2. Attempt exact compatible runtime framework remediation if available.
-3. Attempt exact compatible dev-tooling remediation if available.
-4. Open a major framework/tooling upgrade spec if force/breaking movement is
+1. Review Sprint 2 trial results.
+2. Open a Next 16 compatibility sprint if runtime framework remediation is
    required.
-5. Revalidate the full demo, production-demo build, and release docs.
-6. Close or defer remaining findings honestly.
+3. Open an ESLint/tooling compatibility sprint if dev-tooling remediation is
+   required.
+4. Recheck npm metadata for safe non-breaking targets before any future package
+   change.
+5. Open a major framework/tooling upgrade spec if force/breaking movement is
+   required.
+6. Revalidate the full demo, production-demo build, and release docs.
+7. Close or defer remaining findings honestly.

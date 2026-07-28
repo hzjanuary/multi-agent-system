@@ -66,7 +66,7 @@ Validation results:
 
 ### TASK 025.2 - Runtime Framework Remediation Plan
 
-Status: Planned.
+Status: Implemented / no safe Next 15 target found.
 
 Goal: Decide whether the Next/PostCSS/Sharp audit chain can be remediated with
 a safe compatible upgrade or requires a major framework sprint.
@@ -93,9 +93,18 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Checked current npm metadata for Next 15 releases.
+- No newer compatible Next 15 release exists beyond installed `15.5.22`.
+- Current latest Next is `16.2.12`, which is a major framework upgrade and
+  remains blocked behind a separate compatibility sprint.
+- Direct `postcss@8.5.24` was identified as a safe hygiene-only patch candidate
+  but not a likely fix for the nested Next PostCSS audit path.
+
 ### TASK 025.3 - Development Tooling Remediation Plan
 
-Status: Planned.
+Status: Implemented / no safe ESLint 9 target found.
 
 Goal: Decide how to remediate the ESLint/minimatch tooling chain separately
 from runtime framework findings.
@@ -121,9 +130,19 @@ git diff --check
 git status --short
 ```
 
+Implementation:
+
+- Refreshed `npm outdated` showed no newer wanted `eslint` 9 target and no
+  newer wanted `eslint-config-next` 15 target.
+- Current latest tooling targets are `eslint@10.8.0` and
+  `eslint-config-next@16.2.12`, both requiring compatibility review.
+- Current npm audit force path may install `@eslint/eslintrc@0.1.0`, which is
+  unsafe relative to installed `3.3.6` and remains blocked.
+- No dev-tooling dependency change was attempted in Sprint 2.
+
 ### TASK 025.4 - Controlled Runtime Upgrade Implementation
 
-Status: Future implementation task.
+Status: Implemented / trial reverted because ineffective.
 
 Goal: Apply the approved runtime framework package change, if TASK 025.2
 identifies a safe target.
@@ -158,6 +177,43 @@ docker compose -f docker-compose.prod.yml \
 bash scripts/ci/frontend-gate.sh
 bash scripts/ci/all-gates.sh
 ```
+
+Implementation:
+
+- Applied one targeted trial batch:
+  - `npm install postcss@8.5.24`
+- Reason:
+  - Direct `postcss` was the only current-major wanted patch shown by
+    `npm outdated`.
+  - Expected finding group: hygiene check around the PostCSS path.
+  - Risk: low for direct dependency, but unlikely to affect nested Next
+    `postcss@8.4.31`.
+- Validation with the trial present:
+  - `npm ci` passed.
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - `npm run typecheck` passed.
+  - `npm test` passed: 13 test files, 93 tests.
+  - `npm audit` remained 12 high vulnerabilities.
+- Decision:
+  - Reverted `frontend/package.json` and `frontend/package-lock.json` because
+    the trial was ineffective and did not reduce the audit count or remove a
+    finding group.
+- Revert:
+  - `git restore frontend/package.json frontend/package-lock.json`
+  - `cd frontend && npm ci`
+- Final state:
+  - No dependency changes are kept from Sprint 2.
+  - Remaining findings require future Next major/tooling compatibility work or
+    future safe npm metadata.
+- Final closeout validation:
+  - `docker compose config` passed.
+  - `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+    passed.
+  - `bash scripts/ci/frontend-gate.sh` passed.
+  - `bash scripts/ci/all-gates.sh` passed, including backend gate,
+    frontend gate, production-demo image build, and whitespace check.
+  - `git diff --check` passed.
 
 ### TASK 025.5 - Controlled Tooling Upgrade Implementation
 
