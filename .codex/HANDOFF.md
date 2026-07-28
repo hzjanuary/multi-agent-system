@@ -24,11 +24,67 @@ Closed specs:
 - SPEC-018 Catalog Expansion - Approved / Closed
 - SPEC-019 Provider Live Verification - Approved / Closed
 - SPEC-020 Approved Outbound Communication - Approved / Closed
+- SPEC-021 Catalog Governance and Provider Policy - Approved / Closed
+- SPEC-022 Evaluation and Benchmarking - Approved / Closed
 
 Current planned spec sequence:
 
-- SPEC-021 Catalog Governance and Provider Policy - Implemented / ready for closeout review
-- SPEC-022 Evaluation and Benchmarking - Sprint 2 implemented / ready for review
+- SPEC-023 Release Readiness and Final Packaging - Planning / ready for review
+
+## Current SPEC-023 Release Readiness and Final Packaging State
+
+Status:
+
+- Planning / ready for review.
+
+Scope:
+
+- SPEC-023 defines the final release-readiness package for the repository after
+  SPEC-001 through SPEC-022 are completed and approved.
+- Planning covers final release checklist, docs index consistency, demo runbook
+  consistency, evaluation command checklist, backend/frontend gate checklist,
+  stable environment defaults, optional feature flags, safety boundaries, known
+  limitations, screenshots/manual smoke references, evidence package structure,
+  future roadmap, acceptance criteria, and task sequence.
+- Planning only. No backend, frontend, Telegram runtime, API, database,
+  Docker/Compose/CI, provider, workflow runtime, outbound send, real email,
+  live web, LLM, Tavily, or final quote behavior has been implemented.
+
+Planning docs:
+
+- `.ai/specs/SPEC-023-release-readiness-final-packaging/spec.md`
+- `.ai/specs/SPEC-023-release-readiness-final-packaging/tasks.md`
+
+Planned task sequence:
+
+1. TASK 023.1 - Release Checklist And Packaging Inventory.
+2. TASK 023.2 - Documentation Index Consistency Review.
+3. TASK 023.3 - Demo Runbook And Manual Smoke Consistency.
+4. TASK 023.4 - Final Validation Command Checklist.
+5. TASK 023.5 - Stable Defaults, Feature Flags, And Safety Boundary Audit.
+6. TASK 023.6 - Final Evidence Package Template.
+7. TASK 023.7 - Release Closeout Review.
+
+Safety:
+
+- Stable defaults remain deterministic and no-key:
+  `LLM_PROVIDER=fake`, `LLM_RUNTIME_ENABLED=false`,
+  `EMBEDDING_PROVIDER=fake`, `RAG_ENABLED=false`,
+  `PRICE_RESEARCH_ENABLED=false`, `OUTBOUND_COMMUNICATION_ENABLED=false`,
+  `OUTBOUND_SEND_ENABLED=false`, `TELEGRAM_LLM_EXTRACTION_ENABLED=false`, and
+  `TELEGRAM_SALES_REPLY_ENABLED=false`.
+- Optional flags remain explicit for Telegram LLM extraction, Telegram
+  sales-style replies, RAG, price research, Tavily/manual provider
+  verification, and outbound preview.
+- Release readiness must not introduce provider calls, live web calls, real
+  email, auto-approval, auto-resume, final quote behavior, stock/delivery
+  promises, discount approval claims, unsupported silent item dropping, fake
+  evidence, or committed secrets.
+
+Validation:
+
+- `git diff --check`
+- `git status --short`
 
 ## Current SPEC-016 Conversational Sales Agent State
 
@@ -216,22 +272,22 @@ Last known SPEC-016 validation:
   - `bash scripts/ci/all-gates.sh` passed, including production-demo image build and whitespace check.
   - `git diff --check` passed.
 
-Recommended next work after SPEC-021 planning:
+Recommended next work after SPEC-023 planning:
 
-- Review SPEC-021 closeout before any product implementation.
-- Review SPEC-022 Sprint 1 before adding workflow lifecycle benchmarks,
-  frontend smoke automation, or CI gates.
-- Keep catalog governance, provider operations, outbound send-provider
-  behavior, and production communication policy planning-only until a specific
-  SPEC-021 task is approved for implementation.
-- Keep provider observability and live external research controls future-scoped
-  until safety, audit, and validation requirements are approved.
+- Review SPEC-023 before implementing final release-readiness docs or
+  packaging templates.
+- Keep release packaging docs-only unless a specific SPEC-023 task explicitly
+  scopes a checklist, evidence template, or command-reference update.
+- Keep provider operations, outbound send-provider behavior, production
+  communication policy, cloud deployment automation, and live external
+  research controls future-scoped until safety, audit, and validation
+  requirements are approved.
 
 ## Current SPEC-021 Catalog Governance and Provider Policy State
 
 Status:
 
-- Implemented / ready for closeout review.
+- Approved / Closed.
 
 Scope:
 
@@ -264,7 +320,7 @@ Validation:
 
 Status:
 
-- Sprint 2 implemented / ready for review.
+- Approved / Closed.
 
 Scope:
 

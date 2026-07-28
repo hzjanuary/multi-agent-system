@@ -48,8 +48,9 @@
 - SPEC-018 Catalog Expansion - Approved / Closed
 - SPEC-019 Provider Live Verification - Approved / Closed
 - SPEC-020 Approved Outbound Communication - Approved / Closed
-- SPEC-021 Catalog Governance and Provider Policy - Implemented / ready for closeout review
-- SPEC-022 Evaluation and Benchmarking - Sprint 2 implemented / ready for review
+- SPEC-021 Catalog Governance and Provider Policy - Approved / Closed
+- SPEC-022 Evaluation and Benchmarking - Approved / Closed
+- SPEC-023 Release Readiness and Final Packaging - Planning / ready for review
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,
@@ -58,7 +59,9 @@ numbers.
 
 ## Phase 7 - Observability
 
-- SPEC-023 Audit Log
+- Retired placeholder: SPEC-023 Audit Log. SPEC-023 is now assigned to Release
+  Readiness and Final Packaging. Future audit-log work should use a
+  non-conflicting SPEC number.
 - SPEC-024 Analytics
 - SPEC-025 End-to-End Demo Flow
 
