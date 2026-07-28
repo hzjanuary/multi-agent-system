@@ -18,9 +18,9 @@ after an authorized decision.
 
 ## Completed SPEC Status
 
-SPEC-001 through SPEC-022 are completed and approved in the current release
-context. SPEC-023 provides this final release-readiness package and is ready for
-closeout review once its checklist/docs are approved.
+SPEC-001 through SPEC-023 are completed and approved in the current release
+context. SPEC-023 provides the final release-readiness package for
+`v1.0.0-demo-release`.
 
 Major completed areas:
 

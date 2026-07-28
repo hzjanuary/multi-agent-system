@@ -26,17 +26,77 @@ Closed specs:
 - SPEC-020 Approved Outbound Communication - Approved / Closed
 - SPEC-021 Catalog Governance and Provider Policy - Approved / Closed
 - SPEC-022 Evaluation and Benchmarking - Approved / Closed
+- SPEC-023 Release Readiness and Final Packaging - Approved / Closed
 
 Current planned spec sequence:
 
-- No active implementation spec remains open after SPEC-023. Future work should
-  be opened as a new explicit spec/task.
+- SPEC-024 Dependency and Security Maintenance Sprint 1 is implemented / ready
+  for closeout review.
+- Dependency upgrades remain future work and must be opened as a bounded
+  maintenance sprint before changing manifests or lockfiles.
+
+## Current SPEC-024 Dependency and Security Maintenance State
+
+Status:
+
+- Implemented / ready for closeout review.
+
+Scope:
+
+- SPEC-024 Sprint 1 documents dependency/security maintenance after
+  `v1.0.0-demo-release`.
+- It triages current frontend npm audit findings, defines audit/remediation
+  policy, adds security maintenance docs, updates README/release roadmap/spec
+  index, and records handoff state.
+- Documentation and audit triage only. No dependency upgrades, no
+  `npm audit fix`, no package manifest/lockfile changes, and no product
+  behavior changes.
+
+Security docs:
+
+- `.ai/specs/SPEC-024-dependency-security-maintenance/spec.md`
+- `.ai/specs/SPEC-024-dependency-security-maintenance/tasks.md`
+- `docs/security/DEPENDENCY_SECURITY_MAINTENANCE.md`
+- `docs/security/SECURITY_TRIAGE_REPORT.md`
+
+Audit summary:
+
+- Audit timestamp: `2026-07-28T09:10:11+07:00`.
+- Branch/commit: `main` /
+  `838b9146a845e185d9186553fc6013d70feb65ab`.
+- Frontend `npm audit` reported 12 high vulnerabilities and 0 critical,
+  moderate, or low findings.
+- Affected npm names: `next`, `postcss`, `sharp`, `brace-expansion`,
+  `minimatch`, `eslint`, `@eslint/config-array`, `@eslint/eslintrc`,
+  `eslint-config-next`, `eslint-plugin-import`, `eslint-plugin-jsx-a11y`, and
+  `eslint-plugin-react`.
+- `npm outdated` reported available updates for Next/ESLint/PostCSS and other
+  frontend packages.
+- Host `poetry` command was unavailable, so backend outdated review is deferred
+  to a future environment with Poetry.
+- No dependency files were changed and no fix command was run.
+
+Next recommended step:
+
+- Review SPEC-024 triage.
+- Open a bounded dependency patch sprint if remediation is approved.
+- Prioritize reviewed Next patch remediation before broader deployment.
+- Use a separate major upgrade spec for Next 16, ESLint 10, Tailwind 4,
+  TypeScript 7, or other framework-level upgrades.
+
+Safety:
+
+- Stable deterministic demo behavior remains unchanged.
+- No backend, frontend, Telegram, API, database, Docker/Compose/CI, provider,
+  real email, final quote, or runtime behavior changed.
+- Do not run `npm audit fix` or `npm audit fix --force` without explicit future
+  task approval.
 
 ## Current SPEC-023 Release Readiness and Final Packaging State
 
 Status:
 
-- Implemented / ready for closeout review.
+- Approved / Closed.
 
 Scope:
 

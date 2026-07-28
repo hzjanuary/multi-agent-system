@@ -11,8 +11,9 @@ decision.
 ## Status
 
 - Final graduation-ready project.
-- SPEC-001 through SPEC-022 completed and approved; SPEC-023 release-readiness
-  docs prepared for closeout review.
+- SPEC-001 through SPEC-023 completed and approved.
+- SPEC-024 dependency/security maintenance Sprint 1 documents current npm audit
+  findings and remediation policy without changing demo behavior.
 - Frontend demo surfaces use the **Violet Operations Console** dark command
   center design.
 - Default demo is deterministic and no-key.
@@ -144,6 +145,7 @@ docs/evaluation/          SPEC-022 benchmark guide and demo regression checklist
 docs/final/               Final evaluation, demo validation, release assets
 docs/governance/          Catalog, provider evidence, approval, and outbound policy
 docs/release/             Final release-readiness package and command checklist
+docs/security/            Dependency/security maintenance and triage docs
 docs/report/              Graduation report narrative assets
 docs/report/diagrams/     Mermaid architecture diagram sources
 docs/llm/                 Provider setup and local Ollama smoke docs
@@ -316,6 +318,8 @@ validation requires explicit `--confirm-local-demo`.
 - [Release readiness checklist](docs/release/RELEASE_READINESS_CHECKLIST.md)
 - [Release demo commands](docs/release/DEMO_COMMANDS.md)
 - [Known limitations and roadmap](docs/release/KNOWN_LIMITATIONS_AND_ROADMAP.md)
+- [Dependency security maintenance](docs/security/DEPENDENCY_SECURITY_MAINTENANCE.md)
+- [Security triage report](docs/security/SECURITY_TRIAGE_REPORT.md)
 - [SPEC-022 evaluation guide](docs/evaluation/SPEC_022_EVALUATION_GUIDE.md)
 - [Demo regression checklist](docs/evaluation/DEMO_REGRESSION_CHECKLIST.md)
 - [Final docs index](docs/final/README.md)
@@ -343,6 +347,8 @@ validation requires explicit `--confirm-local-demo`.
 - No fake price/catalog behavior.
 - No raw prompts, provider payloads, embeddings, vector payloads, secrets,
   tokens, cookies, or chain-of-thought are displayed intentionally.
+- Dependency remediation is tracked separately from the stable demo release;
+  do not run automatic audit fixes without a reviewed maintenance sprint.
 
 ## Roadmap After Defense
 
@@ -352,6 +358,7 @@ validation requires explicit `--confirm-local-demo`.
 4. Email/Gmail send-provider planning beyond the closed SPEC-020 preview-only
    foundation.
 5. Production deployment polish.
+6. Bounded dependency/security patch sprint after SPEC-024 triage review.
 
 ## License
 

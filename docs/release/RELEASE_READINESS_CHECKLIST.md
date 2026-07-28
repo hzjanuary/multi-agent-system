@@ -203,8 +203,7 @@ Before release submission, confirm:
 - README is the public landing page.
 - `docs/release/FINAL_PROJECT_PACKAGE.md` summarizes the final package.
 - Demo runbooks match the implemented routes and commands.
-- SPEC-001 through SPEC-022 are completed and approved.
-- SPEC-023 is ready for closeout review.
+- SPEC-001 through SPEC-023 are completed and approved.
 - Known limitations are documented.
 - Future roadmap is bounded and not claimed as implemented.
 - No safety boundary is weakened.

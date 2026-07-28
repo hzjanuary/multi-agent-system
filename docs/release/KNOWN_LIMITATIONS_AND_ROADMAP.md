@@ -71,6 +71,16 @@ implemented in the current repository.
 - They do not fabricate events, agent activity, catalog metadata, reference
   evidence, prices, approvals, or outbound communication.
 
+### Dependency And Security Maintenance
+
+- Frontend `npm audit` currently reports tracked high-severity findings.
+- SPEC-024 Sprint 1 documents triage and maintenance policy only.
+- No dependency upgrades were made in Sprint 1.
+- `npm audit fix` and `npm audit fix --force` require a separate reviewed
+  maintenance sprint.
+- Backend outdated review should be rerun in an environment with Poetry
+  available.
+
 ## Stable Safety Boundaries
 
 The release must preserve:
@@ -156,6 +166,16 @@ Future document work should add:
 - document versioning;
 - retention and redaction policy;
 - ingestion review controls.
+
+### 7. Dependency And Security Patch Sprint
+
+Future security maintenance should add:
+
+- reviewed frontend patch/minor upgrades where compatible;
+- rerun npm audit after patching;
+- Poetry-based backend outdated review;
+- full backend/frontend/all-gates validation after dependency changes;
+- separate major upgrade specs for framework-level changes.
 
 ## Non-Roadmap Claims
 
