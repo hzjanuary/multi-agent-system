@@ -52,7 +52,8 @@
 - SPEC-022 Evaluation and Benchmarking - Approved / Closed
 - SPEC-023 Release Readiness and Final Packaging - Approved / Closed
 - SPEC-024 Dependency and Security Maintenance - Approved / Closed with deferred npm audit findings
-- SPEC-025 Controlled Dependency Upgrade Remediation - Sprint 2 implemented / Ready for review
+- SPEC-025 Controlled Dependency Upgrade Remediation - Approved / Closed
+- SPEC-026 Production Hardening - Planning / Ready for review
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,
@@ -76,7 +77,9 @@ numbers.
 - Older deployment placeholders remain broad future buckets. SPEC-014 is the
   active bounded deployment/observability planning slice for the current
   graduation demo path.
-- SPEC-026 Production Docker
+- Retired placeholder: SPEC-026 Production Docker. SPEC-026 is now assigned to
+  Production Hardening. Future production Docker implementation should use a
+  non-conflicting SPEC number or an approved SPEC-026 implementation task.
 - SPEC-027 CI/CD
 - SPEC-028 Deployment Guide
 - SPEC-029 Final Documentation

@@ -29,19 +29,80 @@ Closed specs:
 - SPEC-023 Release Readiness and Final Packaging - Approved / Closed
 - SPEC-024 Dependency and Security Maintenance - Approved / Closed with
   deferred npm audit findings
+- SPEC-025 Controlled Dependency Upgrade Remediation - Approved / Closed
 
 Current planned spec sequence:
 
-- SPEC-025 Controlled Dependency Upgrade Remediation Sprint 2 is implemented /
-  ready for review.
-- Future dependency upgrades remain future work and must be implemented only
-  through approved SPEC-025 tasks before changing manifests or lockfiles.
+- SPEC-026 Production Hardening is planned / ready for review.
+- Future production hardening work must remain docs/checklist/runbook work until
+  an approved implementation task explicitly authorizes behavior,
+  infrastructure, dependency, Docker/Compose, CI, provider, outbound email, or
+  runtime default changes.
+
+## Current SPEC-026 Production Hardening State
+
+Status:
+
+- Planning / ready for review.
+
+Scope:
+
+- SPEC-026 plans production hardening after SPEC-001 through SPEC-025 are
+  completed and approved.
+- Planning covers production environment validation, secrets management,
+  deployment hardening, database/storage hardening, observability and incident
+  response, security maintenance carryover, demo-versus-production boundaries,
+  user stories, acceptance criteria, and a future task sequence.
+- This planning task does not change backend code, frontend code, Telegram
+  behavior, API contracts, database models/migrations, Docker/Compose/CI
+  behavior, dependencies, provider calls, runtime defaults, outbound email
+  behavior, or final quote behavior.
+
+Spec docs:
+
+- `.ai/specs/SPEC-026-production-hardening/spec.md`
+- `.ai/specs/SPEC-026-production-hardening/tasks.md`
+
+Stable defaults to preserve:
+
+- `LLM_PROVIDER=fake`
+- `LLM_RUNTIME_ENABLED=false`
+- `PRICE_RESEARCH_ENABLED=false`
+- `RAG_ENABLED=false`
+- `OUTBOUND_COMMUNICATION_ENABLED=false`
+- `OUTBOUND_SEND_ENABLED=false`
+- `TELEGRAM_LLM_EXTRACTION_ENABLED=false`
+- `TELEGRAM_SALES_REPLY_ENABLED=false`
+
+Safety:
+
+- No real email sending.
+- No outbound send endpoint.
+- No automatic live provider calls.
+- No Telegram live price research.
+- No final quote before Manager/Admin approval and explicit resume.
+- Remaining npm audit findings remain documented/deferred through
+  SPEC-024/SPEC-025.
+- No secrets, provider keys, Telegram tokens, cookies, passwords, JWTs, raw
+  prompts, provider payloads, embeddings, vector payloads, or chain-of-thought
+  should be committed or exposed.
+
+Next recommended work:
+
+- Review SPEC-026 planning.
+- If approved, implement the planned tasks in order:
+  - TASK 026.1 Production Environment Checklist.
+  - TASK 026.2 Secrets And Provider Key Runbook.
+  - TASK 026.3 Backup/Restore And Migration Safety Plan.
+  - TASK 026.4 Observability And Incident Response Runbook.
+  - TASK 026.5 Production Smoke Checklist.
+  - TASK 026.6 Final Validation And Closeout.
 
 ## Current SPEC-025 Controlled Dependency Upgrade Remediation State
 
 Status:
 
-- Sprint 2 implemented / ready for review.
+- Approved / Closed.
 
 Scope:
 
