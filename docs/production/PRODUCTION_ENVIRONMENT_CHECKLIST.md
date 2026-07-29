@@ -71,6 +71,7 @@ Related production runbooks:
 - `docs/production/SECRETS_AND_PROVIDER_KEYS_RUNBOOK.md`
 - `docs/production/BACKUP_RESTORE_AND_MIGRATION_RUNBOOK.md`
 - `docs/production/OBSERVABILITY_AND_INCIDENT_RESPONSE_RUNBOOK.md`
+- `docs/production/PRODUCTION_AUTOMATION_COMMANDS.md`
 
 ## Required Production Checks
 

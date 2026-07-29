@@ -2,7 +2,7 @@
 
 ## Status
 
-Planning / Draft
+Sprint 1 implemented / ready for review.
 
 ## Product Objective
 
@@ -13,11 +13,12 @@ goal is to define which checks can become non-destructive scripts, which checks
 must remain operator-reviewed, and which actions are blocked until a later
 approved implementation spec.
 
-This planning task does not implement automation. It does not change product
-behavior, backend code, frontend code, Telegram behavior, providers, API
-behavior, database schema, migrations, Docker/Compose behavior, CI behavior,
-dependencies, runtime defaults, outbound email behavior, or final quote
-behavior.
+The initial planning task did not implement automation. Sprint 1 now implements
+read-only environment validation and tracked-file secret scanning under
+`scripts/ops/`. It does not change product behavior, backend code, frontend
+code, Telegram behavior, providers, API behavior, database schema, migrations,
+Docker/Compose behavior, CI behavior, dependencies, runtime defaults, outbound
+email behavior, or final quote behavior.
 
 ## Context
 
@@ -254,6 +255,21 @@ Rationale:
 - production automation crosses release, environment, smoke, observability, and
   storage runbook boundaries, so `scripts/ops/` is the clearest neutral home.
 
+Implemented Sprint 1 scripts:
+
+```text
+scripts/ops/validate_environment.py
+scripts/ops/scan_secrets.py
+```
+
+Sprint 1 support files:
+
+```text
+scripts/ops/test_validate_environment.py
+scripts/ops/test_scan_secrets.py
+docs/production/PRODUCTION_AUTOMATION_COMMANDS.md
+```
+
 Future script examples:
 
 ```text
@@ -266,7 +282,7 @@ scripts/ops/migration-preflight.sh
 scripts/ops/release-snapshot.sh
 ```
 
-Do not add these scripts in this planning task.
+Do not add future scripts outside an approved implementation task.
 
 ## CLI Design
 
@@ -481,8 +497,8 @@ Authorization headers, or provider secrets.
 
 ## Non-Goals
 
-- No code implementation in this planning task.
-- No automation scripts in this planning task.
+- No production behavior changes.
+- No mutating automation.
 - No Docker/Compose changes.
 - No CI changes.
 - No dependency changes.

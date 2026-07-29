@@ -35,7 +35,7 @@ git status --short
 
 ### TASK 027.2 - Read-Only Environment And Secret Scan Script
 
-Status: Planned.
+Status: Implemented / ready for review.
 
 Goal: Implement the first non-destructive automation script for env shape and
 tracked-file secret/placeholder scanning.
@@ -60,11 +60,41 @@ Acceptance criteria:
 Validation:
 
 ```bash
+python3 -m unittest scripts.ops.test_validate_environment scripts.ops.test_scan_secrets
+python3 -m py_compile scripts/ops/validate_environment.py scripts/ops/scan_secrets.py
+python3 scripts/ops/validate_environment.py \
+  --env-file docs/deployment/.env.production.example --skip-compose-check
+python3 scripts/ops/validate_environment.py \
+  --env-file docs/deployment/.env.production.example --skip-compose-check --json
+python3 scripts/ops/scan_secrets.py --allow-test-placeholders
+python3 scripts/ops/scan_secrets.py --allow-test-placeholders --json
 git diff --check
 docker compose config
 docker compose -f docker-compose.prod.yml \
   --env-file docs/deployment/.env.production.example config
 ```
+
+Implemented deliverables:
+
+- `scripts/ops/__init__.py`
+- `scripts/ops/validate_environment.py`
+- `scripts/ops/scan_secrets.py`
+- `scripts/ops/test_validate_environment.py`
+- `scripts/ops/test_scan_secrets.py`
+- `docs/production/PRODUCTION_AUTOMATION_COMMANDS.md`
+- `docs/production/PRODUCTION_ENVIRONMENT_CHECKLIST.md` linked to the
+  automation command guide.
+
+Safety properties:
+
+- read-only by default;
+- no destructive action;
+- no provider call;
+- no Telegram call;
+- no workflow mutation;
+- no backend/frontend/runtime behavior change;
+- no Docker/Compose/CI behavior change;
+- no secret values printed.
 
 ### TASK 027.3 - Production Smoke Aggregator Script
 
@@ -255,6 +285,19 @@ No automation scripts, backend/frontend behavior, Telegram behavior, provider
 behavior, API behavior, database schema/migration, Docker/Compose behavior, CI
 behavior, dependency change, outbound send, real email, or final quote behavior
 is implemented by the SPEC-027 planning task.
+
+## SPEC-027 Sprint 1 Deliverables
+
+Implemented after planning approval for TASK 027.2:
+
+- read-only production environment validator;
+- read-only tracked-file secret scanner;
+- unit tests for both scripts;
+- production automation commands guide;
+- production environment checklist link to the automation guide.
+
+The Sprint 1 scripts remain non-mutating and do not call providers, Telegram,
+backend APIs, workflow runtime, outbound email, or live web services.
 
 ## Closeout Checklist For Planning
 

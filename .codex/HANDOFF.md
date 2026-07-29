@@ -35,7 +35,7 @@ Current planned spec sequence:
 
 - SPEC-026 Production Hardening Sprint 3 is implemented / ready for closeout
   review.
-- SPEC-027 Production Automation Planning is drafted / ready for planning
+- SPEC-027 Production Automation Planning Sprint 1 is implemented / ready for
   review.
 - Future production hardening work must remain docs/checklist/runbook work until
   an approved implementation task explicitly authorizes behavior,
@@ -46,7 +46,7 @@ Current planned spec sequence:
 
 Status:
 
-- Planning / Draft.
+- Sprint 1 implemented / ready for review.
 
 Scope:
 
@@ -58,19 +58,33 @@ Scope:
   and envs to respect, non-goals, and task sequence.
 - Future automation should use `scripts/ops/` unless a later approved task
   changes that convention.
-- This planning task does not implement scripts, code, Docker/Compose changes,
-  CI changes, dependency changes, provider calls, runtime default changes,
-  outbound send, real email, or final quote behavior.
+- Sprint 1 implements read-only environment validation and tracked-file secret
+  scanning only. It does not implement Docker/Compose changes, CI changes,
+  dependency changes, provider calls, runtime default changes, outbound send,
+  real email, final quote behavior, or backend/frontend/Telegram/API/database
+  behavior changes.
 
 Spec docs:
 
 - `.ai/specs/SPEC-027-production-automation-planning/spec.md`
 - `.ai/specs/SPEC-027-production-automation-planning/tasks.md`
 
+Sprint 1 deliverables:
+
+- `scripts/ops/__init__.py`
+- `scripts/ops/validate_environment.py`
+- `scripts/ops/scan_secrets.py`
+- `scripts/ops/test_validate_environment.py`
+- `scripts/ops/test_scan_secrets.py`
+- `docs/production/PRODUCTION_AUTOMATION_COMMANDS.md`
+- `docs/production/PRODUCTION_ENVIRONMENT_CHECKLIST.md` links to the automation
+  guide.
+
 Planned task sequence:
 
 1. TASK 027.1 - Production Automation Inventory And Safety Classification.
-2. TASK 027.2 - Read-Only Environment And Secret Scan Script.
+2. TASK 027.2 - Read-Only Environment And Secret Scan Script. Implemented /
+   ready for review.
 3. TASK 027.3 - Production Smoke Aggregator Script.
 4. TASK 027.4 - Backup/Restore Dry-Run Checklist Helper.
 5. TASK 027.5 - Observability Health Summary Script.
@@ -93,10 +107,36 @@ Safety:
 
 Next recommended work:
 
-- Review SPEC-027 planning docs.
-- If approved, implement TASK 027.1 before any scripts are added.
+- Review SPEC-027 Sprint 1.
+- If approved, continue with the next selected SPEC-027 task, likely TASK
+  027.3 Production Smoke Aggregator Script unless TASK 027.1 inventory is
+  requested first.
 - Keep any future automation non-destructive by default and explicit about CI,
   local-only, manual-only, and blocked actions.
+
+Last SPEC-027 Sprint 1 validation results:
+
+- `python3 -m unittest scripts.ops.test_validate_environment scripts.ops.test_scan_secrets`
+  passed: 18 tests.
+- `python3 -m py_compile scripts/ops/validate_environment.py scripts/ops/scan_secrets.py`
+  passed.
+- `python3 scripts/ops/validate_environment.py --env-file docs/deployment/.env.production.example --skip-compose-check`
+  passed with 5 warnings for optional stable-default flags absent from the
+  production example env.
+- `python3 scripts/ops/validate_environment.py --env-file docs/deployment/.env.production.example --skip-compose-check --json`
+  passed with `deterministic=true`, `destructive_actions=false`,
+  `provider_calls=false`, and `secrets_printed=false`.
+- `python3 scripts/ops/scan_secrets.py --allow-test-placeholders` passed with
+  0 findings and 1 warning for a local untracked `docker-compose.override.yml`
+  file not scanned by default.
+- `python3 scripts/ops/scan_secrets.py --allow-test-placeholders --json`
+  passed with 589 scanned files, 0 findings, `deterministic=true`,
+  `destructive_actions=false`, `provider_calls=false`, and
+  `secrets_printed=false`.
+- `docker compose config` passed.
+- `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config`
+  passed.
+- `git diff --check` passed.
 
 ## Current SPEC-026 Production Hardening State
 
