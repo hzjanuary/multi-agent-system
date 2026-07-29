@@ -171,6 +171,11 @@ Future production work should add:
 - external observability integration;
 - production data-retention policies.
 
+SPEC-027 begins planning for non-destructive production automation that may
+turn SPEC-026 runbooks into read-only checks, dry-run helpers, smoke
+aggregators, health summaries, and release snapshots. It does not implement
+automation by itself.
+
 ### 6. Document Management And OCR
 
 Future document work should add:

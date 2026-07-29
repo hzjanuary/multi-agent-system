@@ -35,10 +35,68 @@ Current planned spec sequence:
 
 - SPEC-026 Production Hardening Sprint 3 is implemented / ready for closeout
   review.
+- SPEC-027 Production Automation Planning is drafted / ready for planning
+  review.
 - Future production hardening work must remain docs/checklist/runbook work until
   an approved implementation task explicitly authorizes behavior,
   infrastructure, dependency, Docker/Compose, CI, provider, outbound email, or
   runtime default changes.
+
+## Current SPEC-027 Production Automation Planning State
+
+Status:
+
+- Planning / Draft.
+
+Scope:
+
+- SPEC-027 plans safe production automation after SPEC-026 Production
+  Hardening.
+- Planning covers automation candidates, safety classification,
+  non-destructive-first policy, script location proposal, CLI design,
+  CI/local/manual boundaries, user stories, acceptance criteria, feature flags
+  and envs to respect, non-goals, and task sequence.
+- Future automation should use `scripts/ops/` unless a later approved task
+  changes that convention.
+- This planning task does not implement scripts, code, Docker/Compose changes,
+  CI changes, dependency changes, provider calls, runtime default changes,
+  outbound send, real email, or final quote behavior.
+
+Spec docs:
+
+- `.ai/specs/SPEC-027-production-automation-planning/spec.md`
+- `.ai/specs/SPEC-027-production-automation-planning/tasks.md`
+
+Planned task sequence:
+
+1. TASK 027.1 - Production Automation Inventory And Safety Classification.
+2. TASK 027.2 - Read-Only Environment And Secret Scan Script.
+3. TASK 027.3 - Production Smoke Aggregator Script.
+4. TASK 027.4 - Backup/Restore Dry-Run Checklist Helper.
+5. TASK 027.5 - Observability Health Summary Script.
+6. TASK 027.6 - Release Snapshot Automation.
+7. TASK 027.7 - Final Validation And Closeout.
+
+Safety:
+
+- Sprint 1 implementation must be read-only/non-destructive.
+- Backup/restore automation must start as dry-run/checklist only.
+- No production data deletion, automatic production migration, automatic
+  rollback, backup deletion, secret printing, live provider call by default,
+  outbound send, auto-approval, auto-resume, or final quote behavior is
+  allowed.
+- Stable defaults remain: `LLM_PROVIDER=fake`,
+  `LLM_RUNTIME_ENABLED=false`, `PRICE_RESEARCH_ENABLED=false`,
+  `RAG_ENABLED=false`, `OUTBOUND_COMMUNICATION_ENABLED=false`,
+  `OUTBOUND_SEND_ENABLED=false`, `TELEGRAM_LLM_EXTRACTION_ENABLED=false`, and
+  `TELEGRAM_SALES_REPLY_ENABLED=false`.
+
+Next recommended work:
+
+- Review SPEC-027 planning docs.
+- If approved, implement TASK 027.1 before any scripts are added.
+- Keep any future automation non-destructive by default and explicit about CI,
+  local-only, manual-only, and blocked actions.
 
 ## Current SPEC-026 Production Hardening State
 

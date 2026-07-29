@@ -54,6 +54,7 @@
 - SPEC-024 Dependency and Security Maintenance - Approved / Closed with deferred npm audit findings
 - SPEC-025 Controlled Dependency Upgrade Remediation - Approved / Closed
 - SPEC-026 Production Hardening - Sprint 3 implemented / Ready for closeout review
+- SPEC-027 Production Automation Planning - Planning / Draft
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,
@@ -80,7 +81,9 @@ numbers.
 - Retired placeholder: SPEC-026 Production Docker. SPEC-026 is now assigned to
   Production Hardening. Future production Docker implementation should use a
   non-conflicting SPEC number or an approved SPEC-026 implementation task.
-- SPEC-027 CI/CD
+- Retired placeholder: SPEC-027 CI/CD. SPEC-027 is now assigned to Production
+  Automation Planning. Future CI/CD implementation should use a non-conflicting
+  SPEC number or an approved SPEC-027 implementation task.
 - SPEC-028 Deployment Guide
 - SPEC-029 Final Documentation
 
