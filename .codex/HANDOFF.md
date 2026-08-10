@@ -1101,9 +1101,9 @@ Frozen demo path:
 - Telegram bridge uses sales-style replies with
   `TELEGRAM_SALES_REPLY_ENABLED=true` or `--sales-replies`.
 - Greeting returns help and creates no workflow.
-- Mixed laptop/printer request creates no workflow and returns an unsupported
-  item clarification.
-- Laptop-only Vietnamese RFQ with Office 365 creates a workflow, auto-runs to
+- Mixed supported/unsupported request (e.g. laptops plus office chairs) creates
+  no workflow and returns an unsupported item clarification.
+- Supported laptop/computer/printer RFQ creates a workflow, auto-runs to
   `WAITING_APPROVAL`, and returns workflow plus Agent Monitor links.
 - Manager approval and explicit resume complete the workflow; no real email is
   sent.
@@ -1135,6 +1135,10 @@ Implemented:
   - Parses deterministic laptop quotation messages such as the board-demo
     phrase, `50 laptops`, `purchase 20 laptops`, `buy 10 laptops`, and
     `quote for 5 business laptops`.
+  - Parses printer messages such as `báo giá 10 cái máy in` and
+    `quote for 5 hp printers` into `Máy in`.
+  - Parses computer messages such as `cần báo giá 5 máy tính` and
+    `quote for 8 computers` into `Máy tính`.
   - Builds the existing backend-compatible workflow create payload shape:
     `workflow_type`, `domain`, `request`, and `metadata` with Telegram source
     data under `metadata.tags`/`metadata.attributes`.
@@ -1163,7 +1167,7 @@ Validation so far:
 - `python scripts/demo/telegram_inbound_bridge.py --dry-run --once` passed
   without requiring `TELEGRAM_BOT_TOKEN`.
 - `python -m unittest scripts.demo.test_telegram_inbound_bridge` passed:
-  5 tests.
+  46 tests.
 
 ## Current Runtime Created-Step Bug Fix State
 
@@ -3146,3 +3150,55 @@ idempotency validation after seed code exists.
   a dependency-maintenance task.
 - LF/CRLF warnings from `git diff --check` are non-blocking when no whitespace
   errors are reported.
+
+## Session Continuation Note - 2026-08-10
+
+Scope:
+
+- Expanded the Telegram bridge deterministic catalog to also support printers
+  and computers, and hardened the optional Ollama extraction call.
+
+Implemented:
+
+- `scripts/demo/telegram_inbound_bridge.py`:
+  - Added `Máy in` and `Máy tính` to the supported canonical catalog alongside
+    `Standard business laptop`.
+  - Added printer aliases (`máy in`, `máy in hp`, `hp printers`, `printers`)
+    and computer aliases (`máy tính`, `computers`, `desktops`) to
+    `_ITEM_REGEX`, `_ITEM_MENTION_REGEX`, and the mixed-item wording guard.
+  - Bumped `PARSER_VERSION` to `telegram-demo-parser-v4`.
+  - Ollama extraction now sends `think: false` and `format: "json"` to the
+    `/api/chat` endpoint, clamps timeout to at most 120 seconds, defaults
+    `TELEGRAM_LLM_TIMEOUT_SECONDS` to 90, and falls back to the `thinking`
+    response field when `content` is empty.
+  - The mixed-item wording guard now only triggers for generic/unsupported
+    items such as `ghế văn phòng`, since printers and computers are supported.
+  - Added `_GENERIC_ITEM_REGEX` so a supported request mixed with a generic
+    non-catalog item (e.g. `báo giá 20 cái laptop và 5 cái ghế văn phòng`) is
+    refused instead of silently dropping the other line item.
+- `scripts/demo/test_telegram_inbound_bridge.py`:
+  - Updated mixed-item wording tests to use unsupported office-chair items.
+  - Added printer/computer parsing tests, printer/computer mention-guard tests,
+    Ollama JSON-mode/`think:false` payload assertion, `thinking`-field
+    fallback parsing test, and generic mixed-item guard tests.
+
+Validation:
+
+- `python -m unittest scripts.demo.test_telegram_inbound_bridge` passed: 49
+  tests.
+- Live Ollama extraction through the real bridge path passed for `báo giá cho
+  tôi 10 cái máy in`, `báo giá 10 cái máy in`, `10 máy in`, `cần báo giá 5 máy
+  tính`, and `quote for 50 standard business laptops` (all `extraction_mode=llm`).
+- Live guard check passed: `báo giá 20 cái laptop và 5 cái ghế văn phòng`
+  returns an unsupported mixed request (`5 x ghế văn phòng`), no workflow.
+- End-to-end backend validation passed: workflow created and auto-ran to
+  `WAITING_APPROVAL` (workflow `04be0a9f-ef4f-4da5-bb1b-3eaf9c5a0ebe`).
+- Docs updated: `docs/demo/TELEGRAM_INBOUND_DEMO.md` and
+  `docs/demo/FINAL_LIVE_DEMO_RUNBOOK.md` now document printer/computer support,
+  the 90s LLM timeout default, `think:false` + `format:json`, and the updated
+  mixed-item safety example.
+
+Next step for a future session:
+
+- If the Telegram bridge process is running for the live demo, restart it so it
+  loads the updated `telegram_inbound_bridge.py`.

@@ -1,4 +1,6 @@
+import json
 import unittest
+from typing import Any
 from unittest.mock import patch
 
 from scripts.demo.telegram_inbound_bridge import (
@@ -18,6 +20,7 @@ from scripts.demo.telegram_inbound_bridge import (
     follow_up_message,
     greeting_message,
     is_greeting_message,
+    llm_extract_customer_request,
     parse_args,
     parse_llm_extraction_result,
     parse_customer_request,
@@ -427,6 +430,43 @@ class TelegramInboundBridgeParserTests(unittest.TestCase):
         self.assertIsNone(extract_customer_request("báo giá 3 máy chiếu", self.config()))
         self.assertIsNone(extract_customer_request("quote 2 servers", self.config()))
 
+    def test_mixed_request_with_generic_unknown_item_is_refused(self) -> None:
+        parsed = extract_customer_request(
+            "báo giá 20 cái laptop và 5 cái ghế văn phòng",
+            self.config(),
+        )
+
+        self.assertIsInstance(parsed, UnsupportedMixedRequest)
+        assert isinstance(parsed, UnsupportedMixedRequest)
+        self.assertEqual(parsed.supported_summary, "20 x Standard business laptop")
+        self.assertEqual(parsed.unsupported_summary, "5 x ghế văn phòng")
+
+    def test_mixed_request_with_second_catalog_item_is_refused(self) -> None:
+        parsed = extract_customer_request(
+            "báo giá 20 laptop và 3 máy in",
+            self.config(),
+        )
+
+        self.assertIsInstance(parsed, UnsupportedMixedRequest)
+        assert isinstance(parsed, UnsupportedMixedRequest)
+        self.assertEqual(parsed.supported_summary, "20 x Standard business laptop")
+        self.assertEqual(parsed.unsupported_summary, "3 x Office printer")
+
+    def test_laptop_with_screen_qualifier_still_creates_request(self) -> None:
+        parsed = extract_customer_request(
+            "báo giá 20 laptop màn hình LED",
+            self.config(),
+        )
+
+        self.assertIsInstance(parsed, ParsedCustomerRequest)
+        assert isinstance(parsed, ParsedCustomerRequest)
+        self.assertEqual(parsed.quantity, 20)
+        self.assertEqual(parsed.item_name, "Standard business laptop")
+
+    def test_unsupported_generic_only_item_does_not_create_workflow(self) -> None:
+        self.assertIsNone(extract_customer_request("quote 2 ergonomic chairs", self.config()))
+        self.assertIsNone(extract_customer_request("cần 3 cái quạt điện", self.config()))
+
     def test_laptop_only_vietnamese_request_still_creates_request(self) -> None:
         parsed = extract_customer_request("báo giá 20 laptop", self.config())
 
@@ -584,6 +624,114 @@ class TelegramInboundBridgeLLMExtractionTests(unittest.TestCase):
         assert parsed is not None
         self.assertEqual(parsed.quantity, 50)
         self.assertEqual(parsed.extraction_mode, "fallback")
+
+    def test_llm_payload_requests_strict_json_and_disables_thinking(self) -> None:
+        captured: dict[str, object] = {}
+
+        class FakeResponse:
+            def __init__(self, payload: dict[str, object]) -> None:
+                self._data = json.dumps(payload).encode("utf-8")
+
+            def __enter__(self) -> FakeResponse:
+                return self
+
+            def __exit__(self, *exc: object) -> bool:
+                return False
+
+            def read(self) -> bytes:
+                return self._data
+
+        def fake_urlopen(request: Any, timeout: int) -> FakeResponse:
+            captured["payload"] = json.loads(request.data.decode("utf-8"))
+            captured["timeout"] = timeout
+            return FakeResponse(
+                {
+                    "message": {
+                        "content": '{"language":"vi","intent":"procurement_rfq","items":[{"name":"laptop","quantity":50}],"requested_addons":[],"needs_follow_up":false,"follow_up_question":""}'
+                    }
+                }
+            )
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.urllib.request.urlopen",
+            fake_urlopen,
+        ):
+            parsed = llm_extract_customer_request(
+                "cần báo giá 50 laptop",
+                self.config(),
+            )
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.quantity, 50)
+        payload = captured["payload"]
+        assert isinstance(payload, dict)
+        self.assertIs(payload.get("think"), False)
+        self.assertEqual(payload.get("format"), "json")
+        self.assertEqual(captured["timeout"], 30)
+
+    def test_llm_extraction_uses_thinking_field_when_content_is_empty(self) -> None:
+        class FakeResponse:
+            def __init__(self) -> None:
+                self._data = json.dumps(
+                    {
+                        "message": {
+                            "content": "",
+                            "thinking": '{"language":"en","intent":"procurement_rfq","items":[{"name":"monitor","quantity":4}],"requested_addons":[],"needs_follow_up":false,"follow_up_question":""}',
+                        }
+                    }
+                ).encode("utf-8")
+
+            def __enter__(self) -> FakeResponse:
+                return self
+
+            def __exit__(self, *exc: object) -> bool:
+                return False
+
+            def read(self) -> bytes:
+                return self._data
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.urllib.request.urlopen",
+            lambda request, timeout: FakeResponse(),
+        ):
+            parsed = llm_extract_customer_request(
+                "quote 4 monitors",
+                self.config(),
+            )
+
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.quantity, 4)
+        self.assertEqual(parsed.item_name, "Office monitor")
+
+    def test_llm_extraction_raises_when_content_and_thinking_empty(self) -> None:
+        class FakeResponse:
+            def __enter__(self) -> FakeResponse:
+                return self
+
+            def __exit__(self, *exc: object) -> bool:
+                return False
+
+            def read(self) -> bytes:
+                return b'{"message": {"content": "", "thinking": ""}}'
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.urllib.request.urlopen",
+            lambda request, timeout: FakeResponse(),
+        ):
+            with self.assertRaises(LLMExtractionError):
+                llm_extract_customer_request(
+                    "cần báo giá 50 laptop",
+                    self.config(),
+                )
+
+    def test_llm_timeout_default_is_ninety_seconds(self) -> None:
+        args = parse_args([])
+        with patch.dict("os.environ", {}, clear=True):
+            config = config_from_env(args)
+
+        self.assertEqual(config.llm_timeout_seconds, 90)
 
     def test_missing_quantity_follow_up_does_not_create_request(self) -> None:
         parsed = parse_llm_extraction_result(

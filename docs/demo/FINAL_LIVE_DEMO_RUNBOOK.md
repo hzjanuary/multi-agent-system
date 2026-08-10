@@ -61,6 +61,8 @@ TELEGRAM_SALES_REPLY_ENABLED=true
 The bridge still runs deterministic normalization after LLM extraction:
 
 - laptop aliases become `Standard business laptop`
+- printer aliases become `Máy in`
+- computer aliases become `Máy tính`
 - Office 365 aliases become `office_365`
 - quantity must be a positive integer
 - unsupported mixed items are blocked
@@ -187,18 +189,46 @@ Expected:
 Send:
 
 ```text
-báo giá 20 cái laptop và 5 cái máy in hp
+báo giá 20 cái laptop và 5 cái ghế văn phòng
 ```
 
 Expected:
 
 - no workflow created
 - reply mentions the supported laptop request
-- reply mentions `5 x máy in HP` as unsupported
-- reply explains the demo catalog supports laptop quotation only
-- reply asks for a laptop-only RFQ or catalog/pricing extension
+- reply mentions `5 x ghế văn phòng` as unsupported
+- reply explains the demo catalog supports laptops, computers, and printers
+- reply asks for a supported-item-only RFQ or catalog/pricing extension
 
-### 3. Laptop-Only RFQ
+### 3. Supported RFQs - Computer And Printer
+
+Send:
+
+```text
+báo giá 10 cái máy in
+```
+
+Expected:
+
+- workflow created
+- bridge auto-runs `/run`
+- backend status reaches `WAITING_APPROVAL`
+- reply confirms `10 x Máy in`
+- no final quote, price, stock, delivery date, or email claim
+
+Then send:
+
+```text
+cần báo giá 5 máy tính
+```
+
+Expected:
+
+- workflow created
+- reply confirms `5 x Máy tính`
+- backend status reaches `WAITING_APPROVAL`
+
+### 4. Laptop-Only RFQ
 
 Send:
 
@@ -216,7 +246,7 @@ Expected:
 - reply states human approval is required
 - no final quote, price, stock, delivery date, or email claim
 
-### 4. Agent Monitor
+### 5. Agent Monitor
 
 Open the Agent Monitor URL from the Telegram reply.
 
@@ -229,7 +259,7 @@ Expected:
 - no chain-of-thought, raw prompts, raw provider payloads, embeddings, tokens,
   or secrets are shown
 
-### 5. Manager Approval
+### 6. Manager Approval
 
 Open the workflow detail URL and approve as Manager/Admin.
 
@@ -239,7 +269,7 @@ Expected:
 - workflow becomes `APPROVED`
 - no automatic resume occurs
 
-### 6. Resume
+### 7. Resume
 
 Click Resume workflow in the web UI.
 
@@ -263,7 +293,7 @@ Use this concise explanation during Q&A:
   persisted events, not hidden reasoning.
 - Human approval prevents autonomous final quote issuance.
 - The mixed unsupported item guard prevents silent item dropping and avoids
-  pretending the demo has printer catalog/pricing support.
+  pretending the demo has catalog/pricing support for arbitrary products.
 
 ## Safety Checklist
 
@@ -326,17 +356,18 @@ TELEGRAM_LLM_BASE_URL=http://localhost:11434
 ```
 
 If Ollama is unavailable, the deterministic fallback still handles supported
-laptop RFQs.
+laptop, computer, and printer RFQs.
 
 ### Workflow Created But Not Auto-Run
 
 Open the workflow URL from the Telegram reply. Click Run workflow after the
 backend is ready. The workflow should stop at `WAITING_APPROVAL`.
 
-### Mixed Printer/Laptop Request Creates Workflow
+### Mixed Supported/Unsupported Request Creates Workflow
 
 Restart the Telegram bridge so it loads the latest code. The expected behavior
-is a clarification reply and no workflow creation.
+is a clarification reply and no workflow creation when any item in the message
+is outside the supported laptop/computer/printer catalog.
 
 ## Validation Commands
 

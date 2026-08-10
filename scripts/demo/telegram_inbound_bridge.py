@@ -40,7 +40,7 @@ DEFAULT_POLL_INTERVAL_SECONDS = 2.0
 DEFAULT_TELEGRAM_LLM_PROVIDER = "ollama"
 DEFAULT_TELEGRAM_LLM_MODEL = "qwen2.5:7b-instruct-q4_K_M"
 DEFAULT_TELEGRAM_LLM_BASE_URL = "http://localhost:11434"
-DEFAULT_TELEGRAM_LLM_TIMEOUT_SECONDS = 30
+DEFAULT_TELEGRAM_LLM_TIMEOUT_SECONDS = 90
 EXAMPLE_MESSAGE = (
     "We would like to purchase 50 standard business laptops for a new "
     "operations team. We signed a master agreement in May 2026. Please provide "
@@ -529,7 +529,13 @@ def extract_customer_request(
         extraction_mode: str | None = None,
     ) -> ParsedCustomerRequest | UnsupportedMixedRequest | None:
         normalized = re.sub(r"\s+", " ", text.strip())[:MAX_TEXT_LENGTH]
-        unsupported_items = detect_unsupported_item_mentions(text)
+        unsupported_items = merge_unsupported_mentions(
+            detect_unsupported_item_mentions(text),
+            detect_other_item_mentions(
+                text,
+                parsed.item_name if parsed is not None else None,
+            ),
+        )
         if unsupported_items and parsed is not None:
             guarded_parsed = (
                 parsed_with_extraction_metadata(
@@ -591,6 +597,8 @@ def llm_extract_customer_request(
             {"role": "user", "content": text[:MAX_TEXT_LENGTH]},
         ],
         "stream": False,
+        "think": False,
+        "format": "json",
         "options": {"temperature": 0, "num_predict": 500},
     }
     request = urllib.request.Request(
@@ -615,7 +623,11 @@ def llm_extract_customer_request(
 
     message = response_payload.get("message")
     content = message.get("content") if isinstance(message, dict) else None
-    if not isinstance(content, str):
+    if not isinstance(content, str) or not content.strip():
+        thinking = message.get("thinking") if isinstance(message, dict) else None
+        if isinstance(thinking, str) and thinking.strip():
+            content = thinking
+    if not isinstance(content, str) or not content.strip():
         raise LLMExtractionError("Telegram LLM extraction returned no content")
     return parse_llm_extraction_result(
         content,
@@ -854,6 +866,108 @@ def detect_unsupported_item_mentions(text: str) -> tuple[UnsupportedItemMention,
                 )
                 break
     return tuple(unsupported)
+
+
+_GENERIC_ITEM_REGEX = re.compile(
+    r"\b(\d{1,5})\s+"
+    r"(?:cai|chiec|bo|cay|pcs?|units?|cái|chiếc|bộ|cây)?\s*"
+    r"([^\W\d_][^\W\d_ ]*(?:[-\s][^\W\d_][^\W\d_ ]*){0,8})",
+    re.IGNORECASE,
+)
+
+_TRAILING_ITEM_CONNECTORS = frozenset(
+    {"va", "and", "with", "for", "co", "kem", "cung", "them"}
+)
+
+_UNSUPPORTED_ITEM_ALIASES = frozenset(
+    {
+        "projector",
+        "projectors",
+        "may chieu",
+        "server",
+        "servers",
+        "may chu",
+        "phone",
+        "phones",
+        "dien thoai",
+        "camera",
+        "camera giam sat",
+        "router",
+        "routers",
+        "bo dinh tuyen",
+    }
+)
+
+
+def strip_trailing_connectors(value: str) -> str:
+    words = value.split()
+    normalized_words = normalize_for_matching(value).split()
+    if len(words) != len(normalized_words):
+        return value.strip()
+    while (
+        normalized_words
+        and normalized_words[-1].strip(".,;") in _TRAILING_ITEM_CONNECTORS
+    ):
+        normalized_words.pop()
+        words.pop()
+    return " ".join(words).strip()
+
+
+def merge_unsupported_mentions(
+    *groups: tuple[UnsupportedItemMention, ...],
+) -> tuple[UnsupportedItemMention, ...]:
+    return tuple(dict.fromkeys(item for group in groups for item in group))
+
+
+def detect_other_item_mentions(
+    text: str,
+    extracted_item_name: str | None,
+) -> tuple[UnsupportedItemMention, ...]:
+    """Find catalog or generic item mentions beyond the extracted single item.
+
+    The bridge creates one item per quotation request. Mentioning a second
+    catalog item or an unknown quantity-word item means the message mixes
+    products, so the bridge refuses to create a partial workflow instead of
+    silently dropping the other item.
+    """
+    searchable = normalize_for_matching(text)
+    mentions: list[UnsupportedItemMention] = []
+
+    for item in CATALOG_ITEMS:
+        if item.normalized_item_name == extracted_item_name:
+            continue
+        for alias in sorted(item.normalized_aliases, key=len, reverse=True):
+            match = re.search(quantity_alias_regex(alias), searchable)
+            if match:
+                mentions.append(
+                    UnsupportedItemMention(
+                        quantity=int(match.group(1)),
+                        item_label=item.normalized_item_name,
+                        display_label=item.display_name,
+                    )
+                )
+                break
+
+    for match in _GENERIC_ITEM_REGEX.finditer(text):
+        raw_value = match.group(2)
+        normalized_value = normalize_for_matching(raw_value)
+        if find_catalog_item(normalized_value) is not None:
+            continue
+        if any(alias in normalized_value for alias in _UNSUPPORTED_ITEM_ALIASES):
+            continue
+        label = strip_trailing_connectors(raw_value)
+        if not label:
+            continue
+        quantity = int(match.group(1)) if match.group(1) else None
+        mentions.append(
+            UnsupportedItemMention(
+                quantity=quantity,
+                item_label="unsupported_item",
+                display_label=label,
+            )
+        )
+
+    return tuple(mentions)
 
 
 def build_workflow_create_payload(

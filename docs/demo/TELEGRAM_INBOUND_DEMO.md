@@ -94,7 +94,7 @@ export TELEGRAM_LLM_EXTRACTION_ENABLED="true"
 export TELEGRAM_LLM_PROVIDER="ollama"
 export TELEGRAM_LLM_MODEL="${OLLAMA_MODEL:-qwen2.5:7b-instruct-q4_K_M}"
 export TELEGRAM_LLM_BASE_URL="${OLLAMA_BASE_URL:-http://localhost:11434}"
-export TELEGRAM_LLM_TIMEOUT_SECONDS="30"
+export TELEGRAM_LLM_TIMEOUT_SECONDS="90"
 ```
 
 The bridge only supports local optional extraction through Ollama today. Do not
@@ -268,19 +268,23 @@ to create a workflow silently. Ask the customer actor to use a supported demo
 catalog phrase such as `laptop`, `máy tính bàn`, `màn hình văn phòng`,
 `máy in văn phòng`, or `bộ bàn phím chuột`.
 
-If a message mixes a supported laptop request with an unsupported item, the
-bridge also refuses to create a partial workflow. For example:
+If a message mixes a supported request with an unsupported item, the bridge also
+refuses to create a partial workflow. For example:
 
 ```text
 báo giá 20 laptop và 3 máy chiếu
 quote 10 monitors and 2 servers
+báo giá 20 cái laptop và 5 cái ghế văn phòng
 ```
 
 The bridge recognizes the supported catalog item, detects the unsupported item,
 and replies with a clarification instead of dropping the unsupported line.
-Supported catalog items do not imply price, stock, delivery, discount,
-approval, or final quotation. Send a request with supported catalog items only,
-or add catalog/pricing support before demonstrating other products.
+Unsupported detection covers known unsupported products, additional catalog
+items in the same message, and other quantity-word items such as `ghế văn
+phòng` or `ergonomic chairs`. Supported catalog items do not imply price,
+stock, delivery, discount, approval, or final quotation. Send a request with
+supported catalog items only, or add catalog/pricing support before
+demonstrating other products.
 
 ## Optional LLM Extraction
 
@@ -295,8 +299,15 @@ TELEGRAM_LLM_EXTRACTION_ENABLED=false
 TELEGRAM_LLM_PROVIDER=ollama
 TELEGRAM_LLM_MODEL=<OLLAMA_MODEL or qwen2.5:7b-instruct-q4_K_M>
 TELEGRAM_LLM_BASE_URL=<OLLAMA_BASE_URL or http://localhost:11434>
-TELEGRAM_LLM_TIMEOUT_SECONDS=30
+TELEGRAM_LLM_TIMEOUT_SECONDS=90
 ```
+
+The bridge calls Ollama's `/api/chat` endpoint with `format: "json"` and
+`think: false` so the model returns strict JSON output without a separate
+reasoning channel. A capped `TELEGRAM_LLM_TIMEOUT_SECONDS` (default 90, clamped
+to at most 120) bounds each model call. If a provider returns the JSON inside a
+`thinking` field instead of `content`, the bridge falls back to that field and
+parses it with the same rules.
 
 The LLM is instructed to return exactly one JSON object:
 
@@ -317,6 +328,10 @@ responses are discarded safely.
 After LLM extraction, the deterministic canonicalizer still runs:
 
 - laptop aliases normalize to `Standard business laptop`
+- desktop aliases normalize to `Business desktop PC`
+- monitor aliases normalize to `Office monitor`
+- printer aliases normalize to `Office printer`
+- keyboard/mouse combo aliases normalize to `Wireless keyboard and mouse combo`
 - Office 365 aliases normalize to `office_365`
 - quantity must be a positive integer
 - unsupported items or missing quantity produce a follow-up prompt
@@ -434,7 +449,7 @@ source=telegram
 language=en or vi
 requested_addons=["office_365"] when detected
 demo=true
-parser_version=telegram-demo-parser-v3
+parser_version=telegram-demo-parser-v4
 extraction_mode=deterministic, llm, or fallback
 llm_provider=ollama when LLM extraction produced or attempted a fallback result
 llm_model=<bounded model name> when LLM extraction produced or attempted a fallback result
@@ -528,8 +543,10 @@ python scripts/demo/llm_provider_smoke.py --provider ollama --model qwen2.5:7b-i
 - Local polling only; no webhook endpoint.
 - In-memory Telegram offset only; restart can re-read recent unconfirmed
   updates depending on Telegram offset state.
-- Laptop quotation parser only, with English and Vietnamese demo phrases.
-- Multi-item parsing is not implemented.
+- Laptop, desktop, monitor, printer, and keyboard/mouse combo quotation parser,
+  with English and Vietnamese demo phrases.
+- Multi-item parsing is not implemented; a message that mixes multiple items is
+  refused with a clarification instead of creating a partial workflow.
 - No production secret storage.
 - No Telegram user identity binding to backend users.
 - No auto-approval or auto-resume.

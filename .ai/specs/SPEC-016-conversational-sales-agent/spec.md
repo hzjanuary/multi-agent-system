@@ -50,8 +50,8 @@ The following SPEC-016-related capabilities already exist as local-demo work:
   - unsupported items produce follow-up instead of low-quality workflow data
 - Sales-style Telegram replies behind `TELEGRAM_SALES_REPLY_ENABLED`.
 - Mixed unsupported item safety guard:
-  - supported laptop plus unsupported printer requests do not create partial
-    workflows silently
+  - supported request plus an additional catalog or generic item (for example
+    laptops plus office chairs) does not create partial workflows silently
 - Workflow creation through existing backend APIs.
 - Optional auto-run to `WAITING_APPROVAL`.
 - Sales-style replies can render explicitly supplied bounded reference evidence
