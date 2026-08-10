@@ -179,6 +179,10 @@ class Settings(BaseSettings):
         le=20,
         alias="PRICE_RESEARCH_MAX_SOURCES",
     )
+    price_research_tavily_api_key: str = Field(
+        default="",
+        alias="TAVILY_API_KEY",
+    )
     price_research_default_region: str = Field(
         default="VN",
         min_length=1,

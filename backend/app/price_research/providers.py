@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from app.price_research.exceptions import PriceResearchProviderError
+from app.price_research.exceptions import (
+    PriceResearchErrorCategory,
+    PriceResearchProviderError,
+)
 from app.price_research.schemas import PriceResearchRequest, PriceResearchResult
 
 
@@ -46,8 +49,9 @@ def get_price_research_provider(provider_name: str) -> PriceResearchProvider:
         )
     if normalized == "tavily":
         raise PriceResearchProviderError(
-            "Tavily price research provider requires explicit provider injection "
-            "with TAVILY_API_KEY",
+            "Tavily price research provider requires an injected API key and "
+            "transport",
+            category=PriceResearchErrorCategory.CONFIGURATION,
         )
     raise PriceResearchProviderError(
         f"Unsupported price research provider: {provider_name}",

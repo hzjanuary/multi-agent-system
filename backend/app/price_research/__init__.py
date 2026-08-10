@@ -3,6 +3,7 @@
 from app.price_research.exceptions import (
     PriceResearchDisabledError,
     PriceResearchError,
+    PriceResearchErrorCategory,
     PriceResearchProviderError,
     PriceResearchValidationError,
 )
@@ -21,11 +22,12 @@ from app.price_research.schemas import (
     ReferencePrice,
 )
 from app.price_research.service import PriceResearchService
-from app.price_research.tavily_provider import TavilyPriceResearchProvider
+from app.price_research.web_provider import TavilyPriceResearchProvider
 
 __all__ = [
     "PriceResearchDisabledError",
     "PriceResearchError",
+    "PriceResearchErrorCategory",
     "FakePriceResearchProvider",
     "ManualPriceResearchProvider",
     "PriceResearchProvider",
