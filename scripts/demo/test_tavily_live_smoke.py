@@ -1,14 +1,24 @@
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import io
 import json
 import os
+import sys
 import unittest
 from datetime import UTC, datetime
+from pathlib import Path
 from unittest.mock import patch
 
 from scripts.demo import tavily_live_smoke
+
+try:
+    import pydantic  # noqa: F401
+
+    BACKEND_DEPS_AVAILABLE = True
+except ImportError:
+    BACKEND_DEPS_AVAILABLE = False
 
 
 class TavilyLiveSmokeTests(unittest.TestCase):
@@ -272,6 +282,83 @@ class TavilyLiveSmokeTests(unittest.TestCase):
         )
         for claim in forbidden:
             self.assertNotIn(claim, text)
+
+    @unittest.skipUnless(
+        BACKEND_DEPS_AVAILABLE,
+        "backend dependencies (pydantic) not installed on this Python environment",
+    )
+    def test_live_path_runs_real_adapter_without_network(self) -> None:
+        from unittest.mock import AsyncMock
+
+        backend_path = Path(__file__).resolve().parents[2] / "backend"
+        if str(backend_path) not in sys.path:
+            sys.path.insert(0, str(backend_path))
+
+        from app.llm.clients.http import HTTPResponse, UrllibAsyncJSONHTTPTransport
+
+        response = HTTPResponse(
+            status_code=200,
+            payload={
+                "query": "Standard business laptop",
+                "results": [
+                    {
+                        "title": "Reference business laptop listing",
+                        "url": "https://example.test/laptop-pricing",
+                        "content": "Reference evidence overview for internal review.",
+                    },
+                ],
+            },
+        )
+
+        with patch.dict(
+            os.environ,
+            {"TAVILY_API_KEY": "tvly-test-dummy-key"},
+            clear=False,
+        ):
+            config = tavily_live_smoke.config_from_args(
+                tavily_live_smoke.parse_args(
+                    [
+                        "--provider",
+                        "tavily",
+                        "--item",
+                        "Standard business laptop",
+                        "--quantity",
+                        "20",
+                        "--region",
+                        "VN",
+                        "--currency",
+                        "VND",
+                        "--requested-addon",
+                        "office_365",
+                    ],
+                ),
+            )
+        request = tavily_live_smoke.build_smoke_request(config)
+
+        with patch.object(
+            UrllibAsyncJSONHTTPTransport,
+            "post_json",
+            new=AsyncMock(return_value=response),
+        ) as mock_post:
+            result = asyncio.run(
+                tavily_live_smoke.run_tavily_provider(config, request),
+            )
+
+        output_text = json.dumps(result.model_dump(mode="json")).lower()
+        self.assertEqual(result.provider, "tavily")
+        self.assertFalse(result.is_final_quote)
+        self.assertEqual(result.sources[0].url, "https://example.test/laptop-pricing")
+        self.assertEqual(result.reference_prices, ())
+        self.assertEqual(result.confidence, 0.5)
+        self.assertNotIn("tvly-test-dummy-key", output_text)
+
+        call_kwargs = mock_post.await_args.kwargs
+        self.assertEqual(call_kwargs["url"], "https://api.tavily.com/search")
+        self.assertIn("Standard business laptop", call_kwargs["payload"]["query"])
+        self.assertIn("office_365", call_kwargs["payload"]["query"])
+        self.assertEqual(call_kwargs["payload"]["max_results"], 5)
+        self.assertEqual(call_kwargs["payload"]["search_depth"], "basic")
+        self.assertEqual(call_kwargs["timeout_seconds"], 30)
 
 
 def run_main(

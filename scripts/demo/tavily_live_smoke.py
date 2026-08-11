@@ -22,7 +22,6 @@ from typing import Any
 BACKEND_PATH = Path(__file__).resolve().parents[2] / "backend"
 
 DEFAULT_PROVIDER = "tavily"
-DEFAULT_TAVILY_SEARCH_URL = "https://api.tavily.com/search"
 DEFAULT_REGION = "VN"
 DEFAULT_CURRENCY = "VND"
 DEFAULT_QUANTITY = 1
@@ -71,9 +70,6 @@ class LiveSmokeConfig:
     timeout_seconds: int
     max_results: int
     tavily_api_key: str
-    tavily_search_url: str
-    tavily_include_raw_content: bool
-    tavily_search_depth: str
 
 
 @dataclass(frozen=True)
@@ -161,23 +157,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--max-results",
         type=int,
         default=int(os.getenv("TAVILY_MAX_RESULTS", str(DEFAULT_MAX_RESULTS))),
-        help="Maximum Tavily results to request, bounded 1..10.",
-    )
-    parser.add_argument(
-        "--search-url",
-        default=os.getenv("TAVILY_SEARCH_URL", DEFAULT_TAVILY_SEARCH_URL),
-        help="Tavily search URL. Defaults to the official search endpoint.",
-    )
-    parser.add_argument(
-        "--search-depth",
-        default=os.getenv("TAVILY_SEARCH_DEPTH", "basic"),
-        help="Tavily search depth: basic or advanced.",
-    )
-    parser.add_argument(
-        "--include-raw-content",
-        action="store_true",
-        default=os.getenv("TAVILY_INCLUDE_RAW_CONTENT", "false").lower() == "true",
-        help="Forward include_raw_content to Tavily. Output still never prints raw payloads.",
+        help="Maximum Tavily results to request, bounded 1..5 by the adapter.",
     )
     return parser.parse_args(argv)
 
@@ -205,11 +185,8 @@ def config_from_args(args: argparse.Namespace) -> LiveSmokeConfig:
         dry_run=bool(args.dry_run),
         pretty=bool(args.pretty),
         timeout_seconds=max(1, min(int(args.timeout_seconds), 120)),
-        max_results=max(1, min(int(args.max_results), 10)),
+        max_results=max(1, min(int(args.max_results), 5)),
         tavily_api_key=os.getenv("TAVILY_API_KEY", "").strip(),
-        tavily_search_url=str(args.search_url).strip(),
-        tavily_include_raw_content=bool(args.include_raw_content),
-        tavily_search_depth=str(args.search_depth).strip().lower(),
     )
 
 
@@ -284,7 +261,7 @@ async def run_tavily_provider(
         sys.path.insert(0, str(BACKEND_PATH))
 
     from app.price_research.schemas import PriceResearchRequest
-    from app.price_research.tavily_provider import TavilyPriceResearchProvider
+    from app.price_research.web_provider import TavilyPriceResearchProvider
 
     provider_request = PriceResearchRequest(
         item_name=request.item_name,
@@ -297,11 +274,8 @@ async def run_tavily_provider(
     )
     provider = TavilyPriceResearchProvider(
         api_key=config.tavily_api_key,
-        search_url=config.tavily_search_url,
         timeout_seconds=config.timeout_seconds,
         max_results=config.max_results,
-        include_raw_content=config.tavily_include_raw_content,
-        search_depth=config.tavily_search_depth,
     )
     return await provider.research_price(provider_request)
 

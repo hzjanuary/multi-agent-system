@@ -268,7 +268,7 @@ Implementation validation should include:
 ```bash
 python3 scripts/demo/tavily_live_smoke.py --help
 python3 scripts/demo/tavily_live_smoke.py --provider tavily --item "Standard business laptop" --dry-run
-docker compose run --rm backend-test pytest app/tests/test_price_research_tavily_provider.py -q
+docker compose run --rm backend-test pytest app/tests/test_price_research_web_provider.py -q
 docker compose run --rm backend-test pytest -q
 docker compose run --rm backend-test ruff check .
 docker compose run --rm backend-test black --check .

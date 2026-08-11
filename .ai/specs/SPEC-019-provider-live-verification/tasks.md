@@ -99,7 +99,7 @@ Acceptance criteria:
 Validation:
 
 ```bash
-docker compose run --rm backend-test pytest app/tests/test_price_research_tavily_provider.py -q
+docker compose run --rm backend-test pytest app/tests/test_price_research_web_provider.py -q
 python3 -m unittest scripts.demo.test_tavily_live_smoke
 git diff --check
 ```

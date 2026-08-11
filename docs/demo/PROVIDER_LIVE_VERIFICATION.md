@@ -67,8 +67,9 @@ python3 scripts/demo/tavily_live_smoke.py \
   --pretty
 ```
 
-Confirmed live mode lazy-loads the backend Tavily adapter, so run it from a
-Python environment with backend dependencies installed. `--help` and `--dry-run`
+Confirmed live mode lazy-loads the exact production Tavily adapter
+(`backend/app/price_research/web_provider.py`), so run it from a Python
+environment with backend dependencies installed. `--help` and `--dry-run`
 remain dependency-light and do not import backend packages.
 
 Optional flags:
@@ -78,8 +79,17 @@ Optional flags:
 --requested-addon office_365
 --timeout-seconds 30
 --max-results 5
---search-depth basic
 ```
+
+The adapter fixes the search endpoint (`https://api.tavily.com/search`), search
+depth (`basic`), and does not request raw content; these are production adapter
+settings, not smoke-configurable. `--max-results` is bounded to 1..5 to match
+the adapter cap.
+
+The smoke test suite (`scripts/demo/test_tavily_live_smoke.py`) runs on the host
+without backend dependencies; the live-path wiring test (real adapter with a
+mocked transport, no network or key) requires backend dependencies and is
+skipped where they are absent.
 
 The output includes a safe request summary, bounded sources, warnings, and
 `is_final_quote=false`. Tavily search snippets are treated as external web
