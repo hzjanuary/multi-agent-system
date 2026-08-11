@@ -117,7 +117,9 @@ Forbidden:
 
 Tavily is currently available only as an optional adapter and manual live smoke
 path. It is not connected to Telegram, workflows, frontend pages, approval,
-resume, or email.
+resume, or email. The provider factory builds the Tavily adapter only when a
+non-blank `TAVILY_API_KEY` is present in settings; otherwise construction fails
+closed with a configuration error.
 
 Live verification requires:
 

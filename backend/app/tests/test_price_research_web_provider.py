@@ -147,12 +147,16 @@ def test_provider_requires_api_key_at_construction() -> None:
     assert exc_info.value.category is PriceResearchErrorCategory.CONFIGURATION
 
 
-def test_provider_factory_requires_injected_api_key_and_transport() -> None:
+def test_provider_factory_requires_injected_api_key_and_transport(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TAVILY_API_KEY", "")
+
     with pytest.raises(
         PriceResearchProviderError,
         match="injected API key and transport",
     ) as exc_info:
-        get_price_research_provider("tavily")
+        get_price_research_provider("tavily", settings=Settings())
     assert exc_info.value.category is PriceResearchErrorCategory.CONFIGURATION
 
 

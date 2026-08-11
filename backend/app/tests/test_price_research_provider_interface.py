@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -20,6 +21,7 @@ from app.price_research import (
     PriceResearchSource,
     PriceResearchSourceType,
     ReferencePrice,
+    TavilyPriceResearchProvider,
     get_price_research_provider,
 )
 
@@ -234,9 +236,91 @@ def test_provider_factory_rejects_unknown_provider() -> None:
         get_price_research_provider("external_web")
 
 
-def test_provider_factory_rejects_tavily_without_explicit_injection() -> None:
-    with pytest.raises(PriceResearchProviderError, match="explicit provider injection"):
-        get_price_research_provider("tavily")
+def test_provider_factory_rejects_tavily_without_explicit_injection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TAVILY_API_KEY", "")
+
+    with pytest.raises(
+        PriceResearchProviderError,
+        match="requires an injected API key and transport",
+    ):
+        get_price_research_provider("tavily", settings=Settings())
+
+
+def test_provider_factory_rejects_tavily_with_blank_settings_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TAVILY_API_KEY", "   ")
+
+    with pytest.raises(
+        PriceResearchProviderError,
+        match="requires an injected API key and transport",
+    ) as exc_info:
+        get_price_research_provider("tavily", settings=Settings())
+    assert exc_info.value.category.name == "CONFIGURATION"
+
+
+def test_provider_factory_builds_tavily_from_settings_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TAVILY_API_KEY", "sk-test-key")
+    monkeypatch.setenv("PRICE_RESEARCH_TIMEOUT_SECONDS", "12")
+    monkeypatch.setenv("TAVILY_MAX_RESULTS", "7")
+
+    provider = get_price_research_provider("tavily", settings=Settings())
+
+    assert isinstance(provider, TavilyPriceResearchProvider)
+    assert provider.name == "tavily"
+
+
+@pytest.mark.asyncio
+async def test_service_resolves_tavily_through_factory_without_network(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.llm.clients.http import HTTPResponse, UrllibAsyncJSONHTTPTransport
+
+    monkeypatch.setenv("TAVILY_API_KEY", "sk-test-key")
+    monkeypatch.setenv("PRICE_RESEARCH_TIMEOUT_SECONDS", "12")
+    monkeypatch.setenv("TAVILY_MAX_RESULTS", "3")
+    monkeypatch.setattr(
+        "app.price_research.providers.get_settings",
+        lambda: Settings(),
+    )
+    monkeypatch.setattr(
+        UrllibAsyncJSONHTTPTransport,
+        "post_json",
+        AsyncMock(
+            return_value=HTTPResponse(
+                status_code=200,
+                payload={
+                    "results": [
+                        {
+                            "title": "Business laptop pricing guide",
+                            "url": "https://example.test/laptop-pricing",
+                            "content": "Reference overview for internal review.",
+                        },
+                    ],
+                },
+            )
+        ),
+    )
+
+    service = PriceResearchService(
+        enabled=True,
+        provider_name="tavily",
+        max_sources=5,
+    )
+
+    result = await service.research_price(_request())
+
+    assert result.provider == "tavily"
+    assert result.is_final_quote is False
+    assert result.evidence_label == "reference_price_research"
+    assert result.sources[0].source_type is PriceResearchSourceType.EXTERNAL_WEB
+    assert result.sources[0].confidence == 0.5
+    assert result.reference_prices == ()
+    _assert_no_forbidden_positive_claims(result)
 
 
 @pytest.mark.asyncio

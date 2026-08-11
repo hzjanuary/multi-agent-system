@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from app.config import Settings, get_settings
 from app.price_research.exceptions import (
     PriceResearchErrorCategory,
     PriceResearchProviderError,
@@ -31,8 +32,21 @@ class PriceResearchProvider(Protocol):
         """Return normalized reference price evidence for a supported request."""
 
 
-def get_price_research_provider(provider_name: str) -> PriceResearchProvider:
-    """Return a no-network price research provider by stable name."""
+def get_price_research_provider(
+    provider_name: str,
+    *,
+    settings: Settings | None = None,
+) -> PriceResearchProvider:
+    """Return a price research provider by stable name.
+
+    Deterministic no-network providers (``fake``, ``manual``) are returned
+    directly. Network-capable providers require settings: ``tavily`` is built
+    from the environment-only ``TAVILY_API_KEY`` setting and fails closed with a
+    ``CONFIGURATION`` error when no key is configured. ``rag`` requires an
+    injected knowledge search dependency. The returned provider performs no
+    network access until ``research_price`` is called.
+    """
+    resolved = settings or get_settings()
     normalized = provider_name.strip().lower()
     if normalized == "fake":
         from app.price_research.fake_provider import FakePriceResearchProvider
@@ -48,10 +62,19 @@ def get_price_research_provider(provider_name: str) -> PriceResearchProvider:
             "dependency",
         )
     if normalized == "tavily":
-        raise PriceResearchProviderError(
-            "Tavily price research provider requires an injected API key and "
-            "transport",
-            category=PriceResearchErrorCategory.CONFIGURATION,
+        api_key = resolved.price_research_tavily_api_key.strip()
+        if not api_key:
+            raise PriceResearchProviderError(
+                "Tavily price research provider requires an injected API key and "
+                "transport",
+                category=PriceResearchErrorCategory.CONFIGURATION,
+            )
+        from app.price_research.web_provider import TavilyPriceResearchProvider
+
+        return TavilyPriceResearchProvider(
+            api_key=api_key,
+            timeout_seconds=resolved.price_research_timeout_seconds,
+            max_results=resolved.tavily_max_results,
         )
     raise PriceResearchProviderError(
         f"Unsupported price research provider: {provider_name}",
