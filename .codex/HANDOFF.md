@@ -539,24 +539,36 @@ Implemented:
   - The adapter does not infer prices from snippets/prose, does not create
     final quotes, and adds manual-review warnings when only external web
     sources are available.
-- Implemented TASK 016.9 foundation:
+- Implemented TASK 016.9 (completed):
   - `scripts/demo/telegram_inbound_bridge.py` now has local
     `ReferenceEvidenceSummary`, `ReferenceEvidenceSourceSummary`, and
-    `ReferenceEvidencePriceSummary` dataclasses for explicitly supplied
-    evidence summaries.
-  - Sales-style Telegram replies can render bounded provider/source/confidence
-    and explicit reference amount summaries when a future caller passes an
-    evidence object into the reply renderer.
-  - Evidence rendering is passive. The Telegram bridge does not call Tavily,
-    backend price research services, RAG providers, or external network paths
-    for evidence.
+    `ReferenceEvidencePriceSummary` dataclasses for explicitly supplied evidence
+    summaries, and `BridgeConfig.price_research_enabled` behind
+    `PRICE_RESEARCH_ENABLED` (default false).
+  - Added a provider-independent mapper
+    (`reference_evidence_from_price_research_result`) that consumes the shared
+    price research result/evidence contract (attribute or dict shaped) into
+    bounded reply evidence.
+  - Reference amounts are kept only for explicit structured numeric values
+    (`safe_evidence_amount`); prose is never converted into a price.
+  - Source URLs are bounded and http(s)-only (`safe_evidence_url`); raw snippets
+    and provider payloads are never carried into replies.
+  - `handle_update` accepts an injectable evidence provider and wires evidence
+    into sales replies and dry-run output. A disabled flag, an absent provider,
+    a provider exception, or a wrong return type degrade to no evidence without
+    blocking the deterministic flow.
+  - Evidence rendering is passive; the bridge does not call Tavily, backend
+    price research services, RAG providers, or external network paths for
+    evidence.
   - Empty, absent, low-confidence, warning-only, or `is_final_quote=true`
-    evidence downgrades to manual/internal-review wording.
-  - Technical reply mode remains compatible and ignores evidence summaries.
+    evidence downgrades to manual/internal-review wording; technical reply mode
+    remains compatible and ignores evidence summaries.
   - `scripts/demo/test_telegram_inbound_bridge.py` covers absent evidence,
     explicit reference amounts, bounded citations, low confidence, final-quote
-    downgrade, redaction, forbidden claims, technical compatibility, and no
-    network calls.
+    downgrade, redaction, forbidden claims, technical compatibility, no network
+    calls, mapper bounds/safety, dict-shaped contract, prose-amount rejection,
+    disabled/failing/wrong-type provider degradation, env flag, dry-run
+    evidence wiring, and http(s)-only URL enforcement.
 - Implemented TASK 016.10 foundation:
   - `frontend/components/workflows/workflow-reference-evidence-panel.tsx`
     extracts and renders explicit reference evidence from existing workflow

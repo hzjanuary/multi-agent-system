@@ -244,6 +244,8 @@ git diff --check
 
 ### TASK 016.9 - Telegram Sales Reply Uses Reference Evidence Safely
 
+Status: Implemented.
+
 Goal: Let Telegram sales replies mention available reference evidence without
 issuing a final quote or overclaiming.
 
@@ -256,6 +258,24 @@ Scope:
 - Keep workflow URL, Agent Monitor URL, status, and human approval note.
 - Preserve technical reply mode.
 - Add tests for forbidden claims and no raw payload leakage.
+
+Implemented foundation:
+
+- Added an injectable evidence provider to the Telegram inbound bridge behind
+  `PRICE_RESEARCH_ENABLED` (disabled by default).
+- Added a provider-independent mapper (`reference_evidence_from_price_research_result`)
+  that consumes the shared price research result/evidence contract (attribute or
+  dict shaped) into bounded reply evidence.
+- Reference amounts are kept only when the result exposes an explicit structured
+  numeric amount; prose is never converted into a price.
+- Source URLs are bounded and http(s)-only; raw snippets and provider payloads are
+  never carried into replies.
+- Evidence is wired into sales replies and dry-run output. A disabled flag, an
+  absent provider, a provider exception, or a wrong return type degrade to no
+  evidence without blocking the deterministic flow.
+- Added tests covering mapper bounds/safety, dict-shaped contract, prose-amount
+  rejection, disabled/failing/wrong-type provider degradation, env flag, dry-run
+  evidence wiring, and http(s)-only URL enforcement.
 
 Acceptance criteria:
 

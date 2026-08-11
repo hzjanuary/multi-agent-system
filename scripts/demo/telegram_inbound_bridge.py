@@ -18,6 +18,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any
 
 from scripts.demo.catalog import (
@@ -77,6 +78,7 @@ class BridgeConfig:
     llm_base_url: str
     llm_timeout_seconds: int
     sales_replies_enabled: bool
+    price_research_enabled: bool = False
 
 
 @dataclass(frozen=True)
@@ -338,6 +340,10 @@ def config_from_env(args: argparse.Namespace) -> BridgeConfig:
             args.sales_replies,
             os.getenv("TELEGRAM_SALES_REPLY_ENABLED", "false"),
         ),
+        price_research_enabled=resolve_bool_flag(
+            None,
+            os.getenv("PRICE_RESEARCH_ENABLED", "false"),
+        ),
     )
 
 
@@ -347,7 +353,12 @@ def resolve_bool_flag(cli_value: bool | None, env_value: str) -> bool:
     return env_value.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
+def handle_update(
+    config: BridgeConfig,
+    update: dict[str, Any],
+    *,
+    evidence_provider: Any | None = None,
+) -> None:
     message = update.get("message")
     if not isinstance(message, dict):
         return
@@ -392,6 +403,11 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
         chat_id=chat_id,
         message_id=message_id,
     )
+    evidence = reference_evidence_for_request(
+        config,
+        parsed,
+        evidence_provider=evidence_provider,
+    )
 
     if config.dry_run:
         print(
@@ -401,6 +417,7 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
                     "chat_id": chat_id,
                     "summary": parsed.summary,
                     "payload": payload,
+                    "reference_evidence": reference_evidence_as_dict(evidence),
                 },
                 indent=2,
             )
@@ -431,6 +448,7 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
                     workflow_id=workflow.workflow_id,
                     status=run_status,
                     auto_run=config.auto_run,
+                    evidence=evidence,
                 )
         else:
             reply = telegram_workflow_reply(
@@ -439,8 +457,61 @@ def handle_update(config: BridgeConfig, update: dict[str, Any]) -> None:
                 workflow_id=workflow.workflow_id,
                 status=run_status,
                 auto_run=config.auto_run,
+                evidence=evidence,
             )
     send_or_log_reply(config, chat_id, reply)
+
+
+def reference_evidence_for_request(
+    config: BridgeConfig,
+    parsed: ParsedCustomerRequest,
+    *,
+    evidence_provider: Any | None,
+) -> ReferenceEvidenceSummary | None:
+    """Return bounded reference evidence when price research is enabled.
+
+    Evidence is optional display material. Provider failure, a disabled flag, or
+    an absent provider degrades to no evidence and never blocks the deterministic
+    flow.
+    """
+    if not config.price_research_enabled or evidence_provider is None:
+        return None
+    try:
+        evidence = evidence_provider(parsed, config)
+    except Exception:  # noqa: BLE001 - safe degradation to no evidence
+        return None
+    if not isinstance(evidence, ReferenceEvidenceSummary):
+        return None
+    return evidence
+
+
+def reference_evidence_as_dict(
+    evidence: ReferenceEvidenceSummary | None,
+) -> dict[str, Any] | None:
+    if evidence is None:
+        return None
+    return {
+        "provider": safe_evidence_text(evidence.provider, limit=80) or "unknown",
+        "evidence_label": safe_evidence_text(evidence.evidence_label, limit=120)
+        or "reference_price_research",
+        "reference_prices": [
+            {
+                "label": price.label,
+                "amount": safe_evidence_text(price.amount or "", limit=80),
+                "currency": safe_evidence_text(price.currency or "", limit=12),
+                "unit": safe_evidence_text(price.unit or "", limit=40),
+            }
+            for price in evidence.reference_prices[:MAX_EVIDENCE_ITEMS]
+        ],
+        "sources": [
+            {
+                "title": safe_evidence_text(source.title) or "reference source",
+                "url": safe_evidence_url(source.url),
+            }
+            for source in evidence.sources[:MAX_EVIDENCE_ITEMS]
+        ],
+        "warnings": safe_evidence_warnings(evidence.warnings),
+    }
 
 
 def handle_command(config: BridgeConfig, chat_id: str, text: str) -> None:
@@ -1416,6 +1487,8 @@ def safe_evidence_url(value: str | None) -> str | None:
         return None
     if contains_sensitive_marker(safe):
         return None
+    if not re.match(r"^https?://", safe, flags=re.IGNORECASE):
+        return None
     return safe
 
 
@@ -1444,6 +1517,118 @@ def contains_sensitive_marker(value: str) -> bool:
             value,
         )
     )
+
+
+def _evidence_field(container: Any, name: str) -> Any:
+    """Read a contract field from a mapping or an attribute-backed object."""
+    if isinstance(container, dict):
+        return container.get(name)
+    if container is None:
+        return None
+    return getattr(container, name, None)
+
+
+def reference_evidence_from_price_research_result(result: Any) -> ReferenceEvidenceSummary | None:
+    """Map a provider-independent price research result into bounded reply evidence.
+
+    The mapper consumes the shared PriceResearch result/evidence contract, not a
+    Tavily-specific shape. Raw snippets are never carried into replies, amounts
+    are kept only when the result exposes an explicit structured amount, and
+    source URLs are bounded and http(s)-only.
+    """
+    if result is None:
+        return None
+    provider = safe_evidence_text(_evidence_field(result, "provider") or "", limit=80) or "unknown"
+    evidence_label = (
+        safe_evidence_text(
+            _evidence_field(result, "evidence_label") or "",
+            limit=120,
+        )
+        or "reference_price_research"
+    )
+    retrieved_at = safe_evidence_text(
+        str(_evidence_field(result, "retrieved_at") or ""),
+        limit=120,
+    )
+    confidence = normalize_optional_confidence(_evidence_field(result, "confidence"))
+    warnings = safe_evidence_warnings(
+        tuple(
+            str(warning)
+            for warning in _evidence_field(result, "warnings") or ()
+            if warning
+        )
+    )
+    is_final_quote = bool(_evidence_field(result, "is_final_quote") or False)
+
+    prices: list[ReferenceEvidencePriceSummary] = []
+    for price in _evidence_field(result, "reference_prices") or ():
+        if len(prices) >= MAX_EVIDENCE_ITEMS:
+            break
+        label = safe_evidence_text(_evidence_field(price, "label") or "", limit=80) or "reference price"
+        amount = safe_evidence_amount(_evidence_field(price, "amount"))
+        currency = safe_evidence_text(_evidence_field(price, "currency") or "", limit=12)
+        unit = safe_evidence_text(_evidence_field(price, "unit") or "", limit=40)
+        prices.append(
+            ReferenceEvidencePriceSummary(
+                label=label,
+                amount=amount,
+                currency=currency,
+                unit=unit,
+            )
+        )
+
+    sources: list[ReferenceEvidenceSourceSummary] = []
+    for source in _evidence_field(result, "sources") or ():
+        if len(sources) >= MAX_EVIDENCE_ITEMS:
+            break
+        title = safe_evidence_text(_evidence_field(source, "title") or "") or "reference source"
+        url = safe_evidence_url(_evidence_field(source, "url"))
+        sources.append(ReferenceEvidenceSourceSummary(title=title, url=url))
+
+    return ReferenceEvidenceSummary(
+        provider=provider,
+        evidence_label=evidence_label,
+        reference_prices=tuple(prices),
+        sources=tuple(sources),
+        confidence=confidence,
+        warnings=tuple(warnings),
+        retrieved_at=retrieved_at,
+        is_final_quote=is_final_quote,
+    )
+
+
+def normalize_optional_confidence(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return normalized_confidence(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+_EXPLICIT_AMOUNT_PATTERN = re.compile(r"^[0-9]+(?:\.[0-9]+)?$")
+
+
+def safe_evidence_amount(value: Any) -> str | None:
+    """Keep a reference amount only when it is an explicit structured number.
+
+    Prose, free-form strings, booleans, and non-finite numbers are never treated
+    as prices, so no amount is ever invented from unstructured evidence. Plain
+    numeric strings are accepted as explicit structured values.
+    """
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, Decimal):
+        if not value.is_finite() or value < 0:
+            return None
+        return safe_evidence_text(str(value), limit=80)
+    if isinstance(value, (int, float)):
+        if value < 0:
+            return None
+        return safe_evidence_text(str(value), limit=80)
+    if isinstance(value, str) and _EXPLICIT_AMOUNT_PATTERN.fullmatch(value.strip()):
+        return safe_evidence_text(value.strip(), limit=80)
+    return None
 
 
 def telegram_sales_run_failed_reply(

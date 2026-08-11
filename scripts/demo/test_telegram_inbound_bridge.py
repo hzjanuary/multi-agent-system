@@ -1,5 +1,11 @@
+import io
 import json
+import os
 import unittest
+from contextlib import redirect_stdout
+from dataclasses import replace
+from decimal import Decimal
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
 
@@ -19,11 +25,15 @@ from scripts.demo.telegram_inbound_bridge import (
     extract_customer_request,
     follow_up_message,
     greeting_message,
+    handle_update,
     is_greeting_message,
     llm_extract_customer_request,
     parse_args,
     parse_llm_extraction_result,
     parse_customer_request,
+    reference_evidence_for_request,
+    reference_evidence_from_price_research_result,
+    safe_evidence_url,
     sender_display_name,
     telegram_run_failed_reply,
     telegram_workflow_reply,
@@ -1238,6 +1248,337 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
         for claim in forbidden:
             with self.subTest(claim=claim):
                 self.assertNotIn(claim, reply)
+
+
+class TelegramReferenceEvidenceTests(unittest.TestCase):
+    def config(self, *, sales: bool = False) -> BridgeConfig:
+        return BridgeConfig(
+            telegram_bot_token=None,
+            backend_api_base_url="http://localhost:8000/api/v1",
+            frontend_base_url="http://localhost:3000",
+            manager_email="manager@example.test",
+            manager_password="DemoPassword123!",
+            poll_interval_seconds=2.0,
+            allowed_chat_id=None,
+            dry_run=True,
+            once=True,
+            auto_run=True,
+            llm_extraction_enabled=False,
+            llm_provider="ollama",
+            llm_model="qwen2.5:7b-instruct-q4_K_M",
+            llm_base_url="http://localhost:11434",
+            llm_timeout_seconds=30,
+            sales_replies_enabled=sales,
+            price_research_enabled=True,
+        )
+
+    def provider_independent_result(self) -> SimpleNamespace:
+        return SimpleNamespace(
+            provider="reference_provider",
+            evidence_label="reference_price_research",
+            retrieved_at="2026-08-11T08:00:00Z",
+            confidence=0.85,
+            is_final_quote=False,
+            reference_prices=(
+                SimpleNamespace(
+                    label="Market reference",
+                    amount="12000000",
+                    currency="VND",
+                    unit="unit",
+                ),
+                SimpleNamespace(
+                    label="Vendor reference",
+                    amount=Decimal("12000000"),
+                    currency="VND",
+                    unit="unit",
+                ),
+                SimpleNamespace(
+                    label="Third reference",
+                    amount="11000000",
+                    currency="VND",
+                    unit="unit",
+                ),
+            ),
+            sources=(
+                SimpleNamespace(
+                    title="Public supplier page",
+                    url="https://supplier.example/prices",
+                ),
+                SimpleNamespace(
+                    title="Internal notes",
+                    url="file:///etc/shadow",
+                ),
+                SimpleNamespace(
+                    title="Leak",
+                    url="https://supplier.example/?api_key=secret",
+                ),
+                SimpleNamespace(
+                    title="Snippet holder",
+                    url="https://supplier.example/",
+                    snippet="raw_response secret provider_payload chain_of_thought",
+                ),
+            ),
+            warnings=("rate limited once",),
+        )
+
+    def test_mapper_builds_bounded_summary_from_provider_independent_result(self) -> None:
+        mapped = reference_evidence_from_price_research_result(
+            self.provider_independent_result()
+        )
+
+        self.assertIsNotNone(mapped)
+        assert mapped is not None
+        self.assertEqual(mapped.provider, "reference_provider")
+        self.assertEqual(mapped.evidence_label, "reference_price_research")
+        self.assertEqual(mapped.retrieved_at, "2026-08-11T08:00:00Z")
+        self.assertEqual(mapped.confidence, 0.85)
+        self.assertFalse(mapped.is_final_quote)
+        self.assertEqual(mapped.warnings, ("rate limited once",))
+        self.assertEqual(len(mapped.reference_prices), 2)
+        self.assertEqual(len(mapped.sources), 2)
+        self.assertEqual(mapped.reference_prices[0].amount, "12000000")
+        self.assertEqual(mapped.reference_prices[1].amount, "12000000")
+
+    def test_mapper_never_echoes_raw_snippets(self) -> None:
+        mapped = reference_evidence_from_price_research_result(
+            self.provider_independent_result()
+        )
+
+        self.assertIsNotNone(mapped)
+        assert mapped is not None
+        rendered = str(mapped)
+        for marker in ("raw_response", "secret", "provider_payload", "chain_of_thought"):
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, rendered)
+        self.assertIsNone(
+            next((s.url for s in mapped.sources if s.title == "Leak"), None)
+        )
+        self.assertIsNone(
+            next((s.url for s in mapped.sources if s.title == "Internal notes"), None)
+        )
+
+    def test_mapper_drops_non_http_urls_and_sensitive_urls(self) -> None:
+        mapped = reference_evidence_from_price_research_result(
+            self.provider_independent_result()
+        )
+
+        self.assertIsNotNone(mapped)
+        assert mapped is not None
+        urls = [source.url for source in mapped.sources]
+        self.assertIn("https://supplier.example/prices", urls)
+        self.assertNotIn("file:///etc/shadow", urls)
+        self.assertNotIn("https://supplier.example/?api_key=secret", urls)
+
+    def test_mapper_ignores_prose_amounts(self) -> None:
+        result = self.provider_independent_result()
+        result.reference_prices = (
+            SimpleNamespace(
+                label="Prose price",
+                amount="around twelve million VND",
+                currency="VND",
+                unit="unit",
+            ),
+        )
+
+        mapped = reference_evidence_from_price_research_result(result)
+
+        self.assertIsNotNone(mapped)
+        assert mapped is not None
+        self.assertEqual(len(mapped.reference_prices), 1)
+        self.assertIsNone(mapped.reference_prices[0].amount)
+
+    def test_mapper_returns_none_for_none(self) -> None:
+        self.assertIsNone(reference_evidence_from_price_research_result(None))
+
+    def test_mapper_accepts_dict_shaped_contract(self) -> None:
+        result = {
+            "provider": "tavily",
+            "evidence_label": "reference_price_research",
+            "retrieved_at": "2026-08-11T08:00:00Z",
+            "confidence": 0.75,
+            "is_final_quote": False,
+            "warnings": [],
+            "reference_prices": [
+                {
+                    "label": "Market reference",
+                    "amount": "12000000",
+                    "currency": "VND",
+                    "unit": "unit",
+                },
+                {
+                    "label": "Vendor reference",
+                    "amount": "11500000",
+                    "currency": "VND",
+                    "unit": "unit",
+                },
+            ],
+            "sources": [
+                {
+                    "title": "Public supplier page",
+                    "url": "https://supplier.example/prices",
+                },
+                {
+                    "title": "Leak",
+                    "url": "https://supplier.example/?api_key=secret",
+                },
+            ],
+        }
+
+        mapped = reference_evidence_from_price_research_result(result)
+
+        self.assertIsNotNone(mapped)
+        assert mapped is not None
+        self.assertEqual(mapped.provider, "tavily")
+        self.assertEqual(mapped.confidence, 0.75)
+        self.assertEqual(len(mapped.reference_prices), 2)
+        self.assertEqual(mapped.reference_prices[1].amount, "11500000")
+        self.assertEqual(len(mapped.sources), 2)
+        self.assertIsNone(mapped.sources[1].url)
+
+    def test_evidence_disabled_does_not_call_provider(self) -> None:
+        called = []
+
+        def provider(parsed: Any, config: BridgeConfig) -> Any:
+            called.append(parsed)
+            return None
+
+        config = replace(self.config(sales=True), price_research_enabled=False)
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+
+        evidence = reference_evidence_for_request(
+            config,
+            parsed,
+            evidence_provider=provider,
+        )
+
+        self.assertIsNone(evidence)
+        self.assertEqual(called, [])
+
+    def test_evidence_provider_raises_degrades_to_none(self) -> None:
+        def provider(parsed: Any, config: BridgeConfig) -> Any:
+            raise RuntimeError("provider exploded")
+
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+
+        evidence = reference_evidence_for_request(
+            self.config(sales=True),
+            parsed,
+            evidence_provider=provider,
+        )
+
+        self.assertIsNone(evidence)
+
+    def test_evidence_provider_returning_wrong_type_degrades_to_none(self) -> None:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+
+        evidence = reference_evidence_for_request(
+            self.config(sales=True),
+            parsed,
+            evidence_provider=lambda parsed, config: {"not": "evidence"},
+        )
+
+        self.assertIsNone(evidence)
+
+    def test_config_price_research_enabled_from_environment(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"PRICE_RESEARCH_ENABLED": "true"},
+            clear=False,
+        ):
+            config = config_from_env(
+                SimpleNamespace(
+                    allowed_chat_id=None,
+                    dry_run=True,
+                    once=True,
+                    auto_run=True,
+                    llm_extraction=None,
+                    sales_replies=None,
+                )
+            )
+        self.assertTrue(config.price_research_enabled)
+
+        with patch.dict(
+            os.environ,
+            {"PRICE_RESEARCH_ENABLED": "false"},
+            clear=False,
+        ):
+            config = config_from_env(
+                SimpleNamespace(
+                    allowed_chat_id=None,
+                    dry_run=True,
+                    once=True,
+                    auto_run=True,
+                    llm_extraction=None,
+                    sales_replies=None,
+                )
+            )
+        self.assertFalse(config.price_research_enabled)
+
+    def test_handle_update_wires_evidence_into_dry_run_log(self) -> None:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+        expected = ReferenceEvidenceSummary(
+            provider="reference_provider",
+            evidence_label="reference_price_research",
+            reference_prices=(
+                ReferenceEvidencePriceSummary(
+                    label="Market reference",
+                    amount="12000000",
+                    currency="VND",
+                    unit="unit",
+                ),
+            ),
+            sources=(ReferenceEvidenceSourceSummary(title="Public supplier page"),),
+            confidence=0.8,
+        )
+
+        def provider(parsed: Any, config: BridgeConfig) -> ReferenceEvidenceSummary:
+            return expected
+
+        update = {
+            "message": {
+                "chat": {"id": 12345},
+                "message_id": 42,
+                "from": {"first_name": "Test"},
+                "text": "quote for 50 standard business laptops",
+            }
+        }
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            handle_update(
+                self.config(sales=True),
+                update,
+                evidence_provider=provider,
+            )
+
+        log = json.loads(buffer.getvalue())
+        self.assertIn("reference_evidence", log)
+        self.assertIsNotNone(log["reference_evidence"])
+        self.assertEqual(
+            log["reference_evidence"]["provider"],
+            "reference_provider",
+        )
+        self.assertEqual(
+            log["reference_evidence"]["reference_prices"][0]["amount"],
+            "12000000",
+        )
+
+    def test_safe_evidence_url_accepts_only_http_and_https(self) -> None:
+        self.assertEqual(
+            safe_evidence_url("https://supplier.example/prices"),
+            "https://supplier.example/prices",
+        )
+        self.assertEqual(
+            safe_evidence_url("http://supplier.example/prices"),
+            "http://supplier.example/prices",
+        )
+        self.assertIsNone(safe_evidence_url("file:///etc/shadow"))
+        self.assertIsNone(safe_evidence_url("ftp://supplier.example/prices"))
+        self.assertIsNone(safe_evidence_url("javascript:alert(1)"))
+        self.assertIsNone(safe_evidence_url("https://supplier.example/?api_key=secret"))
 
 
 if __name__ == "__main__":
