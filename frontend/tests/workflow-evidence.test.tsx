@@ -274,7 +274,6 @@ describe("workflow reference evidence UI", () => {
                 {
                   title: "Supplier " + "very long ".repeat(80),
                   url: "https://supplier.example/" + "path/".repeat(90),
-                  snippet: "<strong>Safe snippet</strong>",
                 },
                 { title: "Second source", url: "https://supplier.example/2" },
                 { title: "Third source", url: "https://supplier.example/3" },
@@ -305,6 +304,82 @@ describe("workflow reference evidence UI", () => {
     );
     expect(document.body.textContent).not.toContain("<strong>");
     expect(document.body.textContent).toContain("...");
+  });
+
+  it("rejects non-http(s) source URLs", async () => {
+    await render(
+      <WorkflowReferenceEvidencePanel
+        workflow={workflowWithEvidence({
+          reference_price_research: {
+            provider: "tavily",
+            evidence_label: "reference_price_research",
+            sources: [
+              {
+                title: "Allowed https",
+                url: "https://supplier.example/laptops",
+              },
+              {
+                title: "Allowed http",
+                url: "http://supplier.example/prices",
+              },
+              {
+                title: "File scheme",
+                url: "file:///etc/shadow",
+              },
+              {
+                title: "Javascript scheme",
+                url: "javascript:alert(1)",
+              },
+              {
+                title: "Data scheme",
+                url: "data:text/plain;base64,SGVsbG8=",
+              },
+              {
+                title: "Ftp scheme",
+                url: "ftp://supplier.example/prices",
+              },
+            ],
+          },
+        })}
+      />,
+    );
+
+    expect(document.body.textContent).toContain("Allowed https");
+    expect(document.body.textContent).toContain("https://supplier.example/laptops");
+    expect(document.body.textContent).toContain("Allowed http");
+    expect(document.body.textContent).toContain("http://supplier.example/prices");
+    expect(document.body.textContent).not.toContain("file:///etc/shadow");
+    expect(document.body.textContent).not.toContain("javascript:alert(1)");
+    expect(document.body.textContent).not.toContain("data:text/plain");
+    expect(document.body.textContent).not.toContain("ftp://supplier.example");
+  });
+
+  it("does not render source snippets from workflow state", async () => {
+    await render(
+      <WorkflowReferenceEvidencePanel
+        workflow={workflowWithEvidence({
+          reference_price_research: {
+            provider: "tavily",
+            evidence_label: "reference_price_research",
+            sources: [
+              {
+                title: "Supplier listing",
+                url: "https://supplier.example/laptops",
+                snippet: "raw provider snippet that must never render",
+                summary: "summary fallback must never render either",
+                content: "content fallback must never render either",
+              },
+            ],
+          },
+        })}
+      />,
+    );
+
+    expect(document.body.textContent).toContain("Supplier listing");
+    expect(document.body.textContent).toContain("https://supplier.example/laptops");
+    expect(document.body.textContent).not.toContain("raw provider snippet");
+    expect(document.body.textContent).not.toContain("summary fallback");
+    expect(document.body.textContent).not.toContain("content fallback");
   });
 
   it("redacts sensitive values and skips sensitive source objects", async () => {
@@ -696,7 +771,6 @@ function sampleReferenceEvidence() {
       {
         title: "Supplier reference listing",
         url: "https://supplier.example/laptops",
-        snippet: "Reference source for manual review.",
       },
     ],
     reference_prices: [],

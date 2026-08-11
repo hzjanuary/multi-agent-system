@@ -569,7 +569,7 @@ Implemented:
     calls, mapper bounds/safety, dict-shaped contract, prose-amount rejection,
     disabled/failing/wrong-type provider degradation, env flag, dry-run
     evidence wiring, and http(s)-only URL enforcement.
-- Implemented TASK 016.10 foundation:
+- Implemented TASK 016.10 (Agent Monitor / workflow evidence polish):
   - `frontend/components/workflows/workflow-reference-evidence-panel.tsx`
     extracts and renders explicit reference evidence from existing workflow
     state JSON only.
@@ -584,6 +584,9 @@ Implemented:
     strips raw HTML, redacts sensitive markers, caps displayed counts, and
     suppresses `is_final_quote=true` prices/sources behind internal-review
     wording.
+  - Source URLs are now http(s)-only (`file:`, `javascript:`, `data:`, `ftp:`
+    and other schemes are dropped), and arbitrary source snippets from
+    workflow state are omitted from rendering.
   - Existing RAG citation rendering remains in
     `WorkflowEvidencePanel`.
   - Frontend tests cover missing evidence, valid evidence, structured reference

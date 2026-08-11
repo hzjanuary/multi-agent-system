@@ -161,6 +161,7 @@ describe("agent monitor page", () => {
     expect(document.body.textContent).toContain("Catalog reference");
     expect(document.body.textContent).toContain("12000000 VND");
     expect(document.body.textContent).toContain("Internal catalog source");
+    expect(document.body.textContent).not.toContain("Reference evidence for review.");
   });
 
   it("renders selected workflow catalog metadata when explicitly present", async () => {

@@ -30,7 +30,6 @@ const SENSITIVE_MARKERS = [
 export interface ReferenceEvidenceSource {
   title: string;
   url: string | null;
-  snippet: string | null;
 }
 
 export interface ReferenceEvidencePrice {
@@ -145,7 +144,7 @@ export function WorkflowReferenceEvidencePanel({
               <div className="mt-3 grid gap-3">
                 {displaySources.map((source) => (
                   <ReferenceSourceRow
-                    key={[source.title, source.url, source.snippet].join("|")}
+                    key={[source.title, source.url].join("|")}
                     source={source}
                   />
                 ))}
@@ -215,11 +214,6 @@ function ReferenceSourceRow({ source }: { source: ReferenceEvidenceSource }) {
       {source.url ? (
         <p className="mt-1 break-all font-mono text-xs leading-5 text-muted-foreground">
           {source.url}
-        </p>
-      ) : null}
-      {source.snippet ? (
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          {source.snippet}
         </p>
       ) : null}
     </article>
@@ -312,8 +306,7 @@ function normalizeSources(value: unknown): ReferenceEvidenceSource[] {
       safeText(source.url) ??
       "Reference source";
     const url = safeUrl(source.url);
-    const snippet = safeText(source.snippet ?? source.summary ?? source.content);
-    sources.push({ title, url, snippet });
+    sources.push({ title, url });
   }
   return sources;
 }
@@ -365,6 +358,9 @@ function formatConfidence(value: number): string {
 function safeUrl(value: unknown): string | null {
   const text = safeText(value, MAX_URL_CHARS);
   if (!text || containsSensitiveMarker(text)) {
+    return null;
+  }
+  if (!/^https?:\/\//i.test(text)) {
     return null;
   }
   return text;

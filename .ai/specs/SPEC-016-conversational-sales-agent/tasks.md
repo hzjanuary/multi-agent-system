@@ -294,6 +294,8 @@ git diff --check
 
 ### TASK 016.10 - Observability / Agent Monitor Evidence Polish
 
+Status: Implemented.
+
 Goal: Surface reference price and RAG evidence in Agent Monitor/workflow UI only
 when real backend evidence exists.
 
@@ -323,6 +325,28 @@ cd frontend && npm test
 bash scripts/ci/frontend-gate.sh
 git diff --check
 ```
+
+Implemented:
+
+- The reference evidence panel (`workflow-reference-evidence-panel.tsx`) renders
+  only explicit evidence-shaped fields from existing workflow state JSON (root,
+  `runtime_context`, or `outputs`); it returns `null` when none exist, so empty
+  states stay honest and no evidence is fabricated.
+- Reference evidence is shown as review material with an internal-review notice;
+  `is_final_quote=true` prices/sources are suppressed, so it is never presented
+  as a final quote.
+- Rendering is bounded to structured title/URL/price/warning fields; raw HTML is
+  stripped, provider payloads/prompts/tokens/embeddings/vector payloads and
+  chain-of-thought are never rendered, and arbitrary source snippets from
+  workflow state are omitted.
+- Source URLs are http(s)-only; file/javascript/data/ftp and other schemes are
+  dropped.
+- Existing approval/resume controls remain visible in Agent Monitor and workflow
+  detail; no workflow actions or approval semantics changed.
+- Frontend tests cover missing evidence, valid evidence, structured reference
+  rows, non-http(s) URL rejection, snippet non-rendering, bounded rendering,
+  review/final-quote wording, redaction of sensitive fields, honest empty
+  states, and Agent Monitor approval/resume controls.
 
 ### TASK 016.11 - Final Validation And Docs
 
