@@ -644,23 +644,28 @@ Safety:
 Last known SPEC-016 validation:
 
 - TASK 016.11 closeout validation passed:
-  - `git status --short` reported only the intended docs/spec/handoff changes.
+  - `git status --short` reported only the intended docs/spec/handoff/test
+    changes.
   - `docker compose config` passed.
   - `docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example config` passed.
   - `python3 -m unittest scripts.demo.test_telegram_inbound_bridge` passed:
-    49 tests.
+    77 tests.
   - `python3 -m py_compile scripts/demo/telegram_inbound_bridge.py` passed.
   - `docker compose run --rm backend-test pytest -q` passed:
-    752 passed, 1 skipped.
+    789 passed, 1 skipped.
   - `docker compose run --rm backend-test ruff check .` passed.
   - `docker compose run --rm backend-test black --check .` passed.
   - `docker compose run --rm backend-test mypy app` passed.
   - `cd frontend && npm run lint && npm run build && npm run typecheck && npm test` passed:
-    83 frontend tests.
-  - `bash scripts/ci/backend-gate.sh` passed.
-  - `bash scripts/ci/frontend-gate.sh` passed.
-  - `bash scripts/ci/all-gates.sh` passed, including production-demo image build and whitespace check.
+    95 frontend tests.
+  - `bash scripts/ci/all-gates.sh` passed, including backend/frontend gates,
+    production-demo image build, and whitespace check.
   - `git diff --check` passed.
+  - Note: backend gates run against the baked-in `backend-test` image, so the
+    image must be rebuilt (`docker compose build backend-test`) before re-running
+    them. A stale-image run produced a false ruff failure; rebuilding resolved
+    it. The Tavily factory test regex was corrected to match the actual
+    `PriceResearchProviderError` message (behavior unchanged).
 
 Recommended next work after SPEC-023:
 

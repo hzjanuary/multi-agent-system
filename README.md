@@ -230,6 +230,13 @@ Primary live demo message:
 vay lay truoc cho toi 20 cai laptop tieu chuan kem san office 365
 ```
 
+Reference evidence is optional display only: the bridge never calls Tavily or
+live price lookup, and reference prices are review material, never a final
+quote. The feature-flagged price research foundation is documented in
+`.ai/specs/SPEC-016-conversational-sales-agent/spec.md` with a manual-only live
+smoke path in `docs/demo/PROVIDER_LIVE_VERIFICATION.md` and evidence policy in
+`docs/governance/PROVIDER_EVIDENCE_POLICY.md`.
+
 Reference docs:
 
 - [Final live demo runbook](docs/demo/FINAL_LIVE_DEMO_RUNBOOK.md)
@@ -355,13 +362,18 @@ validation requires explicit `--confirm-local-demo`.
 
 ## Roadmap After Defense
 
-1. LLM runtime hardening beyond the deterministic defense path.
-2. Catalog governance and expansion beyond the closed SPEC-018 demo catalog.
-3. Provider policy hardening after the manual-only SPEC-019 Tavily smoke path.
-4. Email/Gmail send-provider planning beyond the closed SPEC-020 preview-only
+1. SPEC-016 conversational sales / reference price evidence foundation:
+   governance and live-verification hardening. Price research stays
+   feature-flagged, disabled by default, and is never a final quote:
+   `.ai/specs/SPEC-016-conversational-sales-agent/spec.md` and
+   `docs/demo/PROVIDER_LIVE_VERIFICATION.md`.
+2. LLM runtime hardening beyond the deterministic defense path.
+3. Catalog governance and expansion beyond the closed SPEC-018 demo catalog.
+4. Provider policy hardening after the manual-only SPEC-019 Tavily smoke path.
+5. Email/Gmail send-provider planning beyond the closed SPEC-020 preview-only
    foundation.
-5. Production deployment polish.
-6. Bounded dependency/security patch sprint after SPEC-024 triage review.
+6. Production deployment polish.
+7. Bounded dependency/security patch sprint after SPEC-024 triage review.
 
 ## License
 

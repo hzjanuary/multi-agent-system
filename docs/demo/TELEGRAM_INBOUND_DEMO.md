@@ -396,6 +396,13 @@ The current stable Telegram demo does not call Tavily, does not call backend
 price research providers, and does not perform live price lookup from
 Telegram.
 
+Optional backend price research is a separate feature-flagged foundation
+(`PRICE_RESEARCH_ENABLED=true`, disabled by default) that this bridge never
+calls. It is documented in
+`.ai/specs/SPEC-016-conversational-sales-agent/spec.md`, with a manual-only live
+smoke path in `docs/demo/PROVIDER_LIVE_VERIFICATION.md` and provider evidence
+policy in `docs/governance/PROVIDER_EVIDENCE_POLICY.md`.
+
 If reference evidence is supplied later, it must be labeled for internal review
 only. Source titles, URLs, warnings, confidence, and explicit reference amounts
 must remain bounded. Empty, low-confidence, warning-only, or final-quote-marked
