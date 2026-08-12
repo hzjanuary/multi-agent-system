@@ -18,25 +18,37 @@ from scripts.demo.telegram_inbound_bridge import (
     ReferenceEvidencePriceSummary,
     ReferenceEvidenceSourceSummary,
     ReferenceEvidenceSummary,
+    TelegramPendingQuote,
+    TrustedFinalPrice,
     UnsupportedMixedRequest,
     WorkflowCreationResult,
     build_workflow_create_payload,
     config_from_env,
     extract_customer_request,
+    extract_trusted_price_from_workflow,
     follow_up_message,
+    format_final_price,
     greeting_message,
     handle_update,
     is_greeting_message,
+    latest_approval_decision,
     llm_extract_customer_request,
     parse_args,
     parse_llm_extraction_result,
     parse_customer_request,
+    process_pending_approvals,
     reference_evidence_for_request,
     reference_evidence_from_price_research_result,
+    register_pending_quote,
     safe_evidence_url,
     sender_display_name,
+    telegram_approval_changes_requested_reply,
+    telegram_approval_rejected_reply,
+    telegram_final_quote_reply,
+    telegram_manual_final_quote_reply,
     telegram_run_failed_reply,
     telegram_workflow_reply,
+    trusted_price_from_mapping,
     unsupported_mixed_item_message,
 )
 from scripts.demo.catalog import (
@@ -869,14 +881,11 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
         self.assertIn("Cảm ơn anh/chị", reply)
         self.assertIn("50 x Standard business laptop", reply)
         self.assertIn("Office 365", reply)
-        self.assertIn("workflow-123", reply)
-        self.assertIn("WAITING_APPROVAL", reply)
-        self.assertIn("http://localhost:3000/workflows/workflow-123", reply)
-        self.assertIn(
-            "http://localhost:3000/agent-monitor?workflowId=workflow-123",
-            reply,
-        )
         self.assertIn("Đây chưa phải báo giá cuối cùng", reply)
+        self.assertNotIn("workflow-123", reply)
+        self.assertNotIn("WAITING_APPROVAL", reply)
+        self.assertNotIn("localhost", reply)
+        self.assertNotIn("http://", reply)
 
     def test_sales_reply_with_no_evidence_is_semantically_unchanged(self) -> None:
         parsed = self.vietnamese_parsed_request()
@@ -891,9 +900,9 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
 
         self.assertNotIn("Tham khảo giá nội bộ", reply)
         self.assertIn("Cảm ơn anh/chị", reply)
-        self.assertIn("WAITING_APPROVAL", reply)
+        self.assertNotIn("WAITING_APPROVAL", reply)
 
-    def test_sales_reply_with_evidence_mentions_reference_evidence_only(self) -> None:
+    def test_sales_reply_never_leaks_reference_evidence_to_customer(self) -> None:
         parsed = self.vietnamese_parsed_request()
         evidence = ReferenceEvidenceSummary(
             provider="tavily",
@@ -918,15 +927,14 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
             evidence=evidence,
         )
 
-        self.assertIn("Tham khảo giá nội bộ", reply)
-        self.assertIn("provider: tavily", reply)
-        self.assertIn("sources: 1", reply)
-        self.assertIn("confidence 0.72", reply)
-        self.assertIn("Supplier reference listing", reply)
-        self.assertIn("https://supplier.example/laptops", reply)
-        self.assertIn("không phải báo giá cuối cùng", reply)
+        self.assertNotIn("Tham khảo giá nội bộ", reply)
+        self.assertNotIn("tavily", reply)
+        self.assertNotIn("confidence 0.72", reply)
+        self.assertNotIn("Supplier reference listing", reply)
+        self.assertNotIn("https://supplier.example/laptops", reply)
+        self.assertIn("chưa phải báo giá cuối cùng", reply)
 
-    def test_sales_reply_with_reference_price_labels_amount_as_reference(self) -> None:
+    def test_sales_reply_never_displays_reference_amounts_to_customer(self) -> None:
         parsed = parse_customer_request("quote for 50 standard business laptops")
         assert parsed is not None
         evidence = ReferenceEvidenceSummary(
@@ -959,12 +967,13 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
             evidence=evidence,
         )
 
-        self.assertIn("Reference evidence is available for internal review", reply)
-        self.assertIn("Reference only: Unit reference: 12000000 VND / unit", reply)
-        self.assertIn("not final quotation", reply)
+        self.assertNotIn("Reference evidence is available for internal review", reply)
+        self.assertNotIn("Reference only: Unit reference: 12000000 VND / unit", reply)
+        self.assertNotIn("12000000", reply)
         self.assertNotIn("approved quotation", reply.lower())
+        self.assertIn("This is not a final quotation yet", reply)
 
-    def test_sales_reply_bounds_source_titles_and_urls(self) -> None:
+    def test_sales_reply_never_renders_source_titles_or_urls(self) -> None:
         parsed = self.vietnamese_parsed_request()
         evidence = ReferenceEvidenceSummary(
             provider="tavily",
@@ -995,11 +1004,11 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
             evidence=evidence,
         )
 
-        self.assertIn("Second source", reply)
+        self.assertNotIn("Second source", reply)
         self.assertNotIn("Third source should not render", reply)
         self.assertLessEqual(len(reply), 3900)
 
-    def test_empty_evidence_produces_manual_review_wording(self) -> None:
+    def test_empty_evidence_does_not_reach_customer_reply(self) -> None:
         parsed = self.vietnamese_parsed_request()
         evidence = ReferenceEvidenceSummary(
             provider="tavily",
@@ -1017,10 +1026,11 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
             evidence=evidence,
         )
 
-        self.assertIn("đang chờ rà soát thủ công", reply)
+        self.assertNotIn("đang chờ rà soát thủ công", reply)
         self.assertNotIn("Giá tham khảo:", reply)
+        self.assertNotIn("No structured price metadata", reply)
 
-    def test_low_confidence_evidence_produces_caution_wording(self) -> None:
+    def test_low_confidence_evidence_never_reaches_customer(self) -> None:
         parsed = parse_customer_request("quote for 50 standard business laptops")
         assert parsed is not None
         evidence = ReferenceEvidenceSummary(
@@ -1040,11 +1050,12 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
             evidence=evidence,
         )
 
-        self.assertIn("pending manual pricing review", reply)
-        self.assertIn("Low confidence (0.20)", reply)
+        self.assertNotIn("pending manual pricing review", reply)
+        self.assertNotIn("Low confidence (0.20)", reply)
         self.assertNotIn("Reference only:", reply)
+        self.assertNotIn("Low confidence source", reply)
 
-    def test_evidence_marked_final_quote_is_downgraded(self) -> None:
+    def test_evidence_final_quote_flag_never_reaches_customer(self) -> None:
         parsed = parse_customer_request("quote for 50 standard business laptops")
         assert parsed is not None
         evidence = ReferenceEvidenceSummary(
@@ -1069,7 +1080,7 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
             evidence=evidence,
         ).lower()
 
-        self.assertIn("requires internal review", reply)
+        self.assertNotIn("requires internal review", reply)
         self.assertNotIn("approved final quote", reply)
         self.assertNotIn("12000000", reply)
 
@@ -1155,7 +1166,8 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
             )
 
         urlopen.assert_not_called()
-        self.assertIn("Manual source", reply)
+        self.assertNotIn("Manual source", reply)
+        self.assertIn("Cảm ơn anh/chị", reply)
 
     def test_sales_run_failed_reply_hides_raw_backend_error_json(self) -> None:
         parsed = self.vietnamese_parsed_request()
@@ -1166,12 +1178,14 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
             error=ApiError('HTTP 500: {"traceback":"secret stack","detail":"raw"}'),
         )
 
-        self.assertIn("workflow-123", reply)
-        self.assertIn("http://localhost:3000/workflows/workflow-123", reply)
-        self.assertIn("chưa hoàn tất", reply)
+        self.assertNotIn("workflow-123", reply)
+        self.assertNotIn("http://localhost:3000/workflows/workflow-123", reply)
+        self.assertNotIn("CREATED", reply)
         self.assertNotIn("traceback", reply)
         self.assertNotIn("HTTP 500", reply)
         self.assertNotIn('{"', reply)
+        self.assertIn("Rất tiếc", reply)
+        self.assertIn("hoàn tất báo giá", reply)
 
     def test_technical_run_failed_reply_keeps_error_detail(self) -> None:
         parsed = parse_customer_request("quote for 50 standard business laptops")
@@ -1248,6 +1262,396 @@ class TelegramInboundBridgeSalesReplyTests(unittest.TestCase):
         for claim in forbidden:
             with self.subTest(claim=claim):
                 self.assertNotIn(claim, reply)
+
+
+class TelegramPostApprovalTests(unittest.TestCase):
+    def config(self, *, sales: bool = True) -> BridgeConfig:
+        return BridgeConfig(
+            telegram_bot_token=None,
+            backend_api_base_url="http://localhost:8000/api/v1",
+            frontend_base_url="http://localhost:3000",
+            manager_email="manager@example.test",
+            manager_password="DemoPassword123!",
+            poll_interval_seconds=2.0,
+            allowed_chat_id=None,
+            dry_run=True,
+            once=True,
+            auto_run=True,
+            llm_extraction_enabled=False,
+            llm_provider="ollama",
+            llm_model="qwen2.5:7b-instruct-q4_K_M",
+            llm_base_url="http://localhost:11434",
+            llm_timeout_seconds=30,
+            sales_replies_enabled=sales,
+            price_research_enabled=False,
+            approval_poll_interval_seconds=3.0,
+            final_quote_enabled=True,
+        )
+
+    def english_parsed(self) -> ParsedCustomerRequest:
+        parsed = parse_customer_request("quote for 50 standard business laptops")
+        assert parsed is not None
+        return parsed
+
+    def test_format_final_price_keeps_trusted_precision(self) -> None:
+        self.assertEqual(format_final_price(Decimal("952.56")), "952.56")
+        self.assertEqual(format_final_price(Decimal("952")), "952")
+        self.assertEqual(format_final_price(Decimal("0.5")), "0.50")
+        self.assertEqual(format_final_price(Decimal("0")), "0")
+
+    def test_trusted_price_from_mapping_accepts_structured_price(self) -> None:
+        price = trusted_price_from_mapping(
+            {
+                "unit_price": 952.56,
+                "currency": "USD",
+                "unit": "unit",
+                "quantity_basis": 1,
+            }
+        )
+
+        self.assertIsNotNone(price)
+        assert price is not None
+        self.assertEqual(price.unit_price, Decimal("952.56"))
+        self.assertEqual(price.currency, "USD")
+        self.assertEqual(price.unit, "unit")
+
+    def test_trusted_price_from_mapping_never_accepts_prose_or_missing_currency(self) -> None:
+        self.assertIsNone(
+            trusted_price_from_mapping({"unit_price": "around twelve dollars"})
+        )
+        self.assertIsNone(
+            trusted_price_from_mapping({"unit_price": 952.56})
+        )
+        self.assertIsNone(
+            trusted_price_from_mapping({"unit_price": 952.56, "currency": "dollar"})
+        )
+        self.assertIsNone(
+            trusted_price_from_mapping({"unit_price": -5, "currency": "USD"})
+        )
+        self.assertIsNone(
+            trusted_price_from_mapping({"observed_price": None, "currency": "USD"})
+        )
+
+    def test_telegram_final_quote_reply_includes_total_and_no_internal_ids(self) -> None:
+        reply = telegram_final_quote_reply(
+            self.config(),
+            self.english_parsed(),
+            TrustedFinalPrice(
+                unit_price=Decimal("952.56"),
+                currency="USD",
+                unit="unit",
+            ),
+        )
+
+        self.assertIn("Quotation: 50 x Standard business laptop", reply)
+        self.assertIn("Unit price: 952.56 USD per unit", reply)
+        self.assertIn("Total: 47628.00 USD", reply)
+        self.assertNotIn("workflow-123", reply)
+        self.assertNotIn("WAITING_APPROVAL", reply)
+        self.assertNotIn("http://", reply)
+        self.assertNotIn("evidenc", reply.lower())
+
+    def test_telegram_final_quote_reply_vietnamese(self) -> None:
+        parsed = parse_customer_request("cần báo giá 50 laptop")
+        assert parsed is not None
+        reply = telegram_final_quote_reply(
+            self.config(),
+            parsed,
+            TrustedFinalPrice(
+                unit_price=Decimal("952.56"),
+                currency="USD",
+                unit="unit",
+            ),
+        )
+
+        self.assertIn("Báo giá: 50 x Standard business laptop", reply)
+        self.assertIn("Đơn giá: 952.56 USD per unit", reply)
+        self.assertIn("Thành tiền: 47628.00 USD", reply)
+        self.assertNotIn("http://", reply)
+
+    def test_telegram_manual_final_quote_reply_is_safe_fallback(self) -> None:
+        reply = telegram_manual_final_quote_reply(self.config(), self.english_parsed())
+
+        self.assertIn("approved", reply)
+        self.assertIn("operator", reply)
+        self.assertNotIn("http://", reply)
+        self.assertNotIn("workflow", reply.lower())
+
+    def test_telegram_approval_rejected_reply_keeps_comment_but_no_ids(self) -> None:
+        reply = telegram_approval_rejected_reply(
+            self.config(),
+            self.english_parsed(),
+            "Not in approved policy",
+        )
+
+        self.assertIn("not approved", reply)
+        self.assertIn("Not in approved policy", reply)
+        self.assertNotIn("http://", reply)
+        self.assertNotIn("workflow", reply.lower())
+
+    def test_telegram_approval_changes_requested_reply_keeps_comment(self) -> None:
+        reply = telegram_approval_changes_requested_reply(
+            self.config(),
+            self.english_parsed(),
+            "Need quantity and delivery location",
+        )
+
+        self.assertIn("needs more information", reply)
+        self.assertIn("Need quantity and delivery location", reply)
+        self.assertNotIn("http://", reply)
+
+    def test_latest_approval_decision_normalizes_approve_reject_request_changes(self) -> None:
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_approval_history",
+            return_value={
+                "approvals": [
+                    {"decision": "request_changes", "comment": "add PO number"},
+                    {"decision": "approve", "comment": "Approved by manager"},
+                ]
+            },
+        ):
+            decision, comment = latest_approval_decision(
+                self.config(), "token", "workflow-1"
+            )
+        self.assertEqual(decision, "approve")
+        self.assertEqual(comment, "Approved by manager")
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_approval_history",
+            return_value={
+                "approvals": [
+                    {"decision": "reject", "comment": "Out of budget"}
+                ]
+            },
+        ):
+            decision, comment = latest_approval_decision(
+                self.config(), "token", "workflow-1"
+            )
+        self.assertEqual(decision, "reject")
+        self.assertEqual(comment, "Out of budget")
+
+    def test_latest_approval_decision_unknown_decision_is_never_approve(self) -> None:
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_approval_history",
+            return_value={
+                "approvals": [
+                    {"decision": "mystery_action", "comment": None}
+                ]
+            },
+        ):
+            decision, comment = latest_approval_decision(
+                self.config(), "token", "workflow-1"
+            )
+        self.assertEqual(decision, "request_changes")
+        self.assertIsNone(comment)
+
+    def test_latest_approval_decision_empty_history_is_none(self) -> None:
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_approval_history",
+            return_value={"approvals": []},
+        ):
+            decision, comment = latest_approval_decision(
+                self.config(), "token", "workflow-1"
+            )
+        self.assertIsNone(decision)
+        self.assertIsNone(comment)
+
+    def test_register_pending_quote_only_when_final_quote_enabled(self) -> None:
+        pending: dict[str, TelegramPendingQuote] = {}
+        workflow = WorkflowCreationResult("workflow-123", "WAITING_APPROVAL")
+        parsed = self.english_parsed()
+
+        register_pending_quote(
+            pending,
+            self.config(),
+            "chat-1",
+            workflow,
+            parsed,
+        )
+        self.assertIn("chat-1", pending)
+        self.assertEqual(pending["chat-1"].workflow_id, "workflow-123")
+        self.assertFalse(pending["chat-1"].resumed)
+
+        disabled = replace(self.config(), final_quote_enabled=False)
+        register_pending_quote(
+            pending,
+            disabled,
+            "chat-2",
+            workflow,
+            parsed,
+        )
+        self.assertNotIn("chat-2", pending)
+
+    def test_process_pending_approvals_approve_resumes_and_sends_final_quote(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.english_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+
+        def fake_reply(config: BridgeConfig, chat_id: str, text: str) -> None:
+            replies.append(text)
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("approve", "Approved"),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            return_value="QUOTED",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.extract_trusted_price_from_workflow",
+            return_value=TrustedFinalPrice(
+                unit_price=Decimal("952.56"),
+                currency="USD",
+                unit="unit",
+            ),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=fake_reply,
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("Quotation: 50 x Standard business laptop", replies[0])
+        self.assertIn("Total: 47628.00 USD", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_process_pending_approvals_approve_without_price_falls_back(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.english_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+
+        def fake_reply(config: BridgeConfig, chat_id: str, text: str) -> None:
+            replies.append(text)
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            return_value="QUOTED",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.extract_trusted_price_from_workflow",
+            return_value=None,
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=fake_reply,
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("does not yet have a trusted final price", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_process_pending_approvals_reject_never_resumes(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.english_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+
+        def fake_reply(config: BridgeConfig, chat_id: str, text: str) -> None:
+            replies.append(text)
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("reject", "Out of budget"),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            side_effect=AssertionError("resume must not be called on reject"),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=fake_reply,
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("not approved", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_process_pending_approvals_request_changes_never_resumes(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.english_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+
+        def fake_reply(config: BridgeConfig, chat_id: str, text: str) -> None:
+            replies.append(text)
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("request_changes", "Add PO number"),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            side_effect=AssertionError("resume must not be called on request_changes"),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=fake_reply,
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("needs more information", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_process_pending_approvals_resume_failure_sends_safe_fallback(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.english_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+
+        def fake_reply(config: BridgeConfig, chat_id: str, text: str) -> None:
+            replies.append(text)
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            side_effect=ApiError("backend unavailable"),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=fake_reply,
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("operator", replies[0])
+        self.assertNotIn("chat-1", pending)
 
 
 class TelegramReferenceEvidenceTests(unittest.TestCase):

@@ -5,9 +5,12 @@
 The Telegram inbound bridge lets a customer actor send a procurement request
 from a phone during the local graduation demo. The local script polls Telegram,
 parses a bounded English or Vietnamese catalog-backed quotation request,
-creates a procurement workflow through the existing backend API, optionally
-runs it to `WAITING_APPROVAL`, and replies with workflow and Agent Monitor
-links.
+creates a procurement workflow through the existing backend API, runs it to
+`WAITING_APPROVAL`, and replies with a customer-facing acknowledgment. When the
+bridge observes a manager approval in the backend approval history, it resumes
+the workflow and sends the official quotation from a trusted price in the
+workflow state (or a safe operator-review fallback when no trusted price
+exists).
 
 This is a local demo bridge. It is not a production Telegram webhook
 integration.
@@ -23,7 +26,10 @@ formalizes the Conversational Sales Agent direction, including safe catalog/RAG
 evidence and optional external reference price research foundations. The local
 bridge still does not call Tavily, does not perform real web search or live
 price lookup from Telegram, does not call backend price research providers,
-does not auto-approve, does not auto-resume, and does not issue final quotes.
+and does not auto-approve. After a recorded Manager/Admin approval decision,
+the bridge resumes the workflow and issues a final quotation only from a
+trusted structured price in backend workflow state; when no such price exists
+it replies with a safe operator-review message instead of inventing a price.
 
 ## Why Polling
 
@@ -38,7 +44,8 @@ script under `scripts/demo/` and uses only existing backend endpoints.
 - The script does not print the Telegram bot token.
 - The script does not print backend access tokens or passwords.
 - The script does not auto-approve.
-- The script does not auto-resume.
+- The script resumes a workflow only after the backend records a Manager/Admin
+  approval decision; it never resumes on reject or request_changes.
 - The script does not send real customer email.
 - The script does not fabricate workflow events, agent activity, or RAG
   evidence.
@@ -48,8 +55,8 @@ script under `scripts/demo/` and uses only existing backend endpoints.
 - Ollama is not required for the default Telegram bridge. The deterministic
   parser remains the stable path.
 - Optional LLM-backed RFQ extraction can be enabled locally. It falls back to
-  deterministic parsing and still never auto-approves, auto-resumes, or sends
-  email.
+  deterministic parsing and still never auto-approves, never resumes before an
+  approval decision, and never sends email.
 
 ## Create A Telegram Bot
 
@@ -68,8 +75,10 @@ export FRONTEND_BASE_URL="http://localhost:3000"
 export DEMO_MANAGER_EMAIL="manager@example.test"
 export DEMO_MANAGER_PASSWORD="DemoPassword123!"
 export TELEGRAM_POLL_INTERVAL_SECONDS="2"
+export TELEGRAM_APPROVAL_POLL_INTERVAL_SECONDS="3"
 export TELEGRAM_LLM_EXTRACTION_ENABLED="false"
 export TELEGRAM_SALES_REPLY_ENABLED="false"
+export TELEGRAM_FINAL_QUOTE_ENABLED="true"
 ```
 
 Windows PowerShell equivalent:
@@ -81,8 +90,10 @@ $env:FRONTEND_BASE_URL = "http://localhost:3000"
 $env:DEMO_MANAGER_EMAIL = "manager@example.test"
 $env:DEMO_MANAGER_PASSWORD = "DemoPassword123!"
 $env:TELEGRAM_POLL_INTERVAL_SECONDS = "2"
+$env:TELEGRAM_APPROVAL_POLL_INTERVAL_SECONDS = "3"
 $env:TELEGRAM_LLM_EXTRACTION_ENABLED = "false"
 $env:TELEGRAM_SALES_REPLY_ENABLED = "false"
+$env:TELEGRAM_FINAL_QUOTE_ENABLED = "true"
 ```
 
 The Manager credentials are local-demo/board-demo only.
@@ -370,8 +381,10 @@ Sales-style replies:
 - explain that the request entered the internal quotation workflow
 - explain that the system checks pricing policy, contract/discount rules,
   compliance, and approval requirements
-- include workflow id, status, workflow URL, and Agent Monitor URL
-- clearly state that no final quote has been issued yet
+- state that a manager will review the request and the official quotation will
+  follow approval
+- never include workflow id, status, workflow URL, Agent Monitor URL, or
+  reference evidence (these remain internal)
 
 Sales-style replies never:
 
@@ -379,7 +392,7 @@ Sales-style replies never:
 - claim a discount amount
 - claim stock availability
 - promise delivery dates
-- claim final approval
+- claim final approval (the acknowledgment is not a quotation)
 - claim a real email was sent
 - expose raw backend errors, stack traces, prompts, provider payloads, tokens,
   or passwords
@@ -408,7 +421,8 @@ only. Source titles, URLs, warnings, confidence, and explicit reference amounts
 must remain bounded. Empty, low-confidence, warning-only, or final-quote-marked
 evidence must fall back to manual review wording. No Telegram reply may issue a
 final quotation before Manager approval, claim stock or delivery, claim a
-discount, auto-approve, auto-resume, or say that real email was sent.
+discount, auto-approve, resume before an approval decision, or say that real
+email was sent.
 
 Reference evidence is not a customer quotation. Manager/Admin approval remains
 the final boundary before any customer-ready quote or communication.
@@ -422,20 +436,20 @@ the final boundary before any customer-ready quote or communication.
 5. Start `python scripts/demo/telegram_inbound_bridge.py`.
 6. Send the primary customer message from a phone to the demo bot.
 7. The bridge creates a workflow and, by default, calls `/run`.
-8. The Telegram reply includes:
-   - parsed request summary
-   - detected options such as Office 365 when present
-   - workflow id
-   - status
-   - workflow detail URL
-   - Agent Monitor URL
-   - human approval required note
+8. In technical mode the Telegram reply includes the parsed request summary,
+   detected options such as Office 365, workflow id, status, workflow detail
+   URL, Agent Monitor URL, and the human approval required note. In sales mode
+   the reply is customer-facing and includes only the acknowledgment (no
+   workflow id, status, or URLs).
 9. Open `/agent-monitor?workflowId=<workflow-id>`.
 10. Confirm Agent Activity and timeline events are visible.
 11. Open the workflow detail link.
 12. Approve as Manager/Admin.
-13. Resume the workflow.
-14. Confirm the workflow reaches `COMPLETED`.
+13. The bridge detects the approval on the next poll, resumes the workflow,
+    and (when a trusted price exists) sends the customer the final quotation.
+14. Confirm the workflow reaches `COMPLETED` and the customer received the
+    final quotation (or a safe operator-review message when no trusted price
+    was available).
 
 ## Backend APIs Used
 
@@ -445,9 +459,16 @@ The bridge uses existing backend APIs only:
 POST /api/v1/auth/login
 POST /api/v1/workflows
 POST /api/v1/workflows/{workflow_id}/run
+GET  /api/v1/workflows/{workflow_id}
+GET  /api/v1/workflows/{workflow_id}/approval/history
+POST /api/v1/workflows/{workflow_id}/resume
 ```
 
-It does not call approval or resume endpoints. Those remain human UI actions.
+Approval decisions themselves are submitted through the existing backend UI
+(`POST /api/v1/workflows/{workflow_id}/approval`) by a human Manager/Admin;
+the bridge never submits an approval decision. After a recorded approval, the
+bridge calls the existing resume and workflow-read endpoints to complete the
+quotation flow.
 
 The workflow payload stores safe bounded metadata:
 
@@ -508,7 +529,9 @@ when auto-run is enabled.
 
 The Telegram reply reports the safe failure and includes the workflow URL when
 available. Open the workflow detail page and inspect status/events. The bridge
-does not retry with alternate credentials and does not resume.
+does not retry with alternate credentials and does not resume workflows that
+failed to auto-run (resume happens only for workflows that reached
+`WAITING_APPROVAL` and then received a recorded approval decision).
 
 ### Agent Monitor Does Not Update
 
@@ -556,7 +579,11 @@ python scripts/demo/llm_provider_smoke.py --provider ollama --model qwen2.5:7b-i
   refused with a clarification instead of creating a partial workflow.
 - No production secret storage.
 - No Telegram user identity binding to backend users.
-- No auto-approval or auto-resume.
+- No auto-approval. The bridge resumes only after a Manager/Admin approval
+  decision is recorded in the backend.
+- Post-approval quotations are issued only from trusted structured prices in
+  backend workflow state; when the backend exposes no such price, the bridge
+  sends an operator-review message instead.
 - No customer email sending.
 - No real LLM provider required by default.
 - Optional LLM extraction is local-only and not part of CI.

@@ -16,13 +16,16 @@ Telegram customer message
   -> backend workflow create
   -> /run to WAITING_APPROVAL
   -> Agent Monitor
-  -> Manager approval
-  -> /resume
+  -> Manager approval (human UI action)
+  -> bridge detects approval, resumes, sends final quotation
   -> COMPLETED
 ```
 
-No final quote, price, stock, delivery date, automatic approval, automatic
-resume, or real email is claimed.
+The final quotation is issued only after a recorded Manager/Admin approval
+decision and only from a trusted structured price in backend workflow state.
+No price, stock, delivery date, automatic approval, or real email is claimed.
+The bridge never issues a final quote before approval and never invents a
+price.
 
 ## Stable Backend Mode
 
@@ -241,14 +244,16 @@ Expected:
 - workflow created
 - bridge auto-runs `/run`
 - backend status reaches `WAITING_APPROVAL`
-- reply includes workflow URL
-- reply includes Agent Monitor URL
-- reply states human approval is required
+- sales-style acknowledgment confirms `20 x Standard business laptop kèm Office 365`
 - no final quote, price, stock, delivery date, or email claim
+- the acknowledgment does not include workflow id, status, or internal URLs
+  (those remain in the technical reply mode and in Agent Monitor)
 
 ### 5. Agent Monitor
 
-Open the Agent Monitor URL from the Telegram reply.
+In technical reply mode, open the Agent Monitor URL included in the Telegram
+reply. In sales reply mode the acknowledgment does not expose internal URLs;
+open the workflow detail or Agent Monitor page from the frontend instead.
 
 Expected:
 
@@ -267,17 +272,23 @@ Expected:
 
 - approval history records the decision
 - workflow becomes `APPROVED`
-- no automatic resume occurs
+- no automatic resume happens yet; the bridge waits for a recorded approval
+  decision before resuming
 
-### 7. Resume
+### 7. Final Quotation Delivery
 
-Click Resume workflow in the web UI.
+After the approval is recorded, the bridge polls the approval history, resumes
+the workflow, and (when a trusted structured price exists in backend workflow
+state) sends the customer a final quotation with unit price and total. When no
+trusted price exists, the bridge sends a safe operator-review message instead
+of inventing a price.
 
 Expected:
 
 - workflow reaches `COMPLETED`
-- email preview is generated
+- email preview is generated in the workflow
 - no real email is sent
+- the customer receives the final quotation only after the approval decision
 
 ## Defense Explanation
 
@@ -291,7 +302,12 @@ Use this concise explanation during Q&A:
   `LLM_RUNTIME_ENABLED=false`, making the defense demo reproducible.
 - Agent Monitor shows bounded operational evidence from workflow state and
   persisted events, not hidden reasoning.
-- Human approval prevents autonomous final quote issuance.
+- Human approval is the gate: the bridge never resumes or issues a quotation
+  until a Manager/Admin approval decision is recorded in the backend.
+- After approval, the bridge resumes the workflow and sends a final quotation
+  built only from a trusted structured price in backend workflow state; when
+  no trusted price exists it sends a safe operator-review message and never
+  invents a price.
 - The mixed unsupported item guard prevents silent item dropping and avoids
   pretending the demo has catalog/pricing support for arbitrary products.
 
@@ -316,8 +332,11 @@ During and after the demo:
 - Do not claim stock availability.
 - Do not promise delivery dates.
 - Do not claim real email was sent.
-- Do not auto-approve.
-- Do not auto-resume.
+- Do not auto-approve: the demo manager always submits the approval decision
+  through the workflow UI.
+- The bridge resumes automatically only after a recorded Manager/Admin
+  approval decision; it never resumes before approval, on reject, or on
+  request_changes.
 - Rotate the Telegram token if it appeared in screenshots, logs, chat, or a
   recording.
 

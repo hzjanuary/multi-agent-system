@@ -19,6 +19,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from decimal import Decimal
+from math import isfinite
 from typing import Any
 
 from scripts.demo.catalog import (
@@ -38,6 +39,7 @@ DEFAULT_FRONTEND_BASE_URL = "http://localhost:3000"
 DEFAULT_MANAGER_EMAIL = "manager@example.test"
 DEFAULT_MANAGER_PASSWORD = "DemoPassword123!"
 DEFAULT_POLL_INTERVAL_SECONDS = 2.0
+DEFAULT_APPROVAL_POLL_INTERVAL_SECONDS = 3.0
 DEFAULT_TELEGRAM_LLM_PROVIDER = "ollama"
 DEFAULT_TELEGRAM_LLM_MODEL = "qwen2.5:7b-instruct-q4_K_M"
 DEFAULT_TELEGRAM_LLM_BASE_URL = "http://localhost:11434"
@@ -53,6 +55,8 @@ MAX_EVIDENCE_URL_LENGTH = 300
 MAX_EVIDENCE_ITEMS = 2
 HTTP_TIMEOUT_SECONDS = 15
 PARSER_VERSION = "telegram-demo-parser-v4"
+RESUME_REQUEST_ID_PREFIX = "telegram-resume-"
+FINAL_PRICE_SOURCE_LABEL_LIMIT = 120
 HELPFUL_REQUEST_PROMPT = (
     "Please include quantity and item.\n"
     "English example: quote for 50 standard business laptops.\n"
@@ -79,6 +83,8 @@ class BridgeConfig:
     llm_timeout_seconds: int
     sales_replies_enabled: bool
     price_research_enabled: bool = False
+    approval_poll_interval_seconds: float = DEFAULT_APPROVAL_POLL_INTERVAL_SECONDS
+    final_quote_enabled: bool = True
 
 
 @dataclass(frozen=True)
@@ -168,6 +174,28 @@ class ReferenceEvidenceSummary:
     is_final_quote: bool = False
 
 
+@dataclass(frozen=True)
+class TrustedFinalPrice:
+    """A structured, trusted final unit price shown only after approval."""
+
+    unit_price: Decimal
+    currency: str
+    unit: str | None = None
+    source_label: str | None = None
+    retrieved_at: str | None = None
+
+
+@dataclass
+class TelegramPendingQuote:
+    """In-memory post-approval state for one Telegram quotation request."""
+
+    workflow_id: str
+    parsed: ParsedCustomerRequest
+    created_status: str
+    resumed: bool = False
+    final_reply_sent: bool = False
+
+
 class BridgeError(Exception):
     """Safe local-demo bridge error."""
 
@@ -213,6 +241,8 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     offset: int | None = None
+    pending_quotes: dict[str, TelegramPendingQuote] = {}
+    last_approval_poll = 0.0
     while True:
         try:
             updates = telegram_get_updates(config.telegram_bot_token, offset)
@@ -227,7 +257,12 @@ def main(argv: list[str] | None = None) -> int:
             update_id = update.get("update_id")
             if isinstance(update_id, int):
                 offset = update_id + 1
-            handle_update(config, update)
+            handle_update(config, update, pending=pending_quotes)
+
+        now = time.monotonic()
+        if pending_quotes and now - last_approval_poll >= config.approval_poll_interval_seconds:
+            process_pending_approvals(config, pending_quotes)
+            last_approval_poll = now
 
         if config.once:
             return 0
@@ -344,6 +379,16 @@ def config_from_env(args: argparse.Namespace) -> BridgeConfig:
             None,
             os.getenv("PRICE_RESEARCH_ENABLED", "false"),
         ),
+        approval_poll_interval_seconds=float(
+            os.getenv(
+                "TELEGRAM_APPROVAL_POLL_INTERVAL_SECONDS",
+                str(DEFAULT_APPROVAL_POLL_INTERVAL_SECONDS),
+            )
+        ),
+        final_quote_enabled=resolve_bool_flag(
+            None,
+            os.getenv("TELEGRAM_FINAL_QUOTE_ENABLED", "true"),
+        ),
     )
 
 
@@ -358,6 +403,7 @@ def handle_update(
     update: dict[str, Any],
     *,
     evidence_provider: Any | None = None,
+    pending: dict[str, TelegramPendingQuote] | None = None,
 ) -> None:
     message = update.get("message")
     if not isinstance(message, dict):
@@ -450,6 +496,8 @@ def handle_update(
                     auto_run=config.auto_run,
                     evidence=evidence,
                 )
+                if run_status == "WAITING_APPROVAL" and pending is not None:
+                    register_pending_quote(pending, config, chat_id, workflow, parsed)
         else:
             reply = telegram_workflow_reply(
                 config=config,
@@ -1177,6 +1225,183 @@ def json_api_request(
         raise ApiError(bound_text(str(error))) from error
 
 
+def fetch_workflow_state(
+    config: BridgeConfig, access_token: str, workflow_id: str
+) -> dict[str, Any]:
+    """Return one workflow state read from the backend workflow API."""
+    return json_api_request(
+        "GET",
+        f"{config.backend_api_base_url}/workflows/{urllib.parse.quote(workflow_id)}",
+        {},
+        access_token=access_token,
+    )
+
+
+def fetch_approval_history(
+    config: BridgeConfig, access_token: str, workflow_id: str
+) -> dict[str, Any]:
+    """Return the backend approval history for one workflow."""
+    return json_api_request(
+        "GET",
+        f"{config.backend_api_base_url}/workflows/{urllib.parse.quote(workflow_id)}/approval/history",
+        {},
+        access_token=access_token,
+    )
+
+
+def resume_approved_workflow(
+    config: BridgeConfig, access_token: str, workflow_id: str
+) -> str:
+    """Resume one approved workflow and return its next status."""
+    response = json_api_request(
+        "POST",
+        f"{config.backend_api_base_url}/workflows/{urllib.parse.quote(workflow_id)}/resume",
+        {"request_id": f"{RESUME_REQUEST_ID_PREFIX}{workflow_id}"},
+        access_token=access_token,
+    )
+    status = response.get("next_status")
+    if not isinstance(status, str):
+        raise ApiError("workflow resume response was missing next_status")
+    print(f"Resumed workflow {workflow_id}; status is {status}.")
+    return status
+
+
+def extract_trusted_price_from_workflow(
+    config: BridgeConfig,
+    access_token: str,
+    workflow_id: str,
+) -> TrustedFinalPrice | None:
+    """Return a trusted structured final price written by the backend.
+
+    Only numeric values in explicit workflow state fields qualify. This
+    function never invents, guesses, or LLM-generates a price; absence of a
+    trusted price degrades to an operator-review reply.
+    """
+    state = fetch_workflow_state(config, access_token, workflow_id)
+    for candidate in _workflow_price_candidates(state):
+        price = trusted_price_from_mapping(candidate)
+        if price is not None:
+            return price
+    return None
+
+
+def _workflow_price_candidates(state: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return explicit workflow state mappings that may hold a trusted price."""
+    workflow = state.get("workflow")
+    if not isinstance(workflow, dict):
+        return []
+    candidates: list[dict[str, Any]] = []
+    for key in ("final_quote", "results", "quotation", "outputs"):
+        value = workflow.get(key)
+        if isinstance(value, dict):
+            candidates.append(value)
+        elif isinstance(value, list):
+            candidates.extend(item for item in value if isinstance(item, dict))
+    return candidates
+
+
+def trusted_price_from_mapping(candidate: dict[str, Any]) -> TrustedFinalPrice | None:
+    """Validate one backend mapping into a trusted final unit price.
+
+    Only explicit numeric unit-price values plus a three-letter currency code
+    qualify. Optional quantity_basis normalizes a quoted total to a per-unit
+    value without ever rounding or inventing data.
+    """
+    unit_price = _final_price_decimal(
+        candidate,
+        ("unit_price", "unitPrice", "unit price", "observed_price", "amount"),
+    )
+    if unit_price is None:
+        return None
+    currency = _final_price_currency(candidate)
+    if currency is None:
+        return None
+    quantity_basis = _final_price_positive_int(candidate, ("quantity_basis",))
+    if quantity_basis is not None and quantity_basis > 1:
+        unit_price = unit_price / Decimal(quantity_basis)
+    unit = _final_price_text(candidate, ("unit",), limit=40)
+    source_label = _final_price_text(
+        candidate,
+        ("price_label", "source_label", "document_title"),
+        limit=FINAL_PRICE_SOURCE_LABEL_LIMIT,
+    )
+    retrieved_at = _final_price_text(candidate, ("retrieved_at",), limit=80)
+    return TrustedFinalPrice(
+        unit_price=unit_price,
+        currency=currency,
+        unit=unit,
+        source_label=source_label,
+        retrieved_at=retrieved_at,
+    )
+
+
+def _final_price_decimal(candidate: dict[str, Any], keys: tuple[str, ...]) -> Decimal | None:
+    for key in keys:
+        value = _coerce_final_price_decimal(candidate.get(key))
+        if value is not None:
+            return value
+    return None
+
+
+def _coerce_final_price_decimal(value: Any) -> Decimal | None:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, Decimal):
+        return value if value.is_finite() and value >= 0 else None
+    if isinstance(value, int):
+        return Decimal(value) if value >= 0 else None
+    if isinstance(value, float):
+        if not isfinite(value) or value < 0:
+            return None
+        return Decimal(str(value))
+    if isinstance(value, str):
+        stripped = value.strip()
+        if re.fullmatch(r"[0-9]+(?:\.[0-9]+)?", stripped):
+            try:
+                return Decimal(stripped)
+            except InvalidOperation:
+                return None
+    return None
+
+
+def _final_price_currency(candidate: dict[str, Any]) -> str | None:
+    for key in ("currency", "price_currency"):
+        value = candidate.get(key)
+        if isinstance(value, str):
+            normalized = value.strip().upper()
+            if re.fullmatch(r"[A-Z]{3}", normalized):
+                return normalized
+    return None
+
+
+def _final_price_positive_int(candidate: dict[str, Any], keys: tuple[str, ...]) -> int | None:
+    for key in keys:
+        value = candidate.get(key)
+        if value is None or isinstance(value, bool):
+            continue
+        if isinstance(value, int):
+            return value if value > 0 else None
+        if isinstance(value, str) and re.fullmatch(r"[0-9]{1,9}", value.strip()):
+            parsed = int(value.strip())
+            return parsed if parsed > 0 else None
+    return None
+
+
+def _final_price_text(
+    candidate: dict[str, Any],
+    keys: tuple[str, ...],
+    *,
+    limit: int,
+) -> str | None:
+    for key in keys:
+        value = candidate.get(key)
+        if isinstance(value, str):
+            normalized = re.sub(r"\s+", " ", value).strip()
+            if normalized:
+                return normalized[:limit].strip()
+    return None
+
+
 def telegram_get_updates(token: str, offset: int | None) -> list[dict[str, Any]]:
     params: dict[str, str] = {"timeout": "20", "allowed_updates": json.dumps(["message"])}
     if offset is not None:
@@ -1313,143 +1538,32 @@ def telegram_sales_workflow_reply(
     auto_run: bool,
     evidence: ReferenceEvidenceSummary | None = None,
 ) -> str:
-    workflow_url = f"{config.frontend_base_url}/workflows/{workflow_id}"
-    monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow_id}"
+    """Return a customer-facing acknowledgment with no internal identifiers.
+
+    The customer never sees workflow ids, status values, internal URLs, or
+    reference evidence. Evidence remains internal review material and is never
+    rendered into customer-facing replies.
+    """
     options = (
         f" kèm {parsed.options_summary}" if parsed.options_summary else ""
     )
-    evidence_text = format_sales_reference_evidence(evidence, parsed.language)
     if parsed.language == "vi":
-        processing = (
-            "Yêu cầu đã được chuyển vào hệ thống xử lý báo giá nội bộ để kiểm tra "
-            "chính sách giá, hợp đồng/chiết khấu áp dụng, tuân thủ và điều kiện "
-            "phê duyệt."
-            if auto_run
-            else "Yêu cầu đã được ghi nhận trong hệ thống nội bộ. Nhân sự vận hành "
-            "sẽ bấm Run workflow để bắt đầu kiểm tra."
-        )
         return (
             f"Cảm ơn anh/chị. Em đã ghi nhận nhu cầu {parsed.summary}{options}.\n\n"
-            f"{processing}\n\n"
-            f"{evidence_text}"
-            f"Mã yêu cầu: {workflow_id}\n"
-            f"Trạng thái: {status} — đang chờ quản lý phê duyệt nếu đã chạy tới "
-            "ranh giới phê duyệt.\n"
-            f"Link theo dõi nội bộ: {workflow_url}\n"
-            f"Agent Monitor: {monitor_url}\n\n"
-            "Lưu ý: Đây chưa phải báo giá cuối cùng. Báo giá chỉ được hoàn tất "
-            "sau khi quản lý phê duyệt. Hệ thống không tự phê duyệt, không tự "
-            "resume và không gửi email thật."
+            "Yêu cầu của anh/chị đã được chuyển vào hệ thống báo giá nội bộ để "
+            "kiểm tra chính sách giá, hợp đồng/chiết khấu, tuân thủ và điều kiện "
+            "phê duyệt. Quản lý sẽ rà soát và phê duyệt yêu cầu.\n\n"
+            "Em sẽ gửi báo giá chính thức ngay sau khi được phê duyệt. "
+            "Đây chưa phải báo giá cuối cùng."
         )
     return (
-        f"Thank you. I recorded the request for {parsed.summary}{options}.\n\n"
-        "The request has been transferred into the internal quotation workflow "
+        f"Thank you. I recorded your request for {parsed.summary}{options}.\n\n"
+        "Your request has been transferred to the internal quotation workflow "
         "to check pricing policy, contract/discount rules, compliance, and "
-        "approval requirements.\n\n"
-        f"{evidence_text}"
-        f"Request id: {workflow_id}\n"
-        f"Status: {status}\n"
-        f"Internal workflow: {workflow_url}\n"
-        f"Agent Monitor: {monitor_url}\n\n"
-        "Note: this is not a customer-ready quotation. The quotation is completed "
-        "only after manager approval. The system does not auto-approve, "
-        "auto-resume, or send real email."
+        "approval requirements. A manager will review and approve it.\n\n"
+        "I will send the official quotation as soon as it is approved. "
+        "This is not a final quotation yet."
     )
-
-
-def format_sales_reference_evidence(
-    evidence: ReferenceEvidenceSummary | None,
-    language: str,
-) -> str:
-    """Render bounded reference evidence for sales replies without fetching it."""
-    if evidence is None:
-        return ""
-    provider = safe_evidence_text(evidence.provider, limit=80) or "unknown"
-    if evidence.is_final_quote:
-        return (
-            "Tham khảo giá: bằng chứng cần được rà soát nội bộ trước khi phản hồi "
-            "khách hàng. Chưa phát hành báo giá.\n\n"
-            if language == "vi"
-            else (
-                "Reference evidence requires internal review before customer "
-                "response. No customer-ready quotation has been issued.\n\n"
-            )
-        )
-
-    prices = safe_reference_prices(evidence.reference_prices)
-    sources = safe_reference_sources(evidence.sources)
-    warnings = safe_evidence_warnings(evidence.warnings)
-    confidence = normalized_confidence(evidence.confidence)
-    has_usable_evidence = bool(prices or sources) and (
-        confidence is None or confidence >= 0.5
-    )
-
-    if not has_usable_evidence:
-        caution = low_confidence_text(confidence, language)
-        warning_text = f" {warnings[0]}" if warnings else ""
-        if language == "vi":
-            return (
-                "Tham khảo giá: đang chờ rà soát thủ công; chưa có bằng chứng "
-                f"đủ tin cậy để hiển thị cho báo giá.{caution}{warning_text}\n\n"
-            )
-        return (
-            "Reference evidence: pending manual pricing review; no reliable "
-            f"customer-ready pricing evidence is available.{caution}{warning_text}\n\n"
-        )
-
-    source_count = len(evidence.sources)
-    confidence_text = (
-        f", confidence {confidence:.2f}" if confidence is not None else ""
-    )
-    if language == "vi":
-        lines = [
-            "Tham khảo giá nội bộ: đã có bằng chứng tham khảo để quản lý rà soát "
-            f"(provider: {provider}, sources: {source_count}{confidence_text})."
-        ]
-        lines.extend(f"- Giá tham khảo: {price}" for price in prices)
-        lines.extend(f"- Nguồn: {source}" for source in sources)
-        lines.append("Tất cả số tiền chỉ là tham khảo, không phải báo giá cuối cùng.")
-    else:
-        lines = [
-            "Reference evidence is available for internal review "
-            f"(provider: {provider}, sources: {source_count}{confidence_text})."
-        ]
-        lines.extend(f"- Reference only: {price}" for price in prices)
-        lines.extend(f"- Source: {source}" for source in sources)
-        lines.append("All amounts are reference only, not final quotation.")
-    if warnings:
-        lines.append(f"Warning: {warnings[0]}")
-    return "\n".join(lines) + "\n\n"
-
-
-def safe_reference_prices(
-    prices: tuple[ReferenceEvidencePriceSummary, ...],
-) -> list[str]:
-    safe_prices: list[str] = []
-    for price in prices[:MAX_EVIDENCE_ITEMS]:
-        label = safe_evidence_text(price.label, limit=80) or "reference price"
-        amount = safe_evidence_text(price.amount or "", limit=80)
-        currency = safe_evidence_text(price.currency or "", limit=12)
-        unit = safe_evidence_text(price.unit or "", limit=40)
-        amount_parts = [part for part in (amount, currency) if part]
-        amount_text = " ".join(amount_parts)
-        suffix = f" / {unit}" if unit else ""
-        if amount_text:
-            safe_prices.append(f"{label}: {amount_text}{suffix}")
-        else:
-            safe_prices.append(label)
-    return safe_prices
-
-
-def safe_reference_sources(
-    sources: tuple[ReferenceEvidenceSourceSummary, ...],
-) -> list[str]:
-    safe_sources: list[str] = []
-    for source in sources[:MAX_EVIDENCE_ITEMS]:
-        title = safe_evidence_text(source.title) or "reference source"
-        url = safe_evidence_url(source.url)
-        safe_sources.append(f"{title} ({url})" if url else title)
-    return safe_sources
 
 
 def safe_evidence_warnings(warnings: tuple[str, ...]) -> list[str]:
@@ -1471,14 +1585,6 @@ def normalized_confidence(value: float | None) -> float | None:
     if value > 1:
         return 1.0
     return value
-
-
-def low_confidence_text(confidence: float | None, language: str) -> str:
-    if confidence is None or confidence >= 0.5:
-        return ""
-    if language == "vi":
-        return f" Độ tin cậy thấp ({confidence:.2f})."
-    return f" Low confidence ({confidence:.2f})."
 
 
 def safe_evidence_url(value: str | None) -> str | None:
@@ -1637,35 +1743,236 @@ def telegram_sales_run_failed_reply(
     parsed: ParsedCustomerRequest,
     workflow: WorkflowCreationResult,
 ) -> str:
-    workflow_url = f"{config.frontend_base_url}/workflows/{workflow.workflow_id}"
-    monitor_url = f"{config.frontend_base_url}/agent-monitor?workflowId={workflow.workflow_id}"
+    """Return a safe customer-facing apology without internal identifiers."""
+    if parsed.language == "vi":
+        return (
+            "Rất tiếc, hệ thống chưa thể xử lý yêu cầu của anh/chị ngay bây giờ. "
+            "Nhân viên vận hành sẽ kiểm tra và liên hệ lại với anh/chị để hoàn "
+            "tất báo giá."
+        )
+    return (
+        "Sorry, we could not process your request automatically at this moment. "
+        "An operator will check and get back to you to complete the quotation."
+    )
+
+
+def format_final_price(value: Decimal) -> str:
+    """Format a trusted price without inventing precision."""
+    if value == value.to_integral_value():
+        return str(value)
+    return f"{value:.2f}"
+
+
+def telegram_final_quote_reply(
+    config: BridgeConfig,
+    parsed: ParsedCustomerRequest,
+    price: TrustedFinalPrice,
+) -> str:
+    """Return the customer-facing final quotation after manager approval."""
+    quantity = max(parsed.quantity or 1, 1)
+    total = price.unit_price * Decimal(quantity)
+    unit_price = format_final_price(price.unit_price)
+    total_price = format_final_price(total)
+    per_unit = f" per {price.unit}" if price.unit else " each"
     options = (
         f" kèm {parsed.options_summary}" if parsed.options_summary else ""
     )
     if parsed.language == "vi":
         return (
-            f"Cảm ơn anh/chị. Em đã ghi nhận nhu cầu {parsed.summary}{options}.\n\n"
-            "Yêu cầu đã được tạo trong hệ thống nội bộ nhưng bước xử lý tự động "
-            "chưa hoàn tất. Nhân sự vận hành sẽ mở workflow và bấm Run workflow "
-            "sau khi backend sẵn sàng.\n\n"
-            f"Mã yêu cầu: {workflow.workflow_id}\n"
-            f"Trạng thái hiện tại: {workflow.status}\n"
-            f"Link theo dõi nội bộ: {workflow_url}\n"
-            f"Agent Monitor: {monitor_url}\n\n"
-            "Lưu ý: Đây chưa phải báo giá cuối cùng và chưa có phê duyệt quản lý."
+            "Cảm ơn anh/chị đã chờ. Yêu cầu của anh/chị đã được quản lý phê duyệt.\n\n"
+            f"Báo giá: {parsed.summary}{options}\n"
+            f"Đơn giá: {unit_price} {price.currency}{per_unit}\n"
+            f"Thành tiền: {total_price} {price.currency}\n\n"
+            "Lưu ý: đây là báo giá demo; hệ thống không gửi email thật."
         )
     return (
-        f"Thank you. I recorded the request for {parsed.summary}{options}.\n\n"
-        "The request was created in the internal workflow system, but automated "
-        "processing has not completed. The operator should open the workflow and "
-        "click Run workflow after the backend is ready.\n\n"
-        f"Request id: {workflow.workflow_id}\n"
-        f"Current status: {workflow.status}\n"
-        f"Internal workflow: {workflow_url}\n"
-        f"Agent Monitor: {monitor_url}\n\n"
-        "Note: this is not a customer-ready quotation and no manager approval has "
-        "been issued."
+        "Thank you for waiting. Your request has been approved by the manager.\n\n"
+        f"Quotation: {parsed.summary}{options}\n"
+        f"Unit price: {unit_price} {price.currency}{per_unit}\n"
+        f"Total: {total_price} {price.currency}\n\n"
+        "Note: this is a demo quotation; the system does not send real email."
     )
+
+
+def telegram_manual_final_quote_reply(
+    config: BridgeConfig,
+    parsed: ParsedCustomerRequest,
+) -> str:
+    """Return a safe reply when approval happened but no trusted price exists."""
+    if parsed.language == "vi":
+        return (
+            "Cảm ơn anh/chị đã chờ. Yêu cầu đã được quản lý phê duyệt, nhưng hệ "
+            "thống chưa có mức giá chính thức đủ tin cậy để gửi ngay. Nhân viên "
+            "vận hành sẽ liên hệ để hoàn tất báo giá cho anh/chị."
+        )
+    return (
+        "Thank you for waiting. Your request has been approved, but the system "
+        "does not yet have a trusted final price to send immediately. An "
+        "operator will contact you to complete the quotation."
+    )
+
+
+def telegram_approval_rejected_reply(
+    config: BridgeConfig,
+    parsed: ParsedCustomerRequest,
+    comment: str | None,
+) -> str:
+    """Return a safe customer-facing rejection with the manager's comment."""
+    if parsed.language == "vi":
+        comment_line = f"\nLý do: {comment}" if comment else ""
+        return (
+            "Chúng em rất tiếc, yêu cầu của anh/chị chưa được phê duyệt lần này."
+            f"{comment_line}\n\n"
+            "Nếu anh/chị cần thêm thông tin, nhân viên vận hành sẽ liên hệ."
+        )
+    comment_line = f"\nReason: {comment}" if comment else ""
+    return (
+        "We are sorry, but your request was not approved this time."
+        f"{comment_line}\n\n"
+        "If you need more information, an operator will contact you."
+    )
+
+
+def telegram_approval_changes_requested_reply(
+    config: BridgeConfig,
+    parsed: ParsedCustomerRequest,
+    comment: str | None,
+) -> str:
+    """Return a safe customer-facing message for a request_changes decision."""
+    if parsed.language == "vi":
+        comment_line = f"\nNội dung cần bổ sung: {comment}" if comment else ""
+        return (
+            "Yêu cầu của anh/chị cần được bổ sung thông tin trước khi phê duyệt."
+            f"{comment_line}\n\n"
+            "Em sẽ liên hệ với anh/chị để trao đổi thêm."
+        )
+    comment_line = f"\nRequired follow-up: {comment}" if comment else ""
+    return (
+        "Your request needs more information before it can be approved."
+        f"{comment_line}\n\n"
+        "An operator will contact you to follow up."
+    )
+
+
+def register_pending_quote(
+    pending: dict[str, TelegramPendingQuote],
+    config: BridgeConfig,
+    chat_id: str,
+    workflow: WorkflowCreationResult,
+    parsed: ParsedCustomerRequest,
+) -> None:
+    """Track one WAITING_APPROVAL workflow for the post-approval poll."""
+    if not config.sales_replies_enabled or not config.final_quote_enabled:
+        return
+    pending[chat_id] = TelegramPendingQuote(
+        workflow_id=workflow.workflow_id,
+        parsed=parsed,
+        created_status=workflow.status,
+    )
+    print(f"Registered workflow {workflow.workflow_id} for approval polling.")
+
+
+def latest_approval_decision(
+    config: BridgeConfig,
+    access_token: str,
+    workflow_id: str,
+) -> tuple[str | None, str | None]:
+    """Return (decision, comment) for the most recent backend approval action.
+
+    decision is None when no decision has been recorded yet. Recognized
+    decisions are approve, reject, and request_changes; anything else is
+    treated as request_changes so the bridge never resumes on unknown input.
+    """
+    history = fetch_approval_history(config, access_token, workflow_id)
+    approvals = history.get("approvals")
+    if not isinstance(approvals, list) or not approvals:
+        return None, None
+    last = approvals[-1]
+    if not isinstance(last, dict):
+        return None, None
+    decision = last.get("decision")
+    comment = last.get("comment")
+    if not isinstance(decision, str) or not decision.strip():
+        return None, None
+    normalized = decision.strip().lower()
+    if "approv" in normalized:
+        decision_key = "approve"
+    elif "reject" in normalized:
+        decision_key = "reject"
+    else:
+        decision_key = "request_changes"
+    safe_comment = safe_evidence_text(comment) if isinstance(comment, str) else None
+    if safe_comment == "[redacted]":
+        safe_comment = None
+    return decision_key, safe_comment
+
+
+def process_pending_approvals(
+    config: BridgeConfig,
+    pending: dict[str, TelegramPendingQuote],
+) -> None:
+    """Poll pending workflows for a manager decision and reply to the customer.
+
+    Approve + resume sends the final quotation when a trusted price is
+    available, and otherwise falls back to an operator-review message. Reject
+    and request_changes produce safe replies and never resume the workflow.
+    """
+    if not pending:
+        return
+    try:
+        access_token = backend_login(config)
+    except ApiError as error:
+        print(f"Approval poll login failed: {error}", file=sys.stderr)
+        return
+    for chat_id, quote in list(pending.items()):
+        if quote.final_reply_sent:
+            continue
+        try:
+            decision, comment = latest_approval_decision(
+                config, access_token, quote.workflow_id
+            )
+        except ApiError as error:
+            print(
+                f"Approval poll failed for workflow {quote.workflow_id}: {error}",
+                file=sys.stderr,
+            )
+            continue
+        if decision is None:
+            continue
+        if decision == "reject":
+            pending.pop(chat_id, None)
+            reply = telegram_approval_rejected_reply(config, quote.parsed, comment)
+            send_or_log_reply(config, chat_id, reply)
+            continue
+        if decision == "request_changes":
+            pending.pop(chat_id, None)
+            reply = telegram_approval_changes_requested_reply(config, quote.parsed, comment)
+            send_or_log_reply(config, chat_id, reply)
+            continue
+        if quote.resumed:
+            continue
+        quote.resumed = True
+        try:
+            status = resume_approved_workflow(config, access_token, quote.workflow_id)
+        except ApiError as error:
+            pending.pop(chat_id, None)
+            print(
+                f"Resume failed for workflow {quote.workflow_id}: {error}",
+                file=sys.stderr,
+            )
+            send_or_log_reply(config, chat_id, telegram_manual_final_quote_reply(config, quote.parsed))
+            continue
+        quote.final_reply_sent = True
+        pending.pop(chat_id, None)
+        print(f"Workflow {quote.workflow_id} approved and resumed; status is {status}.")
+        trusted_price = extract_trusted_price_from_workflow(
+            config, access_token, quote.workflow_id
+        )
+        if trusted_price is not None:
+            reply = telegram_final_quote_reply(config, quote.parsed, trusted_price)
+        else:
+            reply = telegram_manual_final_quote_reply(config, quote.parsed)
+        send_or_log_reply(config, chat_id, reply)
 
 
 def greeting_message(config: BridgeConfig, text: str) -> str:
