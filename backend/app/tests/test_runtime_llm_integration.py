@@ -12,9 +12,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.approvals import (
+    WORKFLOW_RESUME_FAILED_EVENT,
+    WORKFLOW_RESUMED_EVENT,
     ApprovalDecisionRequest,
     ApprovalDecisionType,
     ApprovalService,
+    ResumeNotAllowedError,
     WorkflowResumeRequest,
 )
 from app.auth import hash_password
@@ -89,12 +92,14 @@ class ScriptedLLMService:
         provider_error_stage: str | None = None,
         fallback_stage: str | None = None,
         unsafe_fallback_metadata: bool = False,
+        favorable_approval: bool = False,
     ) -> None:
         self.calls: list[LLMChatRequest] = []
         self.malformed_stage = malformed_stage
         self.provider_error_stage = provider_error_stage
         self.fallback_stage = fallback_stage
         self.unsafe_fallback_metadata = unsafe_fallback_metadata
+        self.favorable_approval = favorable_approval
 
     async def complete_json(self, request: LLMChatRequest) -> LLMChatResponse:
         self.calls.append(request)
@@ -107,13 +112,16 @@ class ScriptedLLMService:
                 request_id=request.request_id,
                 details={"api_key": "sk-should-not-leak"},
             )
-        content = (
-            "{}"
-            if stage == self.malformed_stage
-            else json.dumps(
-                _stage_payload(str(request.metadata["expected_schema"])),
+        if stage == "approval_package_preparation" and self.favorable_approval:
+            content = json.dumps(_favorable_approval_payload())
+        else:
+            content = (
+                "{}"
+                if stage == self.malformed_stage
+                else json.dumps(
+                    _stage_payload(str(request.metadata["expected_schema"])),
+                )
             )
-        )
         metadata: dict[str, object] = {}
         if stage == self.fallback_stage:
             metadata = {
@@ -551,6 +559,107 @@ async def test_real_fake_provider_runs_end_to_end_to_waiting_approval_and_resume
     assert len(llm_service.complete_json_calls) == 5
 
 
+@pytest.mark.asyncio
+async def test_favorable_approval_output_still_stops_at_waiting_approval(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    workflow_id = await _created_workflow_id(db_session)
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=_llm_settings(enabled=True),
+        llm_service=ScriptedLLMService(favorable_approval=True),
+    )
+
+    result = await runtime_service.run_workflow(workflow_id)
+    persisted_state = await workflow_service.get_workflow(workflow_id)
+    events = await event_service.list_events_for_workflow(workflow_id)
+
+    approval_output = result.state.stage_outputs[RuntimeStage.APPROVAL]
+    assert approval_output["llm_output"]["requires_human_review"] is False
+    assert approval_output["llm_output"]["decision_draft"] == "ready_for_review"
+
+    assert result.state.status is WorkflowStatus.WAITING_APPROVAL
+    assert result.state.current_stage is RuntimeStage.APPROVAL
+    assert result.state.completed_stages == PRE_APPROVAL_RUNTIME_STAGES
+    assert persisted_state is not None
+    assert persisted_state.status is WorkflowStatus.WAITING_APPROVAL
+    event_types = [event.event_type for event in events]
+    assert WORKFLOW_RESUMED_EVENT not in event_types
+
+
+@pytest.mark.asyncio
+async def test_favorable_approval_output_cannot_bypass_resume_approval(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    workflow_id = await _created_workflow_id(db_session)
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=_llm_settings(enabled=True),
+        llm_service=ScriptedLLMService(favorable_approval=True),
+    )
+    await runtime_service.run_workflow(workflow_id)
+    actor = await _create_user_with_role(db_session, RoleName.MANAGER)
+
+    with pytest.raises(ResumeNotAllowedError):
+        await runtime_service.resume_workflow_after_approval(
+            workflow_id,
+            WorkflowResumeRequest(request_id="g4-no-approval-001"),
+            actor_type="user",
+            actor_id=actor.id,
+        )
+
+    events = await event_service.list_events_for_workflow(workflow_id)
+    persisted_state = await workflow_service.get_workflow(workflow_id)
+    assert events[-1].event_type == WORKFLOW_RESUME_FAILED_EVENT
+    assert persisted_state is not None
+    assert persisted_state.status is WorkflowStatus.WAITING_APPROVAL
+
+
+@pytest.mark.asyncio
+async def test_favorable_approval_output_requires_explicit_approval_and_resume(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    workflow_id = await _created_workflow_id(db_session)
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=_llm_settings(enabled=True),
+        llm_service=ScriptedLLMService(favorable_approval=True),
+    )
+    await runtime_service.run_workflow(workflow_id)
+    actor = await _create_user_with_role(db_session, RoleName.MANAGER)
+
+    await ApprovalService(db_session).submit_approval_decision(
+        workflow_id,
+        ApprovalDecisionRequest(
+            decision=ApprovalDecisionType.APPROVE,
+            comment="Explicit human approval after favorable LLM output.",
+        ),
+        actor,
+    )
+    resume_result = await runtime_service.resume_workflow_after_approval(
+        workflow_id,
+        WorkflowResumeRequest(request_id="g4-approved-001"),
+        actor_type="user",
+        actor_id=actor.id,
+    )
+
+    assert resume_result.state.status is WorkflowStatus.COMPLETED
+    assert resume_result.state.current_stage is RuntimeStage.EMAIL_PREPARATION
+    assert resume_result.state.completed_stages == (
+        *PRE_APPROVAL_RUNTIME_STAGES,
+        *POST_APPROVAL_RUNTIME_STAGES,
+    )
+
+
 def _stage_payload(schema_name: str) -> dict[str, object]:
     payloads: dict[str, dict[str, object]] = {
         "RequirementExtractionOutput": {
@@ -622,6 +731,13 @@ def _stage_payload(schema_name: str) -> dict[str, object]:
         },
     }
     return payloads[schema_name]
+
+
+def _favorable_approval_payload() -> dict[str, object]:
+    payload = dict(_stage_payload("ApprovalPackageOutput"))
+    payload["requires_human_review"] = False
+    payload["decision_draft"] = "ready_for_review"
+    return payload
 
 
 async def _create_user_with_role(
