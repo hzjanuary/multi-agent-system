@@ -101,6 +101,16 @@ def test_prompt_rendering_is_deterministic() -> None:
     assert first == second
 
 
+def test_structured_prompt_uses_canonical_schema_field_names() -> None:
+    request = build_requirement_extraction_request(_workflow_request())
+    system_prompt = request.messages[0].content
+
+    assert '"summary": string' in system_prompt
+    assert '"extracted_items"' in system_prompt
+    assert '"requires_human_review": boolean' in system_prompt
+    assert "no aliases" in system_prompt
+
+
 def test_prompt_redacts_sensitive_keys_and_does_not_read_environment(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

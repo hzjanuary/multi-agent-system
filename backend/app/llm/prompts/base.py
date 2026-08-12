@@ -27,6 +27,64 @@ _SENSITIVE_KEY_PARTS = (
     "token",
 )
 
+_SCHEMA_CONTRACTS: dict[str, str] = {
+    "RequirementExtractionOutput": (
+        '{"summary": string, "domain": string|null, '
+        '"customer_name": string|null, "extracted_items": '
+        '[{"name": string, "quantity": integer|null, "unit": string|null, '
+        '"product_id": string|null, "notes": string|null}], '
+        '"assumptions": string[], "missing_information": string[], '
+        '"confidence": number 0..1, "requires_human_review": boolean}'
+    ),
+    "SupplierPricingAnalysisOutput": (
+        '{"summary": string, "pricing_basis": string, "findings": '
+        '[{"title": string, "detail": string, "severity": '
+        '"low"|"medium"|"high"|"unknown", "citation": string|null}], '
+        '"risks": [{"risk": string, "level": '
+        '"low"|"medium"|"high"|"unknown", "rationale": string, '
+        '"mitigation": string|null}], "assumptions": string[], '
+        '"missing_information": string[], "recommendations": '
+        '[{"action": "proceed"|"review"|"request_information"|"block", '
+        '"rationale": string, "owner_role": string|null}], '
+        '"confidence": number 0..1, "requires_human_review": boolean}'
+    ),
+    "LegalComplianceAnalysisOutput": (
+        '{"summary": string, "compliance_status": string, "findings": '
+        '[{"title": string, "detail": string, "severity": '
+        '"low"|"medium"|"high"|"unknown", "citation": string|null}], '
+        '"risks": [{"risk": string, "level": '
+        '"low"|"medium"|"high"|"unknown", "rationale": string, '
+        '"mitigation": string|null}], "missing_information": string[], '
+        '"recommendations": [{"action": '
+        '"proceed"|"review"|"request_information"|"block", '
+        '"rationale": string, "owner_role": string|null}], '
+        '"confidence": number 0..1, "requires_human_review": boolean}'
+    ),
+    "FinanceRiskAnalysisOutput": (
+        '{"summary": string, "budget_impact": string, "findings": '
+        '[{"title": string, "detail": string, "severity": '
+        '"low"|"medium"|"high"|"unknown", "citation": string|null}], '
+        '"risks": [{"risk": string, "level": '
+        '"low"|"medium"|"high"|"unknown", "rationale": string, '
+        '"mitigation": string|null}], "assumptions": string[], '
+        '"recommendations": [{"action": '
+        '"proceed"|"review"|"request_information"|"block", '
+        '"rationale": string, "owner_role": string|null}], '
+        '"confidence": number 0..1, "requires_human_review": boolean}'
+    ),
+    "ApprovalPackageOutput": (
+        '{"summary": string, "decision_draft": '
+        '"ready_for_review"|"needs_more_information"|"not_recommended", '
+        '"key_points": string[], "risks": [{"risk": string, "level": '
+        '"low"|"medium"|"high"|"unknown", "rationale": string, '
+        '"mitigation": string|null}], "recommendations": [{"action": '
+        '"proceed"|"review"|"request_information"|"block", '
+        '"rationale": string, "owner_role": string|null}], '
+        '"missing_information": string[], "confidence": number 0..1, '
+        '"requires_human_review": boolean}'
+    ),
+}
+
 
 def build_structured_json_request(
     *,
@@ -79,11 +137,18 @@ def safe_prompt_json(value: Mapping[str, Any] | str, *, max_length: int) -> str:
 
 
 def _render_system_prompt(stage_name: str, schema_name: str) -> str:
+    schema_contract = _SCHEMA_CONTRACTS.get(schema_name)
+    contract_instruction = (
+        f"Exact JSON contract; use these field names and no aliases: {schema_contract}."
+        if schema_contract is not None
+        else "Use the exact fields defined by the named schema."
+    )
     return "\n".join(
         (
             "You are an enterprise procurement workflow assistant.",
             f"Stage: {stage_name}.",
             f"Return one JSON object that validates against {schema_name}.",
+            contract_instruction,
             "Use only the provided workflow request and context.",
             "Do not invent unsupported facts; mark uncertainty explicitly.",
             "Do not include hidden reasoning, chain-of-thought, secrets, "
