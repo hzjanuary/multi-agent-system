@@ -197,6 +197,7 @@ def _payload_for_chunk(
         "embedding_provider": embedding_settings.provider.value,
         "embedding_model": embedding_settings.model,
         "embedding_dimensions": embedding_settings.dimensions,
+        **metadata.attributes,
         "demo_seed": True,
         "demo_reference_only": True,
     }

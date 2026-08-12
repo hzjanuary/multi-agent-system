@@ -168,3 +168,22 @@ async def test_vector_payloads_are_bounded_safe_and_deterministic() -> None:
     assert "api_key" not in str(first_point.payload).lower()
     assert "raw_prompt" not in str(first_point.payload).lower()
     assert len(str(first_point.payload["text"])) <= 8000
+
+
+async def test_vector_payloads_preserve_structured_demo_pricing_metadata() -> None:
+    service, _storage, vector_store = _service()
+
+    await service.ingest_documents(DEMO_KNOWLEDGE_DOCUMENTS)
+    points = list(vector_store.points["test_demo_knowledge"].values())
+    pricing_points = [
+        point
+        for point in points
+        if point.payload.get("document_id") == "demo-kb-office-monitor-price"
+    ]
+
+    assert pricing_points
+    payload = pricing_points[0].payload
+    assert payload["observed_price"] == "3200000"
+    assert payload["currency"] == "VND"
+    assert payload["quantity_basis"] == 1
+    assert payload["price_label"] == "Internal demo catalog unit price"

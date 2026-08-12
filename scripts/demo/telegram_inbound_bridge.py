@@ -1266,6 +1266,33 @@ def resume_approved_workflow(
     return status
 
 
+def knowledge_pricing_search(
+    config: BridgeConfig,
+    access_token: str,
+    parsed: ParsedCustomerRequest,
+) -> dict[str, Any]:
+    """Search backend-seeded pricing knowledge for a trusted structured price."""
+    query = " ".join(
+        part
+        for part in (
+            parsed.item_name,
+            parsed.original_text[:400],
+            "unit price",
+        )
+        if part
+    )[:1000]
+    return json_api_request(
+        "POST",
+        f"{config.backend_api_base_url}/knowledge/search",
+        {
+            "query": query,
+            "top_k": 5,
+            "source_types": ["pricing"],
+        },
+        access_token=access_token,
+    )
+
+
 def extract_trusted_price_from_workflow(
     config: BridgeConfig,
     access_token: str,
@@ -1280,6 +1307,36 @@ def extract_trusted_price_from_workflow(
     state = fetch_workflow_state(config, access_token, workflow_id)
     for candidate in _workflow_price_candidates(state):
         price = trusted_price_from_mapping(candidate)
+        if price is not None:
+            return price
+    return None
+
+
+def extract_trusted_price_from_knowledge(
+    response: dict[str, Any],
+    *,
+    item_name: str | None = None,
+) -> TrustedFinalPrice | None:
+    """Return a trusted structured price from backend knowledge results."""
+    results = response.get("results")
+    if not isinstance(results, list):
+        return None
+    expected_item = normalize_for_catalog_match(item_name) if item_name else None
+    for result in results:
+        if not isinstance(result, dict):
+            continue
+        metadata = result.get("metadata")
+        candidate = (
+            {**result, **metadata} if isinstance(metadata, dict) else result
+        )
+        if expected_item is not None:
+            candidate_item = candidate.get("normalized_item_name")
+            if isinstance(candidate_item, str):
+                if normalize_for_catalog_match(candidate_item) != expected_item:
+                    continue
+        price = trusted_price_from_mapping(result)
+        if price is None:
+            price = trusted_price_from_mapping(candidate)
         if price is not None:
             return price
     return None
@@ -1968,6 +2025,11 @@ def process_pending_approvals(
         trusted_price = extract_trusted_price_from_workflow(
             config, access_token, quote.workflow_id
         )
+        if trusted_price is None and config.price_research_enabled:
+            trusted_price = extract_trusted_price_from_knowledge(
+                knowledge_pricing_search(config, access_token, quote.parsed),
+                item_name=quote.parsed.item_name,
+            )
         if trusted_price is not None:
             reply = telegram_final_quote_reply(config, quote.parsed, trusted_price)
         else:

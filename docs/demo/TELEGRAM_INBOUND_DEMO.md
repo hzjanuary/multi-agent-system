@@ -401,6 +401,31 @@ When sales replies are disabled, the bridge keeps the technical demo reply
 style with parsed fields, workflow id, status, URLs, and bounded technical run
 errors.
 
+### Post-Approval Replies
+
+When sales replies are enabled and a workflow reached `WAITING_APPROVAL`, the
+bridge registers it for approval polling and polls the backend
+`approval/history` endpoint on every main polling loop iteration. When a
+Manager/Admin approval decision is recorded, the bridge:
+
+- calls `POST /workflows/{workflow_id}/resume`
+- reads the workflow state for a trusted structured price (`final_quote`,
+  `results`, `quotation`, or `outputs` containing an explicit numeric
+  `unit_price` plus a three-letter currency code)
+- sends the final quotation with unit price, total, and currency, or falls
+  back to a safe operator-review message when no trusted price exists
+- never invents, guesses, or LLM-generates a price
+
+For a `reject` decision the bridge sends a safe customer-facing rejection with
+the manager's comment (if any) and never resumes. For a `request_changes`
+decision it sends a safe follow-up message and never resumes. Resume or
+polling failures degrade to an operator-review reply, never to a fabricated
+quotation.
+
+The bridge never auto-approves: it only acts after the backend records a
+human approval decision. A final quotation is never sent before Manager/Admin
+approval.
+
 ### Optional Reference Evidence Wording
 
 Sales-style replies can render bounded reference-evidence summaries only when a
@@ -410,8 +435,14 @@ price research providers, and does not perform live price lookup from
 Telegram.
 
 Optional backend price research is a separate feature-flagged foundation
-(`PRICE_RESEARCH_ENABLED=true`, disabled by default) that this bridge never
-calls. It is documented in
+(`PRICE_RESEARCH_ENABLED=true`, disabled by default). When enabled, the bridge
+uses the existing backend `knowledge/search` endpoint as a fallback for a
+trusted structured price after approval. The local demo pricing documents use
+explicit `observed_price`, `currency`, `unit`, `quantity_basis`, and
+`price_label` metadata; these are internal demo/reference values, not live
+Tavily prices. The bridge still never invents a price and never renders
+reference amounts, source titles/URLs, warnings, or confidence into
+customer-facing replies. Price research is documented in
 `.ai/specs/SPEC-016-conversational-sales-agent/spec.md`, with a manual-only live
 smoke path in `docs/demo/PROVIDER_LIVE_VERIFICATION.md` and provider evidence
 policy in `docs/governance/PROVIDER_EVIDENCE_POLICY.md`.
@@ -462,6 +493,7 @@ POST /api/v1/workflows/{workflow_id}/run
 GET  /api/v1/workflows/{workflow_id}
 GET  /api/v1/workflows/{workflow_id}/approval/history
 POST /api/v1/workflows/{workflow_id}/resume
+POST /api/v1/knowledge/search   (only when PRICE_RESEARCH_ENABLED=true)
 ```
 
 Approval decisions themselves are submitted through the existing backend UI

@@ -77,6 +77,7 @@ def chunk_document(
             domain=document.metadata.domain,
             checksum=chunk_checksum,
             character_count=len(chunk_text),
+            attributes=document.metadata.attributes,
         )
         chunks.append(KnowledgeChunk(metadata=chunk_metadata, text=chunk_text))
 

@@ -87,6 +87,7 @@ def _result(
     score: float = 0.82,
     chunk_id: str = "kbchunk:demo-kb-acme-contract-terms:0:abc123",
     text: str = "Framework Discount: 10 percent for laptop orders.",
+    extra_payload: dict[str, object] | None = None,
 ) -> VectorSearchResult:
     return VectorSearchResult(
         id="point-1",
@@ -108,6 +109,7 @@ def _result(
             "demo_seed": True,
             "demo_reference_only": True,
             "raw_prompt": "must-not-leak",
+            **(extra_payload or {}),
         },
     )
 
@@ -132,6 +134,41 @@ async def test_search_embeds_query_and_maps_safe_citation_result() -> None:
     assert result.citation.relevance_score == 0.82
     assert "raw_prompt" not in result.metadata
     assert "raw_prompt" not in result.model_dump_json().lower()
+
+
+@pytest.mark.asyncio
+async def test_search_preserves_structured_pricing_metadata() -> None:
+    vector_store = FakeVectorStore(
+        results=[
+            _result(
+                document_id="demo-kb-office-monitor-price",
+                source_type="pricing",
+                extra_payload={
+                    "catalog_item_id": "office_monitor",
+                    "normalized_item_name": "Office monitor",
+                    "observed_price": "3200000",
+                    "currency": "VND",
+                    "unit": "unit",
+                    "quantity_basis": 1,
+                    "price_label": "Internal demo catalog unit price",
+                },
+            ),
+        ],
+    )
+    service = _service(vector_store)
+
+    response = await service.search(
+        KnowledgeSearchRequest(
+            query="Office monitor",
+            source_types=(KnowledgeDocumentSourceType.PRICING,),
+        ),
+    )
+
+    metadata = response.results[0].metadata
+    assert metadata["observed_price"] == "3200000"
+    assert metadata["currency"] == "VND"
+    assert metadata["quantity_basis"] == 1
+    assert metadata["price_label"] == "Internal demo catalog unit price"
 
 
 @pytest.mark.asyncio

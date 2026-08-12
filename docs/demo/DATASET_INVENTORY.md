@@ -156,10 +156,19 @@ knowledge ingestion CLI. They cover:
 | `demo-kb-acme-contract-terms` | `contract` | `datasets/contracts/CON-2026-ACME-IT.md` |
 | `demo-kb-supplier-evaluation-notes` | `supplier_profile` | `datasets/index/document_index.json` |
 | `demo-kb-pricing-guideline` | `pricing` | `datasets/pricing_rules.json` |
+| `demo-kb-standard-business-laptop-price` | `pricing` | `datasets/demo/internal_catalog_pricing.json` |
+| `demo-kb-office-printer-price` | `pricing` | `datasets/demo/internal_catalog_pricing.json` |
+| `demo-kb-office-monitor-price` | `pricing` | `datasets/demo/internal_catalog_pricing.json` |
 | `demo-kb-compliance-checklist` | `compliance_checklist` | `datasets/policies/POLICY-DOMAIN-COMPLIANCE.md` |
 
 Each document has a stable document ID, deterministic checksum, bounded demo
 content, and deterministic object storage key under `demo/knowledge/`.
+
+The three internal catalog pricing documents carry explicit structured
+`observed_price`, `currency`, `unit`, `quantity_basis`, and `price_label`
+metadata. These are local demo/reference values only, not live vendor prices;
+Tavily remains external reference evidence and human approval remains required
+before a Telegram quotation is released.
 
 ## Demo Knowledge Ingestion Command
 

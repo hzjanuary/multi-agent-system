@@ -218,6 +218,13 @@ class KnowledgeChunkMetadata(BaseModel):
     domain: str = Field(min_length=1, max_length=MAX_DOMAIN_LENGTH)
     checksum: str = Field(min_length=1, max_length=MAX_CHECKSUM_LENGTH)
     character_count: int = Field(ge=1, le=MAX_CHUNK_TEXT_CHARS)
+    attributes: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("attributes")
+    @classmethod
+    def validate_attributes(cls, value: dict[str, Any]) -> dict[str, Any]:
+        """Keep safe document attributes available on indexed chunks."""
+        return validate_json_metadata(value, "chunk attributes")
 
 
 class KnowledgeChunk(BaseModel):

@@ -25,6 +25,7 @@ from scripts.demo.telegram_inbound_bridge import (
     build_workflow_create_payload,
     config_from_env,
     extract_customer_request,
+    extract_trusted_price_from_knowledge,
     extract_trusted_price_from_workflow,
     follow_up_message,
     format_final_price,
@@ -1331,6 +1332,85 @@ class TelegramPostApprovalTests(unittest.TestCase):
         self.assertIsNone(
             trusted_price_from_mapping({"observed_price": None, "currency": "USD"})
         )
+
+    def test_extract_trusted_price_from_knowledge_requires_structured_result(self) -> None:
+        price = extract_trusted_price_from_knowledge(
+            {
+                "results": [
+                    {
+                        "chunk_index": 0,
+                        "checksum": "abc",
+                        "metadata": {
+                            "embedding_provider": "demo",
+                            "demo_reference_only": True,
+                        },
+                        "content": "The price is around 952 dollars per unit.",
+                    }
+                ]
+            }
+        )
+        self.assertIsNone(price)
+
+        price = extract_trusted_price_from_knowledge(
+            {
+                "results": [
+                    {
+                        "document_title": "Internal Demo Catalog - Office Monitor",
+                        "metadata": {
+                            "observed_price": "3200000",
+                            "currency": "VND",
+                            "unit": "unit",
+                            "quantity_basis": 1,
+                            "price_label": "Internal demo catalog unit price",
+                        },
+                    },
+                ]
+            }
+        )
+        self.assertIsNotNone(price)
+        assert price is not None
+        self.assertEqual(price.unit_price, Decimal("3200000"))
+        self.assertEqual(price.currency, "VND")
+
+        price = extract_trusted_price_from_knowledge(
+            {
+                "results": [
+                    {
+                        "metadata": {
+                            "normalized_item_name": "Standard business laptop",
+                            "observed_price": "18500000",
+                            "currency": "VND",
+                        },
+                    },
+                    {
+                        "metadata": {
+                            "normalized_item_name": "Office monitor",
+                            "observed_price": "3200000",
+                            "currency": "VND",
+                        },
+                    },
+                ]
+            },
+            item_name="Office monitor",
+        )
+        self.assertIsNotNone(price)
+        assert price is not None
+        self.assertEqual(price.unit_price, Decimal("3200000"))
+
+        price = extract_trusted_price_from_knowledge(
+            {
+                "results": [
+                    {
+                        "unit_price": 952.56,
+                        "currency": "USD",
+                        "unit": "unit",
+                    }
+                ]
+            }
+        )
+        self.assertIsNotNone(price)
+        assert price is not None
+        self.assertEqual(price.unit_price, Decimal("952.56"))
 
     def test_telegram_final_quote_reply_includes_total_and_no_internal_ids(self) -> None:
         reply = telegram_final_quote_reply(

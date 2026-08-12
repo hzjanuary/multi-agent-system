@@ -141,6 +141,78 @@ DEMO_KNOWLEDGE_DOCUMENTS: tuple[KnowledgeDocument, ...] = (
         ),
     ),
     _document(
+        document_id="demo-kb-standard-business-laptop-price",
+        title="Internal Demo Catalog - Standard Business Laptop",
+        source_type=KnowledgeDocumentSourceType.PRICING,
+        version="demo-2026.1",
+        effective_date=date(2026, 1, 1),
+        owner_team="Demo Catalog",
+        dataset_path="datasets/demo/internal_catalog_pricing.json",
+        tags=("demo", "pricing", "internal_catalog", "laptop"),
+        attributes={
+            "catalog_item_id": "standard_business_laptop",
+            "normalized_item_name": "Standard business laptop",
+            "observed_price": "18500000",
+            "currency": "VND",
+            "unit": "unit",
+            "quantity_basis": 1,
+            "price_label": "Internal demo catalog unit price",
+        },
+        content=(
+            "Internal demo catalog reference for Standard business laptop. "
+            "This local demo value is not a live vendor price and requires "
+            "human approval before any quotation release."
+        ),
+    ),
+    _document(
+        document_id="demo-kb-office-printer-price",
+        title="Internal Demo Catalog - Office Printer",
+        source_type=KnowledgeDocumentSourceType.PRICING,
+        version="demo-2026.1",
+        effective_date=date(2026, 1, 1),
+        owner_team="Demo Catalog",
+        dataset_path="datasets/demo/internal_catalog_pricing.json",
+        tags=("demo", "pricing", "internal_catalog", "printer"),
+        attributes={
+            "catalog_item_id": "office_printer",
+            "normalized_item_name": "Office printer",
+            "observed_price": "4500000",
+            "currency": "VND",
+            "unit": "unit",
+            "quantity_basis": 1,
+            "price_label": "Internal demo catalog unit price",
+        },
+        content=(
+            "Internal demo catalog reference for Office printer. This local "
+            "demo value is not a live vendor price and requires human approval "
+            "before any quotation release."
+        ),
+    ),
+    _document(
+        document_id="demo-kb-office-monitor-price",
+        title="Internal Demo Catalog - Office Monitor",
+        source_type=KnowledgeDocumentSourceType.PRICING,
+        version="demo-2026.1",
+        effective_date=date(2026, 1, 1),
+        owner_team="Demo Catalog",
+        dataset_path="datasets/demo/internal_catalog_pricing.json",
+        tags=("demo", "pricing", "internal_catalog", "monitor"),
+        attributes={
+            "catalog_item_id": "office_monitor",
+            "normalized_item_name": "Office monitor",
+            "observed_price": "3200000",
+            "currency": "VND",
+            "unit": "unit",
+            "quantity_basis": 1,
+            "price_label": "Internal demo catalog unit price",
+        },
+        content=(
+            "Internal demo catalog reference for Office monitor. This local "
+            "demo value is not a live vendor price and requires human approval "
+            "before any quotation release."
+        ),
+    ),
+    _document(
         document_id="demo-kb-compliance-checklist",
         title="Demo Compliance Checklist",
         source_type=KnowledgeDocumentSourceType.COMPLIANCE_CHECKLIST,

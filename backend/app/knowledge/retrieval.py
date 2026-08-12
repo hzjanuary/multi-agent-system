@@ -229,6 +229,17 @@ def _safe_result_metadata(payload: dict[str, object]) -> dict[str, object]:
         "demo_seed",
         "demo_reference_only",
         "version",
+        "catalog_item_id",
+        "normalized_item_name",
+        "observed_price",
+        "amount",
+        "currency",
+        "unit",
+        "quantity_basis",
+        "price_label",
+        "label",
+        "retrieved_at",
+        "source_url",
     )
     metadata = {key: payload[key] for key in allowed_keys if key in payload}
     return validate_json_metadata(metadata, "retrieval metadata")
