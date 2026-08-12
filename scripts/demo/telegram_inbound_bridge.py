@@ -1237,6 +1237,30 @@ def fetch_workflow_state(
     )
 
 
+def workflow_status_from_response(response: dict[str, Any]) -> str | None:
+    """Extract a workflow status from the API's bounded response shape."""
+    workflow = response.get("workflow")
+    if isinstance(workflow, dict):
+        status = workflow.get("status")
+        if isinstance(status, str):
+            return status
+    status = response.get("status")
+    return status if isinstance(status, str) else None
+
+
+def is_completed_resume_conflict(error: ApiError) -> bool:
+    """Identify only the backend conflict used by a concurrent resume race."""
+    message = str(error)
+    if not message.startswith("HTTP 409:"):
+        return False
+    try:
+        body = json.loads(message.partition(":")[2].strip())
+    except json.JSONDecodeError:
+        return False
+    detail = body.get("detail") if isinstance(body, dict) else None
+    return isinstance(detail, dict) and detail.get("code") == "workflow_resume_not_allowed"
+
+
 def fetch_approval_history(
     config: BridgeConfig, access_token: str, workflow_id: str
 ) -> dict[str, Any]:
@@ -2010,7 +2034,31 @@ def process_pending_approvals(
             continue
         quote.resumed = True
         try:
-            status = resume_approved_workflow(config, access_token, quote.workflow_id)
+            workflow_state = fetch_workflow_state(
+                config, access_token, quote.workflow_id
+            )
+            current_status = workflow_status_from_response(workflow_state)
+            if current_status == "APPROVED":
+                try:
+                    resume_approved_workflow(config, access_token, quote.workflow_id)
+                except ApiError as error:
+                    if not is_completed_resume_conflict(error):
+                        raise
+                    workflow_state = fetch_workflow_state(
+                        config, access_token, quote.workflow_id
+                    )
+                    current_status = workflow_status_from_response(workflow_state)
+                    if current_status != "COMPLETED":
+                        raise
+                else:
+                    workflow_state = fetch_workflow_state(
+                        config, access_token, quote.workflow_id
+                    )
+                    current_status = workflow_status_from_response(workflow_state)
+            if current_status != "COMPLETED":
+                raise ApiError(
+                    f"approved workflow was not ready for quotation: {current_status or 'unknown'}"
+                )
         except ApiError as error:
             pending.pop(chat_id, None)
             print(
@@ -2021,7 +2069,10 @@ def process_pending_approvals(
             continue
         quote.final_reply_sent = True
         pending.pop(chat_id, None)
-        print(f"Workflow {quote.workflow_id} approved and resumed; status is {status}.")
+        print(
+            f"Workflow {quote.workflow_id} approved and ready for quotation; "
+            "status is COMPLETED."
+        )
         trusted_price = extract_trusted_price_from_workflow(
             config, access_token, quote.workflow_id
         )

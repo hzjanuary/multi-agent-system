@@ -1294,6 +1294,35 @@ class TelegramPostApprovalTests(unittest.TestCase):
         assert parsed is not None
         return parsed
 
+    def laptop_20_parsed(self) -> ParsedCustomerRequest:
+        parsed = parse_customer_request("báo giá cho tôi 20 laptop văn phòng tiêu chuẩn")
+        assert parsed is not None
+        return parsed
+
+    def internal_laptop_knowledge_response(self) -> dict[str, Any]:
+        return {
+            "results": [
+                {
+                    "metadata": {
+                        "normalized_item_name": "Office monitor",
+                        "observed_price": "3200000",
+                        "currency": "VND",
+                        "quantity_basis": 1,
+                        "price_label": "Internal demo catalog unit price",
+                    }
+                },
+                {
+                    "metadata": {
+                        "normalized_item_name": "Standard business laptop",
+                        "observed_price": "18500000",
+                        "currency": "VND",
+                        "quantity_basis": 1,
+                        "price_label": "Internal demo catalog unit price",
+                    }
+                },
+            ]
+        }
+
     def test_format_final_price_keeps_trusted_precision(self) -> None:
         self.assertEqual(format_final_price(Decimal("952.56")), "952.56")
         self.assertEqual(format_final_price(Decimal("952")), "952")
@@ -1582,6 +1611,12 @@ class TelegramPostApprovalTests(unittest.TestCase):
             "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
             return_value=("approve", "Approved"),
         ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+            side_effect=[
+                {"workflow": {"status": "APPROVED"}},
+                {"workflow": {"status": "COMPLETED"}},
+            ],
+        ), patch(
             "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
             return_value="QUOTED",
         ), patch(
@@ -1622,6 +1657,12 @@ class TelegramPostApprovalTests(unittest.TestCase):
             "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
             return_value=("approve", None),
         ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+            side_effect=[
+                {"workflow": {"status": "APPROVED"}},
+                {"workflow": {"status": "COMPLETED"}},
+            ],
+        ), patch(
             "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
             return_value="QUOTED",
         ), patch(
@@ -1661,6 +1702,12 @@ class TelegramPostApprovalTests(unittest.TestCase):
         ), patch(
             "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
             return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+            side_effect=[
+                {"workflow": {"status": "APPROVED"}},
+                {"workflow": {"status": "COMPLETED"}},
+            ],
         ), patch(
             "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
             return_value="COMPLETED",
@@ -1744,6 +1791,186 @@ class TelegramPostApprovalTests(unittest.TestCase):
         self.assertIn("not approved", replies[0])
         self.assertNotIn("chat-1", pending)
 
+    def test_completed_before_bridge_resume_skips_resume_and_quotes(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.laptop_20_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+            return_value={"workflow": {"status": "COMPLETED"}},
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+        ) as resume, patch(
+            "scripts.demo.telegram_inbound_bridge.extract_trusted_price_from_workflow",
+            return_value=None,
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.knowledge_pricing_search",
+            return_value=self.internal_laptop_knowledge_response(),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=lambda _config, _chat_id, text: replies.append(text),
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        resume.assert_not_called()
+        self.assertIn("Đơn giá: 18500000 VND", replies[0])
+        self.assertIn("Thành tiền: 370000000 VND", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_completed_resume_conflict_is_treated_as_race_success(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.laptop_20_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+        race_error = ApiError(
+            'HTTP 409: {"detail":{"code":"workflow_resume_not_allowed",'
+            '"message":"Workflow resume requires APPROVED, got COMPLETED."}}'
+        )
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+            side_effect=[
+                {"workflow": {"status": "APPROVED"}},
+                {"workflow": {"status": "COMPLETED"}},
+            ],
+        ) as fetch_state, patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            side_effect=race_error,
+        ) as resume, patch(
+            "scripts.demo.telegram_inbound_bridge.extract_trusted_price_from_workflow",
+            return_value=None,
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.knowledge_pricing_search",
+            return_value=self.internal_laptop_knowledge_response(),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=lambda _config, _chat_id, text: replies.append(text),
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        resume.assert_called_once()
+        self.assertEqual(fetch_state.call_count, 2)
+        self.assertIn("Thành tiền: 370000000 VND", replies[0])
+        self.assertNotIn("Resume failed", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_completed_resume_conflict_without_completed_refresh_fails_safe(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.laptop_20_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+        race_error = ApiError(
+            'HTTP 409: {"detail":{"code":"workflow_resume_not_allowed",'
+            '"message":"Workflow resume requires APPROVED, got WAITING_APPROVAL."}}'
+        )
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+            side_effect=[
+                {"workflow": {"status": "APPROVED"}},
+                {"workflow": {"status": "APPROVED"}},
+            ],
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            side_effect=race_error,
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=lambda _config, _chat_id, text: replies.append(text),
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("mức giá chính thức đủ tin cậy", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_unrelated_resume_conflict_is_not_swallowed(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.laptop_20_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+            return_value={"workflow": {"status": "APPROVED"}},
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            side_effect=ApiError(
+                'HTTP 409: {"detail":{"code":"approval_conflict",'
+                '"message":"another approval conflict"}}'
+            ),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=lambda _config, _chat_id, text: replies.append(text),
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("mức giá chính thức đủ tin cậy", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_completed_without_persisted_approval_does_not_quote(self) -> None:
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=self.laptop_20_parsed(),
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=(None, None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+        ) as fetch_state, patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+        ) as send_reply:
+            process_pending_approvals(self.config(), pending)
+
+        fetch_state.assert_not_called()
+        send_reply.assert_not_called()
+        self.assertIn("chat-1", pending)
+
     def test_process_pending_approvals_request_changes_never_resumes(self) -> None:
         pending = {
             "chat-1": TelegramPendingQuote(
@@ -1795,6 +2022,9 @@ class TelegramPostApprovalTests(unittest.TestCase):
         ), patch(
             "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
             return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.fetch_workflow_state",
+            return_value={"workflow": {"status": "APPROVED"}},
         ), patch(
             "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
             side_effect=ApiError("backend unavailable"),
