@@ -109,7 +109,10 @@ class OpenAICompatibleLLMClient:
         return self._normalize_response(response.payload, request=request, model=model)
 
     def _headers(self, request: LLMChatRequest) -> dict[str, str]:
-        headers = {"Authorization": f"Bearer {self._api_key}"}
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "User-Agent": "enterprise-os-backend/1.0",
+        }
         if request.request_id:
             headers["X-Request-ID"] = request.request_id
         return headers

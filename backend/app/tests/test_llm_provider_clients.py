@@ -108,6 +108,7 @@ async def test_groq_client_maps_request_and_normalizes_response() -> None:
     assert request.url == "https://api.groq.com/openai/v1/chat/completions"
     assert request.headers["Authorization"] == "Bearer groq-test-key"
     assert request.headers["X-Request-ID"] == "request-123"
+    assert request.headers["User-Agent"] == "enterprise-os-backend/1.0"
     assert request.timeout_seconds == 12
     assert request.payload["model"] == "llama-3.3-70b-versatile"
     assert request.payload["stream"] is False
@@ -156,6 +157,53 @@ async def test_openrouter_client_maps_request_and_normalizes_response() -> None:
     assert response.provider is LLMProvider.OPENROUTER
     assert response.structured_json == {"stage": "retrieval"}
     assert response.metadata["provider_api"] == "openai_compatible"
+
+
+@pytest.mark.parametrize(
+    ("client_factory", "expected_authorization"),
+    [
+        (
+            lambda: GroqLLMClient(api_key="groq-test-key", model="m"),
+            "Bearer groq-test-key",
+        ),
+        (
+            lambda: OpenRouterLLMClient(api_key="openrouter-test-key", model="m"),
+            "Bearer openrouter-test-key",
+        ),
+    ],
+)
+async def test_openai_compatible_clients_send_stable_user_agent(
+    client_factory: Any,
+    expected_authorization: str,
+) -> None:
+    transport = FakeTransport(
+        responses=[
+            HTTPResponse(
+                status_code=200,
+                payload={
+                    "id": "response-1",
+                    "model": "m",
+                    "choices": [
+                        {"message": {"content": "ok"}, "finish_reason": "stop"},
+                    ],
+                },
+            ),
+        ],
+    )
+    client = client_factory()
+    client._transport = transport
+
+    await client.complete(
+        LLMChatRequest(
+            messages=(LLMChatMessage(role=LLMMessageRole.USER, content="hello"),),
+            request_id="request-xyz",
+        ),
+    )
+
+    request = transport.requests[0]
+    assert request.headers["Authorization"] == expected_authorization
+    assert request.headers["User-Agent"] == "enterprise-os-backend/1.0"
+    assert request.headers["X-Request-ID"] == "request-xyz"
 
 
 async def test_ollama_client_maps_stream_false_and_normalizes_response() -> None:
