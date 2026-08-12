@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 
 import pytest
@@ -49,6 +50,20 @@ class ScriptedClient:
         if isinstance(outcome, LLMProviderError):
             raise outcome
         return outcome
+
+
+@dataclass
+class CancellingClient:
+    provider: LLMProvider
+    model: str = "cancelling-model"
+    requests: list[LLMChatRequest] = field(default_factory=list)
+
+    def validate_ready(self) -> None:
+        return None
+
+    async def complete(self, request_value: LLMChatRequest) -> LLMChatResponse:
+        self.requests.append(request_value)
+        raise asyncio.CancelledError()
 
 
 @dataclass
@@ -306,6 +321,41 @@ async def test_fallback_does_not_hide_configuration_or_auth_errors() -> None:
 
     assert exc_info.value.category is LLMErrorCategory.AUTHENTICATION
     assert len(fallback.requests) == 0
+
+
+async def test_service_cancellation_propagates_without_retry() -> None:
+    client = CancellingClient(provider=LLMProvider.FAKE)
+    service = LLMService(
+        settings=LLMSettings(provider=LLMProvider.FAKE, max_retries=3),
+        client_factory=CapturingFactory({LLMProvider.FAKE: client}),
+        sleep=no_sleep,
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await service.complete(request())
+
+    assert len(client.requests) == 1
+
+
+async def test_service_cancellation_during_backoff_sleep_skips_retry() -> None:
+    client = ScriptedClient(
+        provider=LLMProvider.GROQ,
+        outcomes=[provider_error(LLMErrorCategory.TIMEOUT)],
+    )
+
+    async def cancelling_sleep(_: float) -> None:
+        raise asyncio.CancelledError()
+
+    service = LLMService(
+        settings=LLMSettings(provider=LLMProvider.GROQ, max_retries=3),
+        client_factory=CapturingFactory({LLMProvider.GROQ: client}),
+        sleep=cancelling_sleep,
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await service.complete(request())
+
+    assert len(client.requests) == 1
 
 
 async def test_missing_real_provider_key_fails_safely_without_secret_leak() -> None:

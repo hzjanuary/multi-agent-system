@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import AsyncIterator, Sequence
 from uuid import UUID
@@ -273,6 +274,41 @@ async def test_resume_failure_persists_safe_failure_state_and_events(
     assert persisted_state.error.code == "RUNTIME_NODE_FAILED"
     assert WORKFLOW_RESUME_FAILED_EVENT in [event.event_type for event in events]
     assert "smtp secret should not leak" not in payload_text
+
+
+@pytest.mark.asyncio
+async def test_resume_cancellation_persists_safe_cancellation_event(
+    db_session: AsyncSession,
+) -> None:
+    actor = await create_user_with_role(db_session, RoleName.MANAGER)
+    workflow_id = await create_approved_workflow(db_session, actor)
+    handlers = create_deterministic_node_handlers()
+
+    def cancelling_email_node(state: RuntimeWorkflowState) -> RuntimeWorkflowState:
+        raise asyncio.CancelledError()
+
+    handlers[RuntimeStage.EMAIL_PREPARATION] = cancelling_email_node
+    event_service = WorkflowEventService(db_session)
+    runtime_service = RuntimeService(
+        WorkflowService(db_session),
+        event_service,
+        node_handlers=handlers,
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await runtime_service.resume_workflow_after_approval(workflow_id)
+
+    persisted_state = await WorkflowService(db_session).get_workflow(workflow_id)
+    events = await event_service.list_events_for_workflow(workflow_id)
+    event_types = [event.event_type for event in events]
+
+    assert persisted_state is not None
+    assert persisted_state.status is WorkflowStatus.GENERATING_EMAIL
+    assert persisted_state.error is None
+    assert "workflow.runtime.cancelled" in event_types
+    assert WORKFLOW_RESUME_FAILED_EVENT not in event_types
+    assert "workflow.node.failed" not in event_types
+    assert "workflow.runtime.failed" not in event_types
 
 
 async def create_approved_workflow(

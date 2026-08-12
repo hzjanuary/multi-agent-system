@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
@@ -271,6 +272,16 @@ class RuntimeService:
                     stage_output=stage_runtime_state.stage_outputs.get(stage),
                     payload=self._llm_stage_event_payload(stage),
                 )
+        except asyncio.CancelledError:
+            await self._handle_runtime_cancellation(
+                workflow_id,
+                current_workflow_state,
+                runtime_payload,
+                stage,
+                actor_type=actor_type,
+                actor_id=actor_id,
+            )
+            raise
         except Exception as exc:
             await self._handle_runtime_failure(
                 workflow_id,
@@ -429,6 +440,16 @@ class RuntimeService:
                 stage_output=stage_runtime_state.stage_outputs.get(stage),
                 payload=self._llm_stage_event_payload(stage),
             )
+        except asyncio.CancelledError:
+            await self._handle_runtime_cancellation(
+                workflow_id,
+                current_workflow_state,
+                runtime_payload,
+                stage,
+                actor_type=actor_type,
+                actor_id=actor_id,
+            )
+            raise
         except Exception as exc:
             await self._handle_runtime_failure(
                 workflow_id,
@@ -736,6 +757,70 @@ class RuntimeService:
         except InvalidWorkflowTransitionError:
             return workflow_state
 
+    async def _handle_runtime_cancellation(
+        self,
+        workflow_id: UUID,
+        workflow_state: WorkflowState,
+        runtime_payload: RuntimeStatePayload,
+        stage: RuntimeStage,
+        *,
+        actor_type: str | None,
+        actor_id: UUID | None,
+    ) -> WorkflowState:
+        await self._append_runtime_event(
+            workflow_id,
+            "workflow.runtime.cancelled",
+            None,
+            actor_type=actor_type,
+            actor_id=actor_id,
+            message="Workflow runtime cancelled.",
+            payload={
+                "cancelled_stage": stage.value,
+                "status": workflow_state.status.value,
+            },
+        )
+        cancelled_workflow_state = await self._transition_to_cancelled_if_allowed(
+            workflow_id,
+            workflow_state,
+            actor_type=actor_type,
+            actor_id=actor_id,
+            reason=f"Runtime cancelled during {stage.value} stage.",
+        )
+        runtime_state = RuntimeWorkflowState.model_validate(runtime_payload).model_copy(
+            update={"status": cancelled_workflow_state.status}
+        )
+        updated_state = runtime_state_to_workflow_state(
+            runtime_state,
+            cancelled_workflow_state,
+        )
+        return await self.workflow_service.update_workflow_state(
+            workflow_id,
+            updated_state,
+            actor_type=actor_type,
+            actor_id=actor_id,
+            reason="Runtime persisted cancellation state.",
+        )
+
+    async def _transition_to_cancelled_if_allowed(
+        self,
+        workflow_id: UUID,
+        workflow_state: WorkflowState,
+        *,
+        actor_type: str | None,
+        actor_id: UUID | None,
+        reason: str,
+    ) -> WorkflowState:
+        try:
+            return await self.workflow_service.transition_workflow_status(
+                workflow_id,
+                WorkflowStatus.CANCELLED,
+                actor_type=actor_type,
+                actor_id=actor_id,
+                reason=reason,
+            )
+        except InvalidWorkflowTransitionError:
+            return workflow_state
+
     async def _append_runtime_failed_event(
         self,
         workflow_id: UUID,
@@ -759,7 +844,7 @@ class RuntimeService:
         self,
         workflow_id: UUID,
         event_type: str,
-        status: WorkflowEventStatus,
+        status: WorkflowEventStatus | None,
         *,
         actor_type: str | None,
         actor_id: UUID | None,

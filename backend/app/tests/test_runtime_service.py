@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from uuid import UUID, uuid4
 
@@ -264,6 +265,77 @@ async def test_runtime_service_persists_failure_state_and_events(
     }
     assert "deterministic retrieval failure" not in str(node_failed_event.payload)
     assert "deterministic retrieval failure" not in str(runtime_failed_event.payload)
+
+
+@pytest.mark.asyncio
+async def test_runtime_service_cancellation_persists_safe_cancelled_state(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    created_state = await workflow_service.create_workflow(
+        build_workflow_state_create()
+    )
+    workflow_id = UUID(created_state.workflow_id)
+    handlers = create_deterministic_node_handlers()
+
+    def cancelling_compliance_node(
+        state: RuntimeWorkflowState,
+    ) -> RuntimeWorkflowState:
+        raise asyncio.CancelledError()
+
+    handlers[RuntimeStage.COMPLIANCE] = cancelling_compliance_node
+    event_service = WorkflowEventService(db_session)
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        node_handlers=handlers,
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await runtime_service.run_workflow(workflow_id)
+
+    persisted_state = await workflow_service.get_workflow(workflow_id)
+    events = await event_service.list_events_for_workflow(workflow_id)
+    event_types = [event.event_type for event in events]
+
+    assert persisted_state is not None
+    assert persisted_state.status is WorkflowStatus.CANCELLED
+    assert persisted_state.error is None
+    assert "workflow.runtime.cancelled" in event_types
+    assert "workflow.node.failed" not in event_types
+    assert "workflow.runtime.failed" not in event_types
+    cancelled_event = next(
+        event for event in events if event.event_type == "workflow.runtime.cancelled"
+    )
+    assert cancelled_event.status is None
+    assert cancelled_event.payload == {
+        "workflow_id": str(workflow_id),
+        "cancelled_stage": "compliance",
+        "status": WorkflowStatus.CHECKING_COMPLIANCE.value,
+    }
+
+
+@pytest.mark.asyncio
+async def test_runtime_service_cancellation_keeps_existing_run_and_error_behavior(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    created_state = await workflow_service.create_workflow(
+        build_workflow_state_create()
+    )
+    workflow_id = UUID(created_state.workflow_id)
+    runtime_service = RuntimeService(
+        workflow_service,
+        WorkflowEventService(db_session),
+    )
+
+    result = await runtime_service.run_workflow(
+        workflow_id,
+        actor_type="user",
+        actor_id=uuid4(),
+    )
+
+    assert result.state.status is WorkflowStatus.WAITING_APPROVAL
 
 
 @pytest.mark.asyncio
