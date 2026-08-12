@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.db import create_database_engine, create_session_factory
+from app.llm import LLMProvider, LLMSettings
+from app.llm.errors import LLMConfigurationError
 from app.models.enums import WorkflowStatus
 from app.runtime import (
     PRE_APPROVAL_RUNTIME_STAGES,
@@ -364,6 +366,58 @@ async def test_runtime_service_does_not_commit(
 
 def test_runtime_service_module_imports_without_api_routes() -> None:
     assert RuntimeService is not None
+
+
+async def test_runtime_rejects_fake_fallback_masking_real_provider(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    with pytest.raises(LLMConfigurationError, match="fake"):
+        RuntimeService(
+            workflow_service,
+            event_service,
+            llm_settings=LLMSettings(
+                runtime_enabled=True,
+                provider=LLMProvider.GROQ,
+                fallback_enabled=True,
+            ),
+        )
+
+
+async def test_runtime_allows_fake_fallback_in_fake_provider_mode(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=LLMSettings(
+            runtime_enabled=True,
+            provider=LLMProvider.FAKE,
+            fallback_enabled=True,
+            fallback_provider=LLMProvider.FAKE,
+        ),
+    )
+
+    assert runtime_service.llm_runtime_enabled is True
+
+
+async def test_runtime_ignores_fallback_config_when_runtime_disabled(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=LLMSettings(
+            runtime_enabled=False,
+            provider=LLMProvider.GROQ,
+            fallback_enabled=True,
+        ),
+    )
 
 
 def runtime_stage_status(stage: RuntimeStage) -> str:

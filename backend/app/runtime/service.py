@@ -7,8 +7,8 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
-from app.llm.contracts import LLMErrorCategory
-from app.llm.errors import LLMProviderError
+from app.llm.contracts import LLMErrorCategory, LLMProvider
+from app.llm.errors import LLMConfigurationError, LLMProviderError
 from app.llm.service import LLMService
 from app.llm.settings import LLMSettings
 from app.models.enums import WorkflowEventStatus, WorkflowStatus
@@ -115,6 +115,12 @@ class RuntimeService:
         self.workflow_event_service = workflow_event_service
         self.llm_settings = llm_settings or LLMSettings()
         self.llm_runtime_enabled = self.llm_settings.runtime_enabled
+        if self.llm_runtime_enabled and _is_masking_fake_fallback(self.llm_settings):
+            raise LLMConfigurationError(
+                "llm runtime rejects fake-provider fallback while a real provider "
+                "is selected; a fake fallback can mask provider outages",
+                provider=self.llm_settings.provider,
+            )
         self.llm_service = (
             llm_service
             if llm_service is not None
@@ -979,6 +985,14 @@ def _approval_records_from_state(state: WorkflowState) -> tuple[ApprovalRecord, 
     if not isinstance(raw_records, list | tuple):
         return ()
     return tuple(ApprovalRecord.model_validate(record) for record in raw_records)
+
+
+def _is_masking_fake_fallback(settings: LLMSettings) -> bool:
+    return (
+        settings.fallback_enabled
+        and settings.fallback_provider is LLMProvider.FAKE
+        and settings.provider is not LLMProvider.FAKE
+    )
 
 
 def _safe_resume_metadata(metadata: dict[str, Any]) -> dict[str, Any]:

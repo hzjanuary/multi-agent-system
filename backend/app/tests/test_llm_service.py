@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import random
 from dataclasses import dataclass, field
 
 import pytest
@@ -18,7 +19,12 @@ from app.llm.contracts import (
     LLMResponseFormat,
 )
 from app.llm.errors import LLMProviderError
-from app.llm.service import LLMService
+from app.llm.service import (
+    BACKOFF_JITTER_FRACTION,
+    BACKOFF_MAX_SECONDS,
+    LLMService,
+    backoff_delay_seconds,
+)
 
 
 def request(*, provider: LLMProvider | None = None) -> LLMChatRequest:
@@ -31,6 +37,14 @@ def request(*, provider: LLMProvider | None = None) -> LLMChatRequest:
 
 async def no_sleep(_: float) -> None:
     return None
+
+
+class RecordingSleep:
+    def __init__(self) -> None:
+        self.delays: list[float] = []
+
+    async def __call__(self, delay: float) -> None:
+        self.delays.append(delay)
 
 
 @dataclass
@@ -183,6 +197,40 @@ async def test_service_retries_transient_errors(category: LLMErrorCategory) -> N
 
     assert result.provider is LLMProvider.GROQ
     assert len(client.requests) == 3
+
+
+def test_backoff_delay_is_bounded_exponential_with_jitter() -> None:
+    rng = random.Random(7)
+    delays = [backoff_delay_seconds(attempt, rng=rng) for attempt in range(6)]
+
+    for delay in delays:
+        assert 0 < delay <= BACKOFF_MAX_SECONDS * (1 + BACKOFF_JITTER_FRACTION)
+    assert delays[0] < delays[1] < delays[2] < delays[3] < delays[4]
+
+
+async def test_service_applies_bounded_backoff_between_retries() -> None:
+    client = ScriptedClient(
+        provider=LLMProvider.GROQ,
+        outcomes=[
+            provider_error(LLMErrorCategory.TIMEOUT),
+            provider_error(LLMErrorCategory.RATE_LIMIT),
+            response(LLMProvider.GROQ),
+        ],
+    )
+    sleep = RecordingSleep()
+    service = LLMService(
+        settings=LLMSettings(provider=LLMProvider.GROQ, max_retries=2),
+        client_factory=CapturingFactory({LLMProvider.GROQ: client}),
+        sleep=sleep,
+    )
+
+    result = await service.complete(request())
+
+    assert result.provider is LLMProvider.GROQ
+    assert len(client.requests) == 3
+    assert len(sleep.delays) == 2
+    assert all(0 < delay <= BACKOFF_MAX_SECONDS for delay in sleep.delays)
+    assert sleep.delays[1] > sleep.delays[0]
 
 
 async def test_service_stops_after_configured_retry_limit() -> None:

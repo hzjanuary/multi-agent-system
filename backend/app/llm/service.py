@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import random
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -20,6 +21,27 @@ from app.llm.retry import is_fallback_eligible_llm_error, is_retryable_llm_error
 from app.llm.settings import LLMSettings
 
 SleepCallable = Callable[[float], Awaitable[None]]
+
+BACKOFF_BASE_SECONDS = 0.5
+BACKOFF_MULTIPLIER = 2.0
+BACKOFF_MAX_SECONDS = 8.0
+BACKOFF_JITTER_FRACTION = 0.25
+
+
+def backoff_delay_seconds(
+    attempt: int,
+    *,
+    base_seconds: float = BACKOFF_BASE_SECONDS,
+    multiplier: float = BACKOFF_MULTIPLIER,
+    max_seconds: float = BACKOFF_MAX_SECONDS,
+    jitter_fraction: float = BACKOFF_JITTER_FRACTION,
+    rng: random.Random | None = None,
+) -> float:
+    """Return a bounded exponential backoff delay with jitter for a retry attempt."""
+    exponential = min(max_seconds, base_seconds * multiplier ** max(attempt, 0))
+    sample = rng.random() if rng is not None else random.random()
+    jitter = exponential * jitter_fraction * (2 * sample - 1)
+    return exponential + jitter
 
 
 class LLMService:
@@ -95,7 +117,8 @@ class LLMService:
                 attempts_remaining -= 1
                 if attempts_remaining <= 0 or not is_retryable_llm_error(exc.category):
                     raise
-                await self._sleep(0)
+                retry_attempt = self._settings.max_retries - attempts_remaining
+                await self._sleep(backoff_delay_seconds(retry_attempt))
         if last_error is not None:
             raise last_error
         raise LLMProviderError(
