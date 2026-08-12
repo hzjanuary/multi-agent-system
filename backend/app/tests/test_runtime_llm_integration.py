@@ -87,10 +87,14 @@ class ScriptedLLMService:
         *,
         malformed_stage: str | None = None,
         provider_error_stage: str | None = None,
+        fallback_stage: str | None = None,
+        unsafe_fallback_metadata: bool = False,
     ) -> None:
         self.calls: list[LLMChatRequest] = []
         self.malformed_stage = malformed_stage
         self.provider_error_stage = provider_error_stage
+        self.fallback_stage = fallback_stage
+        self.unsafe_fallback_metadata = unsafe_fallback_metadata
 
     async def complete_json(self, request: LLMChatRequest) -> LLMChatResponse:
         self.calls.append(request)
@@ -110,11 +114,23 @@ class ScriptedLLMService:
                 _stage_payload(str(request.metadata["expected_schema"])),
             )
         )
+        metadata: dict[str, object] = {}
+        if stage == self.fallback_stage:
+            metadata = {
+                "fallback_used": True,
+                "fallback_from_provider": "groq",
+                "fallback_error_category": "unavailable",
+            }
+            if self.unsafe_fallback_metadata:
+                metadata["fallback_from_provider"] = "provider-details: sk-unsafe"
+                metadata["fallback_error_category"] = "raw error body"
+                metadata["raw_provider_error"] = "raw provider body with secrets"
         return LLMChatResponse(
             provider=LLMProvider.FAKE,
             model="fake-runtime-model",
             content=content,
             request_id=f"fake:{request.request_id}",
+            metadata=metadata,
         )
 
 
@@ -182,6 +198,7 @@ async def test_default_runtime_flag_disabled_does_not_call_llm_service(
     assert result.state.stage_outputs[RuntimeStage.PLANNER]["placeholder"] is True
     assert result.state.runtime_context["deterministic_runtime"] is True
     assert llm_service.calls == []
+    assert "llm_fallback_used" not in result.state.stage_outputs[RuntimeStage.PLANNER]
 
 
 @pytest.mark.asyncio
@@ -305,6 +322,136 @@ async def test_llm_enabled_runtime_handles_provider_errors_without_secret_leak(
     assert failed_event.payload["llm_error_category"] == "authentication"
     assert "sk-should-not-leak" not in payload_text
     assert "api_key" not in payload_text
+
+
+@pytest.mark.asyncio
+async def test_llm_enabled_runtime_surfaces_bounded_fallback_metadata(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    workflow_id = await _created_workflow_id(db_session)
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=_llm_settings(enabled=True),
+        llm_service=ScriptedLLMService(
+            fallback_stage="intake_requirement_extraction",
+        ),
+    )
+
+    result = await runtime_service.run_workflow(workflow_id)
+    events = await event_service.list_events_for_workflow(workflow_id)
+
+    planner_output = result.state.stage_outputs[RuntimeStage.PLANNER]
+    assert planner_output["llm_fallback_used"] is True
+    assert planner_output["llm_fallback_from_provider"] == "groq"
+    assert planner_output["llm_fallback_error_category"] == "unavailable"
+
+    retrieval_output = result.state.stage_outputs[RuntimeStage.RETRIEVAL]
+    assert "llm_fallback_used" not in retrieval_output
+    assert "llm_fallback_from_provider" not in retrieval_output
+    assert "llm_fallback_error_category" not in retrieval_output
+
+    completed_events = [
+        event for event in events if event.event_type == "workflow.node.completed"
+    ]
+    planner_event = next(
+        event for event in completed_events if event.agent_name == "planner"
+    )
+    safe_planner_output = planner_event.payload["stage_output"]
+    assert safe_planner_output["llm_fallback_used"] is True
+    assert safe_planner_output["llm_fallback_from_provider"] == "groq"
+    assert safe_planner_output["llm_fallback_error_category"] == "unavailable"
+    payload_text = json.dumps(planner_event.payload, sort_keys=True)
+    assert '"fallback_used":' not in payload_text
+
+    retrieval_event = next(
+        event for event in completed_events if event.agent_name == "retrieval"
+    )
+    safe_retrieval_output = retrieval_event.payload["stage_output"]
+    assert "llm_fallback_used" not in safe_retrieval_output
+    assert "llm_fallback_from_provider" not in safe_retrieval_output
+    assert "llm_fallback_error_category" not in safe_retrieval_output
+
+
+@pytest.mark.asyncio
+async def test_llm_enabled_runtime_normal_response_has_no_fallback_metadata(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    workflow_id = await _created_workflow_id(db_session)
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=_llm_settings(enabled=True),
+        llm_service=ScriptedLLMService(),
+    )
+
+    result = await runtime_service.run_workflow(workflow_id)
+    events = await event_service.list_events_for_workflow(workflow_id)
+
+    for stage in PRE_APPROVAL_RUNTIME_STAGES:
+        if stage is RuntimeStage.QUOTATION:
+            continue
+        output = result.state.stage_outputs[stage]
+        assert "llm_fallback_used" not in output
+        assert "llm_fallback_from_provider" not in output
+        assert "llm_fallback_error_category" not in output
+
+    completed_events = [
+        event for event in events if event.event_type == "workflow.node.completed"
+    ]
+    for event in completed_events:
+        safe_output = event.payload["stage_output"]
+        assert "llm_fallback_used" not in safe_output
+        assert "llm_fallback_from_provider" not in safe_output
+        assert "llm_fallback_error_category" not in safe_output
+
+
+@pytest.mark.asyncio
+async def test_llm_enabled_runtime_rejects_unsafe_fallback_metadata(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    workflow_id = await _created_workflow_id(db_session)
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=_llm_settings(enabled=True),
+        llm_service=ScriptedLLMService(
+            fallback_stage="intake_requirement_extraction",
+            unsafe_fallback_metadata=True,
+        ),
+    )
+
+    result = await runtime_service.run_workflow(workflow_id)
+    events = await event_service.list_events_for_workflow(workflow_id)
+
+    planner_output = result.state.stage_outputs[RuntimeStage.PLANNER]
+    assert planner_output["llm_fallback_used"] is True
+    assert "llm_fallback_from_provider" not in planner_output
+    assert "llm_fallback_error_category" not in planner_output
+    assert "raw_provider_error" not in planner_output
+    assert "sk-unsafe" not in json.dumps(planner_output, sort_keys=True)
+
+    completed_events = [
+        event for event in events if event.event_type == "workflow.node.completed"
+    ]
+    planner_event = next(
+        event for event in completed_events if event.agent_name == "planner"
+    )
+    safe_planner_output = planner_event.payload["stage_output"]
+    assert safe_planner_output["llm_fallback_used"] is True
+    assert "llm_fallback_from_provider" not in safe_planner_output
+    assert "llm_fallback_error_category" not in safe_planner_output
+    payload_text = json.dumps(planner_event.payload, sort_keys=True)
+    assert "sk-unsafe" not in payload_text
+    assert "raw_provider_error" not in payload_text
+    assert "provider-details" not in payload_text
+    assert "raw error body" not in payload_text
 
 
 @pytest.mark.asyncio

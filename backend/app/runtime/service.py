@@ -915,6 +915,9 @@ class RuntimeService:
             "llm_model",
             "llm_request_id",
             "llm_finish_reason",
+            "llm_fallback_used",
+            "llm_fallback_from_provider",
+            "llm_fallback_error_category",
         ):
             if key in stage_output:
                 safe_output[key] = stage_output[key]

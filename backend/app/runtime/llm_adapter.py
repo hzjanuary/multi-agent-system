@@ -7,7 +7,13 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel
 
-from app.llm.contracts import LLMChatRequest, LLMChatResponse, LLMUsage
+from app.llm.contracts import (
+    LLMChatRequest,
+    LLMChatResponse,
+    LLMErrorCategory,
+    LLMProvider,
+    LLMUsage,
+)
 from app.llm.output_parser import parse_structured_output
 from app.llm.prompts import (
     build_approval_package_request,
@@ -149,6 +155,7 @@ def _complete_llm_stage(
     usage = _usage_payload(response.usage)
     if usage:
         stage_output["llm_usage"] = usage
+    stage_output.update(_safe_fallback_metadata(response.metadata))
 
     return _replace_stage_output(
         state,
@@ -235,6 +242,28 @@ def _usage_payload(usage: LLMUsage | None) -> dict[str, Any]:
     if usage is None:
         return {}
     return usage.model_dump(mode="json", exclude_none=True)
+
+
+_LLM_PROVIDER_VALUES: frozenset[str] = frozenset(
+    provider.value for provider in LLMProvider
+)
+_LLM_ERROR_CATEGORY_VALUES: frozenset[str] = frozenset(
+    category.value for category in LLMErrorCategory
+)
+
+
+def _safe_fallback_metadata(metadata: Mapping[str, Any]) -> dict[str, Any]:
+    """Copy only bounded, enum-validated fallback flags from response metadata."""
+    if metadata.get("fallback_used") is not True:
+        return {}
+    fallback_payload: dict[str, Any] = {"llm_fallback_used": True}
+    from_provider = metadata.get("fallback_from_provider")
+    if isinstance(from_provider, str) and from_provider in _LLM_PROVIDER_VALUES:
+        fallback_payload["llm_fallback_from_provider"] = from_provider
+    error_category = metadata.get("fallback_error_category")
+    if isinstance(error_category, str) and error_category in _LLM_ERROR_CATEGORY_VALUES:
+        fallback_payload["llm_fallback_error_category"] = error_category
+    return fallback_payload
 
 
 __all__ = ["LLMCompletionService", "LLMRuntimeAdapter"]
