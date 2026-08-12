@@ -32,6 +32,10 @@ scripts/bin/harness-cli.exe
 # Local Docker Compose overrides may contain machine-specific settings.
 docker-compose.override.yml
 
+# Python bytecode caches (generated build/test artifacts).
+__pycache__/
+*.pyc
+
 # Harness core maintenance binary
 scripts/bin/harness
 scripts/bin/harness.exe
