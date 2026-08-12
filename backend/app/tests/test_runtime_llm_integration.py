@@ -7,8 +7,18 @@ from collections.abc import AsyncIterator
 from uuid import UUID
 
 import pytest
+from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.approvals import (
+    ApprovalDecisionRequest,
+    ApprovalDecisionType,
+    ApprovalService,
+    WorkflowResumeRequest,
+)
+from app.auth import hash_password
+from app.auth.rbac import RoleName
 from app.config import get_settings
 from app.db import create_database_engine, create_session_factory
 from app.llm.contracts import (
@@ -18,9 +28,19 @@ from app.llm.contracts import (
     LLMProvider,
 )
 from app.llm.errors import LLMProviderError
+from app.llm.service import LLMService
 from app.llm.settings import LLMSettings
+from app.llm.structured_outputs import (
+    ApprovalPackageOutput,
+    FinanceRiskAnalysisOutput,
+    LegalComplianceAnalysisOutput,
+    RequirementExtractionOutput,
+    SupplierPricingAnalysisOutput,
+)
+from app.models import Role, User
 from app.models.enums import WorkflowStatus
 from app.runtime import (
+    POST_APPROVAL_RUNTIME_STAGES,
     PRE_APPROVAL_RUNTIME_STAGES,
     RuntimeService,
     RuntimeStage,
@@ -96,6 +116,27 @@ class ScriptedLLMService:
             content=content,
             request_id=f"fake:{request.request_id}",
         )
+
+
+class TrackingFakeLLMService(LLMService):
+    """Real LLMService over FakeLLMClient that records complete_json calls."""
+
+    def __init__(self) -> None:
+        super().__init__(settings=_llm_settings(enabled=True))
+        self.complete_json_calls: list[LLMChatRequest] = []
+
+    async def complete_json(self, request: LLMChatRequest) -> LLMChatResponse:
+        self.complete_json_calls.append(request)
+        return await super().complete_json(request)
+
+
+_RUNTIME_STAGE_SCHEMAS: dict[RuntimeStage, type[BaseModel]] = {
+    RuntimeStage.PLANNER: RequirementExtractionOutput,
+    RuntimeStage.RETRIEVAL: SupplierPricingAnalysisOutput,
+    RuntimeStage.COMPLIANCE: LegalComplianceAnalysisOutput,
+    RuntimeStage.VALIDATION: FinanceRiskAnalysisOutput,
+    RuntimeStage.APPROVAL: ApprovalPackageOutput,
+}
 
 
 def _workflow_state_create() -> WorkflowStateCreate:
@@ -266,6 +307,103 @@ async def test_llm_enabled_runtime_handles_provider_errors_without_secret_leak(
     assert "api_key" not in payload_text
 
 
+@pytest.mark.asyncio
+async def test_real_fake_provider_runs_end_to_end_to_waiting_approval_and_resume(
+    db_session: AsyncSession,
+) -> None:
+    workflow_service = WorkflowService(db_session)
+    event_service = WorkflowEventService(db_session)
+    workflow_id = await _created_workflow_id(db_session)
+    llm_service = TrackingFakeLLMService()
+    runtime_service = RuntimeService(
+        workflow_service,
+        event_service,
+        llm_settings=_llm_settings(enabled=True),
+        llm_service=llm_service,
+    )
+
+    result = await runtime_service.run_workflow(workflow_id)
+    persisted_state = await workflow_service.get_workflow(workflow_id)
+    events = await event_service.list_events_for_workflow(workflow_id)
+
+    assert result.state.status is WorkflowStatus.WAITING_APPROVAL
+    assert result.state.completed_stages == PRE_APPROVAL_RUNTIME_STAGES
+    called_stages = [
+        str(request.metadata["stage"]) for request in llm_service.complete_json_calls
+    ]
+    assert called_stages == [
+        "intake_requirement_extraction",
+        "supplier_pricing_analysis",
+        "legal_compliance_analysis",
+        "finance_risk_analysis",
+        "approval_package_preparation",
+    ]
+    assert len(llm_service.complete_json_calls) == 5
+    for stage in PRE_APPROVAL_RUNTIME_STAGES:
+        if stage is RuntimeStage.QUOTATION:
+            continue
+        output = result.state.stage_outputs[stage]
+        assert output["placeholder"] is False
+        assert output["llm_runtime_enabled"] is True
+        assert output["llm_provider"] == "fake"
+        assert output["llm_output_schema"] == _RUNTIME_STAGE_SCHEMAS[stage].__name__
+        _RUNTIME_STAGE_SCHEMAS[stage].model_validate(output["llm_output"])
+        assert "content" not in output
+    quotation = result.state.stage_outputs[RuntimeStage.QUOTATION]
+    assert quotation["llm_skipped"] is True
+    assert quotation["placeholder"] is True
+    assert result.state.runtime_context["llm_runtime_enabled"] is True
+    assert persisted_state is not None
+    assert persisted_state.status is WorkflowStatus.WAITING_APPROVAL
+    RequirementExtractionOutput.model_validate(persisted_state.planner["llm_output"])
+    completed_events = [
+        event for event in events if event.event_type == "workflow.node.completed"
+    ]
+    assert len(completed_events) == 6
+    llm_completed_events = [
+        event
+        for event in completed_events
+        if event.payload["llm_stage_mode"] == "structured_prompt"
+    ]
+    assert len(llm_completed_events) == 5
+    quotation_event = next(
+        event
+        for event in completed_events
+        if event.payload["llm_stage_mode"] == "deterministic_no_llm"
+    )
+    assert quotation_event.agent_name == "quotation"
+
+    actor = await _create_user_with_role(db_session, RoleName.MANAGER)
+    await ApprovalService(db_session).submit_approval_decision(
+        workflow_id,
+        ApprovalDecisionRequest(
+            decision=ApprovalDecisionType.APPROVE,
+            comment="Approved for G2 resume.",
+        ),
+        actor,
+    )
+    resume_result = await runtime_service.resume_workflow_after_approval(
+        workflow_id,
+        WorkflowResumeRequest(
+            request_id="resume-fake-001",
+            metadata={"operator_note": "G2 fake end-to-end resume"},
+        ),
+        actor_type="user",
+        actor_id=actor.id,
+    )
+
+    assert resume_result.state.status is WorkflowStatus.COMPLETED
+    assert resume_result.state.current_stage is RuntimeStage.EMAIL_PREPARATION
+    assert resume_result.state.completed_stages == (
+        *PRE_APPROVAL_RUNTIME_STAGES,
+        *POST_APPROVAL_RUNTIME_STAGES,
+    )
+    email_output = resume_result.state.stage_outputs[RuntimeStage.EMAIL_PREPARATION]
+    assert email_output["email_sent"] is False
+    assert "llm_output" not in email_output
+    assert len(llm_service.complete_json_calls) == 5
+
+
 def _stage_payload(schema_name: str) -> dict[str, object]:
     payloads: dict[str, dict[str, object]] = {
         "RequirementExtractionOutput": {
@@ -337,3 +475,23 @@ def _stage_payload(schema_name: str) -> dict[str, object]:
         },
     }
     return payloads[schema_name]
+
+
+async def _create_user_with_role(
+    db_session: AsyncSession,
+    role_name: RoleName,
+) -> User:
+    """Create a user with one role for approval decisions."""
+    role = await db_session.scalar(select(Role).where(Role.name == role_name.value))
+    if role is None:
+        role = Role(name=role_name.value, description=f"{role_name.value} role")
+        db_session.add(role)
+        await db_session.flush()
+    user = User(
+        email=f"{role_name.value.lower()}-integration@example.test",
+        hashed_password=hash_password("not-used-in-integration-tests"),
+        roles=[role],
+    )
+    db_session.add(user)
+    await db_session.flush()
+    return user

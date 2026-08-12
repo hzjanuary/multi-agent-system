@@ -60,6 +60,8 @@ The fake provider:
 - performs no network calls
 - requires no API key
 - returns deterministic responses
+- returns schema-valid stage-shaped output for LLM runtime stages when
+  `LLM_RUNTIME_ENABLED=true`
 - is not a real AI model response
 
 Keep `LLM_RUNTIME_ENABLED=false` for the board-stable deterministic demo. If
