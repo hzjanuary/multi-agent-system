@@ -39,3 +39,6 @@ __pycache__/
 # Harness core maintenance binary
 scripts/bin/harness
 scripts/bin/harness.exe
+
+/backend/.env
+.env
