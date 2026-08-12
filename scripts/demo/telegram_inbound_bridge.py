@@ -2025,11 +2025,20 @@ def process_pending_approvals(
         trusted_price = extract_trusted_price_from_workflow(
             config, access_token, quote.workflow_id
         )
-        if trusted_price is None and config.price_research_enabled:
-            trusted_price = extract_trusted_price_from_knowledge(
-                knowledge_pricing_search(config, access_token, quote.parsed),
-                item_name=quote.parsed.item_name,
-            )
+        if trusted_price is None:
+            try:
+                knowledge_response = knowledge_pricing_search(
+                    config, access_token, quote.parsed
+                )
+                trusted_price = extract_trusted_price_from_knowledge(
+                    knowledge_response,
+                    item_name=quote.parsed.item_name,
+                )
+            except ApiError as error:
+                print(
+                    f"Knowledge pricing lookup failed for workflow {quote.workflow_id}: {error}",
+                    file=sys.stderr,
+                )
         if trusted_price is not None:
             reply = telegram_final_quote_reply(config, quote.parsed, trusted_price)
         else:

@@ -22,7 +22,8 @@ Telegram customer message
 ```
 
 The final quotation is issued only after a recorded Manager/Admin approval
-decision and only from a trusted structured price in backend workflow state.
+decision and only from a trusted structured price in backend workflow state or
+the internal structured demo pricing catalog.
 No price, stock, delivery date, automatic approval, or real email is claimed.
 The bridge never issues a final quote before approval and never invents a
 price.
@@ -279,9 +280,9 @@ Expected:
 
 After the approval is recorded, the bridge polls the approval history, resumes
 the workflow, and (when a trusted structured price exists in backend workflow
-state) sends the customer a final quotation with unit price and total. When no
-trusted price exists, the bridge sends a safe operator-review message instead
-of inventing a price.
+state or the internal structured demo pricing catalog) sends the customer a
+final quotation with unit price and total. When no trusted price exists, the
+bridge sends a safe operator-review message instead of inventing a price.
 
 Expected:
 

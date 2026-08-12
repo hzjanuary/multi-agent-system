@@ -1628,6 +1628,9 @@ class TelegramPostApprovalTests(unittest.TestCase):
             "scripts.demo.telegram_inbound_bridge.extract_trusted_price_from_workflow",
             return_value=None,
         ), patch(
+            "scripts.demo.telegram_inbound_bridge.knowledge_pricing_search",
+            return_value={"results": []},
+        ), patch(
             "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
             side_effect=fake_reply,
         ):
@@ -1635,6 +1638,78 @@ class TelegramPostApprovalTests(unittest.TestCase):
 
         self.assertEqual(len(replies), 1)
         self.assertIn("does not yet have a trusted final price", replies[0])
+        self.assertNotIn("chat-1", pending)
+
+    def test_process_pending_approvals_selects_matching_internal_laptop_price(self) -> None:
+        parsed = parse_customer_request("báo giá cho tôi 10 laptop văn phòng tiêu chuẩn")
+        assert parsed is not None
+        pending = {
+            "chat-1": TelegramPendingQuote(
+                workflow_id="workflow-123",
+                parsed=parsed,
+                created_status="WAITING_APPROVAL",
+            )
+        }
+        replies: list[str] = []
+
+        def fake_reply(config: BridgeConfig, chat_id: str, text: str) -> None:
+            replies.append(text)
+
+        with patch(
+            "scripts.demo.telegram_inbound_bridge.backend_login",
+            return_value="token",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.latest_approval_decision",
+            return_value=("approve", None),
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.resume_approved_workflow",
+            return_value="COMPLETED",
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.extract_trusted_price_from_workflow",
+            return_value=None,
+        ), patch(
+            "scripts.demo.telegram_inbound_bridge.knowledge_pricing_search",
+            return_value={
+                "results": [
+                    {
+                        "metadata": {
+                            "normalized_item_name": "Office monitor",
+                            "observed_price": "3200000",
+                            "currency": "VND",
+                            "quantity_basis": 1,
+                            "price_label": "Internal demo catalog unit price",
+                        }
+                    },
+                    {
+                        "metadata": {
+                            "normalized_item_name": "Office printer",
+                            "observed_price": "4500000",
+                            "currency": "VND",
+                            "quantity_basis": 1,
+                            "price_label": "Internal demo catalog unit price",
+                        }
+                    },
+                    {
+                        "metadata": {
+                            "normalized_item_name": "Standard business laptop",
+                            "observed_price": "18500000",
+                            "currency": "VND",
+                            "quantity_basis": 1,
+                            "price_label": "Internal demo catalog unit price",
+                        }
+                    },
+                ]
+            },
+        ) as knowledge_search, patch(
+            "scripts.demo.telegram_inbound_bridge.send_or_log_reply",
+            side_effect=fake_reply,
+        ):
+            process_pending_approvals(self.config(), pending)
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("Đơn giá: 18500000 VND", replies[0])
+        self.assertIn("Thành tiền: 185000000 VND", replies[0])
+        knowledge_search.assert_called_once()
         self.assertNotIn("chat-1", pending)
 
     def test_process_pending_approvals_reject_never_resumes(self) -> None:

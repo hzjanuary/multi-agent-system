@@ -561,7 +561,7 @@ Key backend variables and defaults:
 | `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` | `fake` / `fake-hash-embedding` | Embeddings |
 | `EMBEDDING_DIMENSIONS` / `EMBEDDING_BATCH_SIZE` | `64` / `32` | Embedding settings |
 | `RAG_ENABLED` / `RAG_TOP_K` | `false` / `3` | RAG grounding |
-| `PRICE_RESEARCH_ENABLED` / `PRICE_RESEARCH_PROVIDER` | `false` / `fake` | Reference price research (never a final quote) |
+| `PRICE_RESEARCH_ENABLED` / `PRICE_RESEARCH_PROVIDER` | `false` / `fake` | Optional external reference evidence (never a final quote); internal structured demo pricing is separate |
 | `READINESS_TIMEOUT_SECONDS` | `2.0` | Dependency probe timeout |
 
 Never commit real secrets or API keys. Configure provider keys through

@@ -25,11 +25,12 @@ Post-demo roadmap: `.ai/specs/SPEC-016-conversational-sales-agent/spec.md`
 formalizes the Conversational Sales Agent direction, including safe catalog/RAG
 evidence and optional external reference price research foundations. The local
 bridge still does not call Tavily, does not perform real web search or live
-price lookup from Telegram, does not call backend price research providers,
-and does not auto-approve. After a recorded Manager/Admin approval decision,
+external price lookup from Telegram, and does not auto-approve. After a
+recorded Manager/Admin approval decision,
 the bridge resumes the workflow and issues a final quotation only from a
-trusted structured price in backend workflow state; when no such price exists
-it replies with a safe operator-review message instead of inventing a price.
+trusted structured price in backend workflow state or the internal demo
+pricing catalog; when no such price exists it replies with a safe operator-review
+message instead of inventing a price.
 
 ## Why Polling
 
@@ -430,14 +431,14 @@ approval.
 
 Sales-style replies can render bounded reference-evidence summaries only when a
 future integration explicitly supplies those summaries to the reply renderer.
-The current stable Telegram demo does not call Tavily, does not call backend
-price research providers, and does not perform live price lookup from
-Telegram.
+The current stable Telegram demo does not call Tavily or external backend price
+research providers, and does not perform live external price lookup from
+Telegram. It does call the backend knowledge endpoint after approval to select
+trusted internal demo catalog pricing.
 
-Optional backend price research is a separate feature-flagged foundation
-(`PRICE_RESEARCH_ENABLED=true`, disabled by default). When enabled, the bridge
-uses the existing backend `knowledge/search` endpoint as a fallback for a
-trusted structured price after approval. The local demo pricing documents use
+The bridge always uses the existing backend `knowledge/search` endpoint as a
+fallback for a trusted structured price after approval. The local demo pricing
+documents use
 explicit `observed_price`, `currency`, `unit`, `quantity_basis`, and
 `price_label` metadata; these are internal demo/reference values, not live
 Tavily prices. The bridge still never invents a price and never renders
@@ -493,7 +494,7 @@ POST /api/v1/workflows/{workflow_id}/run
 GET  /api/v1/workflows/{workflow_id}
 GET  /api/v1/workflows/{workflow_id}/approval/history
 POST /api/v1/workflows/{workflow_id}/resume
-POST /api/v1/knowledge/search   (only when PRICE_RESEARCH_ENABLED=true)
+POST /api/v1/knowledge/search   (trusted internal pricing fallback)
 ```
 
 Approval decisions themselves are submitted through the existing backend UI
