@@ -30,6 +30,7 @@ Closed specs:
 - SPEC-024 Dependency and Security Maintenance - Approved / Closed with
   deferred npm audit findings
 - SPEC-025 Controlled Dependency Upgrade Remediation - Approved / Closed
+- SPEC-028 LLM Runtime Hardening - Approved / Closed
 
 Current planned spec sequence:
 
@@ -41,6 +42,94 @@ Current planned spec sequence:
   an approved implementation task explicitly authorizes behavior,
   infrastructure, dependency, Docker/Compose, CI, provider, outbound email, or
   runtime default changes.
+
+## Current SPEC-028 LLM Runtime Hardening State
+
+Status:
+
+- Approved / Closed. G1-G4 hardening is committed and validated; TASK 028.6
+  closeout validation passed and closeout review is complete. No stable
+  default or safety boundary changed.
+
+Scope:
+
+- SPEC-028 hardens the SPEC-011 LLM-assisted runtime path beyond the
+  deterministic defense path.
+- Planning covers four audited gaps: G1 cancellation propagation and dangling
+  runtime state, G2 deterministic schema-valid Fake LLM end-to-end, G3 fallback
+  transparency in safe stage outputs and events, G4 approval and resume
+  boundary invariant.
+- Implemented:
+  - G1 cancellation propagation and dangling runtime state hardening
+    (`5a3e055`).
+  - G2 deterministic schema-valid Fake LLM end-to-end path (`26d6e5c`).
+  - G3 fallback transparency in safe stage outputs and events (`5483596`).
+  - G4 approval and resume boundary invariant tests, tests only (`2dcce86`).
+- TASK 011.7 hardening already implemented this session: bounded exponential
+  retry backoff with jitter in `backend/app/llm/service.py`, and the
+  fake-fallback masking guard in `backend/app/runtime/service.py`.
+- Preserved boundaries: `LLM_PROVIDER=fake`, `LLM_RUNTIME_ENABLED=false`,
+  deterministic defense path unchanged, no real keys for tests, no streaming,
+  no raw prompts/payloads/secrets in state/events, deterministic offline tests.
+- G4 is tests-only; approval/resume control flow stays unchanged.
+
+Spec docs:
+
+- `.ai/specs/SPEC-028-llm-runtime-hardening/spec.md`
+- `.ai/specs/SPEC-028-llm-runtime-hardening/tasks.md`
+
+Implemented task sequence:
+
+1. TASK 028.1 - SPEC-028 Planning Intake And G1-G4 Audit. Implemented.
+2. TASK 028.2 - G1 Cancellation Propagation Hardening. Implemented
+   (`5a3e055`).
+3. TASK 028.3 - G2 Deterministic Schema-Valid Fake LLM End-To-End. Implemented
+   (`26d6e5c`).
+4. TASK 028.4 - G3 Fallback Transparency In Stage Outputs And Events.
+   Implemented (`5483596`).
+5. TASK 028.5 - G4 Approval And Resume Boundary Invariant Tests. Implemented
+   (`2dcce86`).
+6. TASK 028.6 - Final Validation And Closeout. Implemented.
+
+Safety:
+
+- No auto-approval, no auto-resume, no final quote, no real email, no live
+  provider call by default, no secret/raw-payload exposure.
+- Implementation tasks must not change stable defaults or the deterministic
+  defense path.
+
+Next recommended work:
+
+- SPEC-028 is Approved / Closed.
+- Open a future explicit spec before changing LLM runtime defaults, provider
+  behavior, streaming, retry-on-fallback behavior, or proving cancelled
+  in-flight HTTP work via `asyncio.to_thread` leaves no persisted effect.
+- Backend gate: `docker compose run --rm backend-test pytest` plus Ruff, Black,
+  MyPy, and `git diff --check`.
+
+Last SPEC-028 closeout validation results:
+
+- `docker compose run --rm backend-test pytest -q` passed: 816 passed,
+  1 skipped.
+- `docker compose run --rm backend-test ruff check .` passed.
+- `docker compose run --rm backend-test black --check .` passed: 225 files
+  would be left unchanged.
+- `docker compose run --rm backend-test mypy app` passed: no issues in 223
+  source files.
+- `docker compose config` passed.
+- `git diff --check` passed.
+- `git status --short` reported only the intended SPEC-028 docs/spec/index/
+  handoff changes; no source, test, or pycache changes.
+- G1-G4 boundaries verified against committed HEAD: CancelledError handlers in
+  `backend/app/runtime/service.py`, resume gated by
+  `get_resume_allowed_after_decision` (APPROVED plus APPROVE record only),
+  fake stage schemas in `backend/app/llm/clients/fake.py`, and bounded
+  fallback keys in `backend/app/runtime/llm_adapter.py` plus the
+  `_safe_stage_output` allowlist.
+- No dependency, Docker/Compose, CI, provider, API-key, or network-requirement
+  change was introduced in `ff801bc..HEAD`.
+- Known limitation: cancelled in-flight HTTP work via `asyncio.to_thread`
+  remains unproven by tests and out of scope.
 
 ## Current SPEC-027 Production Automation Planning State
 

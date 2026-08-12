@@ -55,6 +55,7 @@
 - SPEC-025 Controlled Dependency Upgrade Remediation - Approved / Closed
 - SPEC-026 Production Hardening - Sprint 3 implemented / Ready for closeout review
 - SPEC-027 Production Automation Planning - Planning / Draft
+- SPEC-028 LLM Runtime Hardening - Approved / Closed
 
 Older frontend placeholder labels for SPEC-018 through SPEC-020 are retired to
 avoid number conflicts with the approved post-demo roadmap. Future frontend,
@@ -84,7 +85,9 @@ numbers.
 - Retired placeholder: SPEC-027 CI/CD. SPEC-027 is now assigned to Production
   Automation Planning. Future CI/CD implementation should use a non-conflicting
   SPEC number or an approved SPEC-027 implementation task.
-- SPEC-028 Deployment Guide
+- Retired placeholder: SPEC-028 Deployment Guide. SPEC-028 is now assigned to
+  LLM Runtime Hardening. Future deployment-guide implementation should use a
+  non-conflicting SPEC number or an approved SPEC-028 implementation task.
 - SPEC-029 Final Documentation
 
 ## Phase 9 - Final Graduation Readiness
