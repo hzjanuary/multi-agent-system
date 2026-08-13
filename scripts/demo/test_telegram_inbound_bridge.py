@@ -24,11 +24,13 @@ from scripts.demo.telegram_inbound_bridge import (
     WorkflowCreationResult,
     build_workflow_create_payload,
     config_from_env,
+    customer_product_name,
     extract_customer_request,
     extract_trusted_price_from_knowledge,
     extract_trusted_price_from_workflow,
     follow_up_message,
     format_final_price,
+    format_vnd,
     greeting_message,
     handle_update,
     is_greeting_message,
@@ -1329,6 +1331,21 @@ class TelegramPostApprovalTests(unittest.TestCase):
         self.assertEqual(format_final_price(Decimal("0.5")), "0.50")
         self.assertEqual(format_final_price(Decimal("0")), "0")
 
+    def test_format_vnd_groups_digits_and_preserves_fractional_value(self) -> None:
+        self.assertEqual(format_vnd(Decimal("18500000")), "18.500.000 VND")
+        self.assertEqual(format_vnd(Decimal("370000000")), "370.000.000 VND")
+        self.assertEqual(format_vnd(Decimal("18500000.50")), "18.500.000,5 VND")
+
+    def test_customer_product_name_localizes_only_for_presentation(self) -> None:
+        self.assertEqual(
+            customer_product_name("Standard business laptop", "vi"),
+            "Laptop văn phòng tiêu chuẩn",
+        )
+        self.assertEqual(
+            customer_product_name("Standard business laptop", "en"),
+            "Standard business laptop",
+        )
+
     def test_trusted_price_from_mapping_accepts_structured_price(self) -> None:
         price = trusted_price_from_mapping(
             {
@@ -1452,31 +1469,89 @@ class TelegramPostApprovalTests(unittest.TestCase):
             ),
         )
 
-        self.assertIn("Quotation: 50 x Standard business laptop", reply)
-        self.assertIn("Unit price: 952.56 USD per unit", reply)
-        self.assertIn("Total: 47628.00 USD", reply)
+        self.assertIn("📋 QUOTATION", reply)
+        self.assertIn("• Standard business laptop", reply)
+        self.assertIn("• Quantity: 50 unit", reply)
+        self.assertIn("• Unit price: 952.56 USD per unit", reply)
+        self.assertIn("• Total: 47628.00 USD", reply)
+        self.assertIn("Reference configuration:", reply)
+        self.assertIn("Suggested software:", reply)
+        self.assertIn("Software license costs are excluded", reply)
         self.assertNotIn("workflow-123", reply)
         self.assertNotIn("WAITING_APPROVAL", reply)
         self.assertNotIn("http://", reply)
         self.assertNotIn("evidenc", reply.lower())
 
-    def test_telegram_final_quote_reply_vietnamese(self) -> None:
-        parsed = parse_customer_request("cần báo giá 50 laptop")
+    def test_vietnamese_laptop_final_quote_is_customer_ready(self) -> None:
+        parsed = self.laptop_20_parsed()
         assert parsed is not None
         reply = telegram_final_quote_reply(
             self.config(),
             parsed,
             TrustedFinalPrice(
-                unit_price=Decimal("952.56"),
-                currency="USD",
+                unit_price=Decimal("18500000"),
+                currency="VND",
                 unit="unit",
             ),
         )
 
-        self.assertIn("Báo giá: 50 x Standard business laptop", reply)
-        self.assertIn("Đơn giá: 952.56 USD per unit", reply)
-        self.assertIn("Thành tiền: 47628.00 USD", reply)
+        self.assertIn(
+            "Yêu cầu của anh/chị đã được quản lý phê duyệt",
+            reply,
+        )
+        self.assertIn("📋 BÁO GIÁ LAPTOP VĂN PHÒNG TIÊU CHUẨN", reply)
+        self.assertIn("• Laptop văn phòng tiêu chuẩn", reply)
+        self.assertIn("• Số lượng: 20 máy", reply)
+        self.assertIn("Cấu hình tham khảo:", reply)
+        self.assertIn("Phần mềm gợi ý:", reply)
+        self.assertIn("• Đơn giá: 18.500.000 VND / máy", reply)
+        self.assertIn("• Tổng cộng: 370.000.000 VND", reply)
+        self.assertIn("Chi phí license phần mềm chưa bao gồm", reply)
+        self.assertIn("thương hiệu/model sẽ được xác nhận", reply)
         self.assertNotIn("http://", reply)
+        self.assertNotIn("workflow-123", reply)
+        self.assertNotIn("WAITING_APPROVAL", reply)
+        self.assertNotIn("RAG", reply)
+        self.assertNotIn("Qdrant", reply)
+        self.assertNotIn("Groq", reply)
+        self.assertNotIn("Tavily", reply)
+
+    def test_monitor_and_printer_quotes_use_natural_vietnamese_units(self) -> None:
+        examples = (
+            (
+                "báo giá 30 màn hình văn phòng",
+                Decimal("3200000"),
+                "Màn hình văn phòng",
+                "30 màn hình",
+                "96.000.000 VND",
+            ),
+            (
+                "báo giá 5 máy in văn phòng",
+                Decimal("4500000"),
+                "Máy in văn phòng",
+                "5 máy",
+                "22.500.000 VND",
+            ),
+        )
+        for request, unit_price, product_name, quantity, total in examples:
+            with self.subTest(request=request):
+                parsed = parse_customer_request(request)
+                assert parsed is not None
+                reply = telegram_final_quote_reply(
+                    self.config(),
+                    parsed,
+                    TrustedFinalPrice(
+                        unit_price=unit_price,
+                        currency="VND",
+                        unit="unit",
+                    ),
+                )
+
+                self.assertIn(f"• {product_name}", reply)
+                self.assertIn(f"• Số lượng: {quantity}", reply)
+                self.assertIn(f"• Tổng cộng: {total}", reply)
+                self.assertNotIn("Cấu hình tham khảo:", reply)
+                self.assertNotIn("Phần mềm gợi ý:", reply)
 
     def test_telegram_manual_final_quote_reply_is_safe_fallback(self) -> None:
         reply = telegram_manual_final_quote_reply(self.config(), self.english_parsed())
@@ -1633,8 +1708,8 @@ class TelegramPostApprovalTests(unittest.TestCase):
             process_pending_approvals(self.config(), pending)
 
         self.assertEqual(len(replies), 1)
-        self.assertIn("Quotation: 50 x Standard business laptop", replies[0])
-        self.assertIn("Total: 47628.00 USD", replies[0])
+        self.assertIn("• Standard business laptop", replies[0])
+        self.assertIn("• Total: 47628.00 USD", replies[0])
         self.assertNotIn("chat-1", pending)
 
     def test_process_pending_approvals_approve_without_price_falls_back(self) -> None:
@@ -1754,8 +1829,8 @@ class TelegramPostApprovalTests(unittest.TestCase):
             process_pending_approvals(self.config(), pending)
 
         self.assertEqual(len(replies), 1)
-        self.assertIn("Đơn giá: 18500000 VND", replies[0])
-        self.assertIn("Thành tiền: 185000000 VND", replies[0])
+        self.assertIn("• Đơn giá: 18.500.000 VND / máy", replies[0])
+        self.assertIn("• Tổng cộng: 185.000.000 VND", replies[0])
         knowledge_search.assert_called_once()
         self.assertNotIn("chat-1", pending)
 
@@ -1824,8 +1899,8 @@ class TelegramPostApprovalTests(unittest.TestCase):
             process_pending_approvals(self.config(), pending)
 
         resume.assert_not_called()
-        self.assertIn("Đơn giá: 18500000 VND", replies[0])
-        self.assertIn("Thành tiền: 370000000 VND", replies[0])
+        self.assertIn("• Đơn giá: 18.500.000 VND / máy", replies[0])
+        self.assertIn("• Tổng cộng: 370.000.000 VND", replies[0])
         self.assertNotIn("chat-1", pending)
 
     def test_completed_resume_conflict_is_treated_as_race_success(self) -> None:
@@ -1870,7 +1945,7 @@ class TelegramPostApprovalTests(unittest.TestCase):
 
         resume.assert_called_once()
         self.assertEqual(fetch_state.call_count, 2)
-        self.assertIn("Thành tiền: 370000000 VND", replies[0])
+        self.assertIn("• Tổng cộng: 370.000.000 VND", replies[0])
         self.assertNotIn("Resume failed", replies[0])
         self.assertNotIn("chat-1", pending)
 

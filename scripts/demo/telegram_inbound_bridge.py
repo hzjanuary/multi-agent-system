@@ -57,6 +57,20 @@ HTTP_TIMEOUT_SECONDS = 15
 PARSER_VERSION = "telegram-demo-parser-v4"
 RESUME_REQUEST_ID_PREFIX = "telegram-resume-"
 FINAL_PRICE_SOURCE_LABEL_LIMIT = 120
+VIETNAMESE_PRODUCT_LABELS = {
+    "Standard business laptop": "Laptop văn phòng tiêu chuẩn",
+    "Business desktop PC": "Máy tính để bàn doanh nghiệp",
+    "Office monitor": "Màn hình văn phòng",
+    "Office printer": "Máy in văn phòng",
+    "Wireless keyboard and mouse combo": "Bộ bàn phím và chuột không dây",
+}
+VIETNAMESE_PRODUCT_UNITS = {
+    "Standard business laptop": "máy",
+    "Business desktop PC": "máy",
+    "Office monitor": "màn hình",
+    "Office printer": "máy",
+    "Wireless keyboard and mouse combo": "bộ",
+}
 HELPFUL_REQUEST_PROMPT = (
     "Please include quantity and item.\n"
     "English example: quote for 50 standard business laptops.\n"
@@ -1844,6 +1858,73 @@ def format_final_price(value: Decimal) -> str:
     return f"{value:.2f}"
 
 
+def format_vnd(value: Decimal) -> str:
+    """Format a trusted VND amount deterministically without locale state."""
+    if not value.is_finite() or value < 0:
+        raise ValueError("VND amount must be finite and non-negative")
+    integer_part, separator, fractional_part = format(value, "f").partition(".")
+    grouped_integer = f"{int(integer_part):,}".replace(",", ".")
+    trimmed_fraction = fractional_part.rstrip("0") if separator else ""
+    amount = f"{grouped_integer},{trimmed_fraction}" if trimmed_fraction else grouped_integer
+    return f"{amount} VND"
+
+
+def format_customer_money(value: Decimal, currency: str) -> str:
+    """Render trusted money using the customer-safe currency convention."""
+    normalized_currency = currency.strip().upper()
+    if normalized_currency == "VND":
+        return format_vnd(value)
+    return f"{format_final_price(value)} {normalized_currency}"
+
+
+def customer_product_name(item_name: str, language: str) -> str:
+    """Return a presentation-only product label without changing catalog identity."""
+    if language == "vi":
+        return VIETNAMESE_PRODUCT_LABELS.get(item_name, item_name)
+    return item_name
+
+
+def customer_unit_label(
+    item_name: str,
+    language: str,
+    trusted_unit: str | None,
+) -> str:
+    """Return a natural presentation unit for a known catalog item."""
+    if language == "vi":
+        return VIETNAMESE_PRODUCT_UNITS.get(item_name, "sản phẩm")
+    return trusted_unit or "unit"
+
+
+def laptop_recommendation_text(language: str) -> str:
+    """Return explicitly non-binding laptop recommendations for demo presentation."""
+    if language == "vi":
+        return (
+            "Cấu hình tham khảo:\n"
+            "• CPU: Intel Core i5 / AMD Ryzen 5 hoặc tương đương\n"
+            "• RAM: 16 GB\n"
+            "• SSD: 512 GB\n"
+            "• Màn hình: 14–15.6 inch Full HD\n"
+            "• Wi-Fi, Bluetooth, webcam\n"
+            "• Hệ điều hành: Windows 11 Pro hoặc tương đương\n\n"
+            "Phần mềm gợi ý:\n"
+            "• Microsoft 365 Business Standard\n"
+            "• Microsoft Teams / Zoom\n"
+            "• Adobe Acrobat\n"
+            "• Adobe Creative Cloud nếu có nhu cầu thiết kế\n"
+            "• Giải pháp antivirus / endpoint security doanh nghiệp\n\n"
+        )
+    return (
+        "Reference configuration:\n"
+        "• Intel Core i5 / AMD Ryzen 5 or equivalent\n"
+        "• 16 GB RAM; 512 GB SSD; 14–15.6 inch Full HD display\n"
+        "• Wi-Fi, Bluetooth, webcam; Windows 11 Pro or equivalent\n\n"
+        "Suggested software:\n"
+        "• Microsoft 365 Business Standard; Microsoft Teams / Zoom\n"
+        "• Adobe Acrobat; Adobe Creative Cloud when design tools are needed\n"
+        "• Enterprise antivirus / endpoint security\n\n"
+    )
+
+
 def telegram_final_quote_reply(
     config: BridgeConfig,
     parsed: ParsedCustomerRequest,
@@ -1852,26 +1933,69 @@ def telegram_final_quote_reply(
     """Return the customer-facing final quotation after manager approval."""
     quantity = max(parsed.quantity or 1, 1)
     total = price.unit_price * Decimal(quantity)
-    unit_price = format_final_price(price.unit_price)
-    total_price = format_final_price(total)
-    per_unit = f" per {price.unit}" if price.unit else " each"
-    options = (
-        f" kèm {parsed.options_summary}" if parsed.options_summary else ""
+    unit_price = format_customer_money(price.unit_price, price.currency)
+    total_price = format_customer_money(total, price.currency)
+    product_name = customer_product_name(parsed.item_name, parsed.language)
+    unit_label = customer_unit_label(
+        parsed.item_name,
+        parsed.language,
+        price.unit,
+    )
+    recommendations = (
+        laptop_recommendation_text(parsed.language)
+        if parsed.item_name == "Standard business laptop"
+        else ""
     )
     if parsed.language == "vi":
+        requested_options = (
+            f"• Nhu cầu bổ sung: {parsed.options_summary} "
+            "(chưa bao gồm trong đơn giá)\n"
+            if parsed.options_summary
+            else ""
+        )
         return (
             "Cảm ơn anh/chị đã chờ. Yêu cầu của anh/chị đã được quản lý phê duyệt.\n\n"
-            f"Báo giá: {parsed.summary}{options}\n"
-            f"Đơn giá: {unit_price} {price.currency}{per_unit}\n"
-            f"Thành tiền: {total_price} {price.currency}\n\n"
-            "Lưu ý: đây là báo giá demo; hệ thống không gửi email thật."
+            f"📋 BÁO GIÁ {product_name.upper()}\n\n"
+            "Sản phẩm:\n"
+            f"• {product_name}\n"
+            f"• Số lượng: {quantity} {unit_label}\n"
+            f"{requested_options}\n"
+            f"{recommendations}"
+            "💰 Báo giá:\n"
+            f"• Đơn giá: {unit_price} / {unit_label}\n"
+            f"• Số lượng: {quantity} {unit_label}\n"
+            f"• Tổng cộng: {total_price}\n\n"
+            "Lưu ý:\n"
+            "• Đây là báo giá demo nội bộ đã được phê duyệt.\n"
+            "• Cấu hình có thể điều chỉnh theo nhu cầu thực tế; "
+            "thương hiệu/model "
+            "sẽ được xác nhận theo danh mục nhà cung cấp.\n"
+            "• Chi phí license phần mềm chưa bao gồm trừ khi được "
+            "ghi rõ trong báo giá."
         )
+    requested_options = (
+        f"• Additional request: {parsed.options_summary} "
+        "(not included in the unit price)\n"
+        if parsed.options_summary
+        else ""
+    )
     return (
         "Thank you for waiting. Your request has been approved by the manager.\n\n"
-        f"Quotation: {parsed.summary}{options}\n"
-        f"Unit price: {unit_price} {price.currency}{per_unit}\n"
-        f"Total: {total_price} {price.currency}\n\n"
-        "Note: this is a demo quotation; the system does not send real email."
+        "📋 QUOTATION\n\n"
+        "Product:\n"
+        f"• {product_name}\n"
+        f"• Quantity: {quantity} {unit_label}\n"
+        f"{requested_options}\n"
+        f"{recommendations}"
+        "💰 Pricing:\n"
+        f"• Unit price: {unit_price} per {unit_label}\n"
+        f"• Quantity: {quantity} {unit_label}\n"
+        f"• Total: {total_price}\n\n"
+        "Notes:\n"
+        "• This approved quotation uses internal demo pricing.\n"
+        "• Reference configuration may be adjusted; brand/model will be confirmed "
+        "from the supplier catalog.\n"
+        "• Software license costs are excluded unless explicitly listed."
     )
 
 
