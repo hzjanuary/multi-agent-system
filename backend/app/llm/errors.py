@@ -33,7 +33,10 @@ class LLMProviderError(Exception):
             safe_details["provider"] = self.provider.value
         if self.request_id is not None:
             safe_details["request_id"] = self.request_id
-        safe_details.update(self.details)
+        for key in ("http_status", "retry_after_seconds", "retryable"):
+            value = self.details.get(key)
+            if isinstance(value, (int, float, bool)):
+                safe_details[key] = value
         return safe_details
 
 

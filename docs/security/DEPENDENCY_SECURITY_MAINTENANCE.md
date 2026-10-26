@@ -1,175 +1,54 @@
-# Dependency Security Maintenance
+# Dependency security maintenance
 
-## Purpose
+The supported application is the Python headless runtime. There is no active
+frontend, Node.js manifest, Qdrant, MinIO or demo-provider dependency set. Old
+SPEC-025 frontend triage reports and catalog/outbound policies remain available
+at Git baseline `92e5f1cfb2b0144bdb39a48db99371974bd372a5`; they are not current
+product rules. Security, data protection, approval boundaries and third-party
+notices remain required by SPEC-029.
 
-This guide defines how to review and remediate dependency security findings for
-Multi-Agent System / Enterprise Multi-Agent OS without destabilizing the
-deterministic demo path.
+Keep audits separate from upgrades: record the affected locked version,
+advisory, reachable code path, fixed version and validation before changing
+packages. Do not run automatic force-upgrade/fix commands during a read-only
+audit. Upgrade related packages through Poetry so the manifest and lock stay
+consistent, then run the backend gates and actual image build.
 
-Audit and triage work is separate from dependency upgrade work. Do not run
-automatic fix commands during audit-only tasks.
-
-## Frontend Audit Commands
-
-Run from the repository root:
-
-```bash
-cd frontend
-npm audit --json > /tmp/multi-agent-system-npm-audit.json
-npm audit
-npm outdated || true
-```
-
-Keep raw JSON outside the repository unless a future task explicitly asks for a
-sanitized artifact. The JSON can be noisy and may include paths that are not
-useful in public docs.
-
-## How To Read npm audit
-
-Review:
-
-- severity count;
-- direct versus transitive dependency;
-- production/runtime dependency versus development tooling;
-- advisory title and affected package range;
-- whether a fix is available;
-- whether npm requires `--force`;
-- whether npm recommends a major or out-of-range upgrade;
-- whether the vulnerable path is reachable in the deployed/runtime flow.
-
-Do not equate every high-severity finding with an immediate release blocker.
-Classify the issue first.
-
-## When To Use npm audit fix
-
-Use `npm audit fix` only in a future dependency remediation sprint when:
-
-- the exact package changes are reviewed;
-- the change stays inside the accepted dependency range;
-- lockfile changes are expected;
-- frontend lint/build/typecheck/test are run afterward;
-- full repository gates are run afterward.
-
-## When Not To Use npm audit fix
-
-Do not use `npm audit fix` during:
-
-- audit-only tasks;
-- release snapshot/report-only tasks;
-- demo preparation immediately before presentation;
-- any task that forbids dependency changes;
-- any task where package manager output recommends `--force`.
-
-Do not use `npm audit fix --force` unless a spec or task explicitly approves the
-breaking changes it may introduce.
-
-## Bounded Patch Sprint Pattern
-
-For a reviewed frontend patch sprint:
-
-1. Capture before-audit JSON under `/tmp`.
-2. Identify direct package targets and exact versions.
-3. Run `npm install <package>@<version>` only for named targets.
-4. Avoid `npm update` without package names.
-5. Avoid `npm audit fix --force`.
-6. Run `npm ci`, lint, build, typecheck, tests, and after-audit.
-7. Document remaining findings if npm still requires force/major remediation.
-
-## Dev Dependency Vulnerabilities
-
-For dev dependency chains, such as ESLint plugins or test/build tooling:
-
-- classify separately from runtime vulnerabilities;
-- check whether the vulnerable package is included in production runtime images;
-- check whether exploitation requires trusted local developer input;
-- remediate in a planned maintenance sprint, not by emergency force upgrade,
-  unless the project risk changes.
-
-## Transitive Vulnerabilities
-
-For transitive dependencies:
-
-- identify the top-level package that brings them in;
-- prefer upgrading the top-level package in a reviewed sprint;
-- avoid direct overrides unless a future task documents the reason;
-- rerun tests and production-demo builds after changes.
-
-## Backend Dependency Review
-
-Run when Poetry is available:
+The current release audit uses the exported locked main dependency graph and
+`pip-audit`, with no inference or operator database access. From `backend/`:
 
 ```bash
-cd backend
-poetry show --outdated || true
+poetry export --only main --without-hashes --format requirements.txt \
+  --output /tmp/maos-main-requirements.txt
+uv tool run pip-audit --requirement /tmp/maos-main-requirements.txt \
+  --no-deps --disable-pip --format json \
+  --output /tmp/maos-dependency-audit.json
 ```
 
-Backend dependency updates must be scoped because they can affect FastAPI,
-Pydantic, SQLAlchemy, auth, storage providers, LangGraph runtime behavior, and
-test fixtures.
+These are optional network-dependent maintenance commands; they do not audit the
+container OS, host, installed custom extensions or model weights. Record the
+actual audit time and source revision, and inspect findings rather than treating
+an exit code alone as a security guarantee. The release
+[verification matrix](../release/verification.md) names the audited graph and
+known limitations.
 
-Do not edit `backend/pyproject.toml` or `backend/poetry.lock` during audit-only
-work.
-
-## Required Validation After Upgrades
-
-After any future frontend dependency change:
+For current source scanning, use the strict tracked-file scanner:
 
 ```bash
-cd frontend
-npm audit
-npm run lint
-npm run build
-npm run typecheck
-npm test
+python3 scripts/ops/scan_secrets.py --strict --allow-test-placeholders
+python3 -m unittest scripts.ops.test_scan_secrets -q
 ```
 
-After any future backend dependency change:
+It prints only redacted findings. Known test fixtures are excluded deliberately;
+ignored local configuration is not a committed-source finding. The scanner
+recognizes the exact random-secret generator used in CI rather than suppressing
+arbitrary shell assignments. Review any finding before changing its rules.
+This bounded scanner is not a claim that every possible secret pattern or all
+historical Git objects have been exhaustively audited. Never copy real keys,
+JWTs, database backups or `.maos/` contents into a report or commit.
 
-```bash
-cd backend
-poetry show --outdated || true
-```
-
-From the repository root:
-
-```bash
-git diff --check
-docker compose config
-docker compose -f docker-compose.prod.yml \
-  --env-file docs/deployment/.env.production.example config
-bash scripts/ci/backend-gate.sh
-bash scripts/ci/frontend-gate.sh
-bash scripts/ci/all-gates.sh
-```
-
-## Rollback Steps
-
-If a dependency update fails validation:
-
-1. Stop and keep the failed branch unmerged.
-2. Restore the previous package manifest and lockfile versions.
-3. Reinstall dependencies from the restored lockfile.
-4. Rebuild local and production-demo images.
-5. Rerun the relevant gates.
-6. Record the failure and package versions in the triage report.
-
-Do not revert unrelated user changes.
-
-## No-Secrets Reminder
-
-Never commit:
-
-- provider API keys;
-- Telegram bot tokens;
-- backend access tokens;
-- JWT production secrets;
-- cookies;
-- local `.env` files;
-- `docker-compose.override.yml`;
-- raw provider payloads;
-- raw prompts;
-- embeddings/vector payloads;
-- real customer data.
-
-Security reports should summarize findings without exposing secrets or local
-machine-specific tokens.
+Check image contents, installed dependencies and required notices before release.
+Retain explicit human approval and resume behavior when upgrading LangGraph or
+model transports; run the PostgreSQL concurrency/restart/restore tests when their
+underlying packages change. Test-double success is not live-provider proof.
+Report sensitive issues following [SECURITY.md](../../SECURITY.md); the existing
+repository issue channel is for non-sensitive coordination only.

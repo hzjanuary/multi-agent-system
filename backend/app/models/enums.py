@@ -1,30 +1,21 @@
-"""Stable database enum values for core models."""
+"""Canonical headless run lifecycle."""
 
 from enum import StrEnum
 
 
-class WorkflowStatus(StrEnum):
-    """Workflow lifecycle states stored in the database."""
-
+class RunStatus(StrEnum):
     CREATED = "CREATED"
-    PLANNING = "PLANNING"
-    RETRIEVING = "RETRIEVING"
-    CALCULATING = "CALCULATING"
-    CHECKING_COMPLIANCE = "CHECKING_COMPLIANCE"
-    VALIDATING = "VALIDATING"
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
     WAITING_APPROVAL = "WAITING_APPROVAL"
     APPROVED = "APPROVED"
-    REJECTED = "REJECTED"
-    GENERATING_EMAIL = "GENERATING_EMAIL"
+    INTERRUPTED = "INTERRUPTED"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    REJECTED = "REJECTED"
     CANCELLED = "CANCELLED"
 
 
-class WorkflowEventStatus(StrEnum):
-    """Coarse event execution states."""
-
-    STARTED = "STARTED"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-    RETRYING = "RETRYING"
+TERMINAL_STATUSES = frozenset(
+    {RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.REJECTED, RunStatus.CANCELLED}
+)

@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Protocol
 
 from app.llm.clients import (
-    FakeLLMClient,
     GeminiLLMClient,
     GroqLLMClient,
     LLMClient,
@@ -13,6 +12,7 @@ from app.llm.clients import (
     OpenRouterLLMClient,
 )
 from app.llm.clients.http import AsyncJSONHTTPTransport
+from app.llm.clients.openai_compatible import OpenAICompatibleLLMClient
 from app.llm.contracts import LLMProvider
 from app.llm.settings import LLMSettings
 
@@ -69,8 +69,17 @@ def create_llm_client(
     selected_provider = provider or settings.provider
     model = settings.model_for_provider(selected_provider)
     default_timeout_seconds = settings.timeout_seconds
-    if selected_provider is LLMProvider.FAKE:
-        return FakeLLMClient(model=model or "fake-deterministic-model")
+    settings.require_provider_configuration()
+    if selected_provider is LLMProvider.OPENAI_COMPATIBLE:
+        return OpenAICompatibleLLMClient(
+            provider=selected_provider,
+            api_key=settings.openai_compatible_api_key,
+            model=model,
+            endpoint_url=settings.openai_compatible_base_url.rstrip("/")
+            + "/chat/completions",
+            transport=transport,
+            default_timeout_seconds=default_timeout_seconds,
+        )
     if selected_provider is LLMProvider.GROQ:
         return GroqLLMClient(
             api_key=settings.groq_api_key,

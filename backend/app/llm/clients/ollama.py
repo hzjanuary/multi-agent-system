@@ -18,7 +18,8 @@ from app.llm.clients.http import (
     HTTPResponse,
     HTTPTimeoutError,
     HTTPTransportError,
-    UrllibAsyncJSONHTTPTransport,
+    HTTPXAsyncJSONHTTPTransport,
+    retry_after_seconds,
 )
 from app.llm.contracts import (
     LLMChatRequest,
@@ -42,7 +43,7 @@ class OllamaLLMClient:
     ) -> None:
         self._base_url = base_url.strip().rstrip("/")
         self._model = model.strip()
-        self._transport = transport or UrllibAsyncJSONHTTPTransport()
+        self._transport = transport or HTTPXAsyncJSONHTTPTransport()
         self._default_timeout_seconds = default_timeout_seconds
 
     @property
@@ -168,7 +169,10 @@ def _raise_for_http_status(request: LLMChatRequest, response: HTTPResponse) -> N
         request=request,
         category=_category_for_status(response.status_code),
         message=f"provider returned HTTP {response.status_code}",
-        details={"http_status": response.status_code},
+        details={
+            "http_status": response.status_code,
+            "retry_after_seconds": retry_after_seconds(response),
+        },
     )
 
 

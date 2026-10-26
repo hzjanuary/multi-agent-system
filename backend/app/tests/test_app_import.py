@@ -7,11 +7,11 @@ from app.main import app, create_app
 
 def test_app_can_be_imported() -> None:
     assert isinstance(app, FastAPI)
-    assert app.title == "Enterprise Multi-Agent OS"
+    assert app.title == "Multi-Agent OS"
 
 
 def test_app_factory_creates_fastapi_instance() -> None:
     created_app = create_app()
 
     assert isinstance(created_app, FastAPI)
-    assert created_app.version == "0.1.0"
+    assert created_app.version == "0.2.0"

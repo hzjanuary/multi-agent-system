@@ -194,6 +194,20 @@ class ScanSecretsTests(unittest.TestCase):
             self.assertEqual(result["findings"], [])
 
 
+    def test_generated_shell_secret_is_code_but_literal_still_fails(self) -> None:
+        generated = "echo \"JWT_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')\" >> \"$GITHUB_ENV\""
+        literal = 'JWT_SECRET_KEY=concrete-sensitive-value-987654321'
+        self.assertEqual(scan_secrets.scan_text(
+            generated, path=".github/workflows/ci.yml", allow_test_placeholders=False), [])
+        findings = scan_secrets.scan_text(
+            literal, path=".github/workflows/ci.yml", allow_test_placeholders=False)
+        self.assertTrue(findings)
+        self.assertTrue(scan_secrets.scan_text(
+            "JWT_SECRET_KEY=$(printf literal-sensitive-value)",
+            path=".github/workflows/ci.yml", allow_test_placeholders=False))
+        self.assertNotIn("concrete-sensitive-value", json.dumps([f.as_dict() for f in findings]))
+
+
 def write(root: Path, relative: str, content: str) -> None:
     """Write fixture content."""
     path = root / relative

@@ -42,3 +42,10 @@ scripts/bin/harness.exe
 
 /backend/.env
 .env
+# Private self-host configuration and CLI credentials.
+.maos/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/

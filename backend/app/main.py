@@ -4,13 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 
-from app.api.v1 import (
-    auth_router,
-    health_router,
-    knowledge_router,
-    observability_router,
-    workflows_router,
-)
+from app.api.v1 import auth_router, health_router
+from app.api.v1.observability import router as observability_router
+from app.api.v1.workflows import router as workflows_router
 from app.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.core.metrics import InProcessMetrics
@@ -29,7 +25,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(
         title=app_settings.app_name,
-        version="0.1.0",
+        version="0.2.0",
         debug=False,
         docs_url="/docs",
         redoc_url="/redoc",
@@ -46,7 +42,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if app_settings.metrics_route_enabled:
         app.include_router(observability_router, prefix=app_settings.api_v1_prefix)
     app.include_router(auth_router, prefix=app_settings.api_v1_prefix)
-    app.include_router(knowledge_router, prefix=app_settings.api_v1_prefix)
     app.include_router(workflows_router, prefix=app_settings.api_v1_prefix)
 
     return app

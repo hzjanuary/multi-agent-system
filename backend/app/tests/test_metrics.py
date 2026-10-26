@@ -65,7 +65,7 @@ def test_normalize_path_label_removes_high_cardinality_segments() -> None:
 
 
 def test_metrics_endpoint_requires_authentication() -> None:
-    client = TestClient(create_app(Settings()))
+    client = TestClient(create_app(Settings(metrics_route_enabled=True)))
 
     response = client.get("/api/v1/observability/metrics")
 
@@ -73,7 +73,7 @@ def test_metrics_endpoint_requires_authentication() -> None:
 
 
 def test_metrics_endpoint_allows_admin_and_manager_roles() -> None:
-    for role_name in (RoleName.ADMIN, RoleName.MANAGER):
+    for role_name in (RoleName.ADMIN, RoleName.OPERATOR):
         client = metrics_client(role_name)
         client.get("/health")
 
@@ -98,21 +98,23 @@ def test_metrics_endpoint_forbids_viewer_role() -> None:
 
 
 def test_metrics_endpoint_can_be_disabled_by_settings() -> None:
-    app = create_app(Settings(METRICS_ROUTE_ENABLED=False))
+    app = create_app(Settings(metrics_route_enabled=False))
     route_paths = route_paths_for(app.routes)
 
     assert "/api/v1/observability/metrics" not in route_paths
 
 
 def test_create_app_registers_observability_metrics_route() -> None:
-    route_paths = route_paths_for(create_app().routes)
+    route_paths = route_paths_for(
+        create_app(Settings(metrics_route_enabled=True)).routes
+    )
 
     assert "/api/v1/observability/metrics" in route_paths
 
 
 def metrics_client(role_name: RoleName) -> TestClient:
     """Return a test client with an authenticated user override."""
-    app = create_app(Settings())
+    app = create_app(Settings(metrics_route_enabled=True))
 
     async def override_current_user() -> User:
         return User(

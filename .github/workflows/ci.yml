@@ -1,36 +1,64 @@
-name: CI
-
+name: Backend CI
 on:
   pull_request:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  quality-gates:
-    name: Quality gates
+  backend:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Run local quality gates
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
         env:
-          BACKEND_GATE_CLEANUP: "1"
-        run: bash scripts/ci/all-gates.sh
-
-      - name: Cleanup Compose services
-        if: always()
+          POSTGRES_USER: maos
+          POSTGRES_PASSWORD: ci-test-isolated-database-only
+          POSTGRES_DB: maos_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U maos -d maos_test"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports: [6379:6379]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    env:
+      APP_ENV: testing
+      DATABASE_URL: postgresql+asyncpg://maos:ci-test-isolated-database-only@localhost:5432/maos_test
+      MAOS_TEST_DATABASE_URL: postgresql+asyncpg://maos:ci-test-isolated-database-only@localhost:5432/maos_test
+      REDIS_URL: redis://localhost:6379/0
+      LLM_MODEL: contract-tests-only
+      MAOS_EXTENSION_MODULES: maos_examples.text_review
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked tooling and dependencies
         run: |
-          docker compose down --remove-orphans || true
-          docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example down --remove-orphans || true
+          pip install poetry==1.8.5
+          cd backend
+          poetry install --with dev --no-root
+      - name: Generate isolated secrets
+        run: |
+          echo "JWT_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')" >> "$GITHUB_ENV"
+      - name: Offline and database gates
+        env:
+          MAOS_TEST_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: bash scripts/ci/backend-gate.sh
+      - name: Release image
+        run: docker build --target runtime -t multi-agent-os:local ./backend
+      - name: Validate release CLI and Compose configuration
+        run: |
+          mkdir -p .maos
+          chmod 700 .maos
+          docker run --rm --user "$(id -u):$(id -g)" --mount "type=bind,source=$(pwd)/.maos,target=/config" multi-agent-os:local python -m app.cli config init --output /config/.env
+          docker run --rm multi-agent-os:local python -m app.cli --version
+          docker run --rm --mount "type=bind,source=$(pwd)/scripts/ci/check-release-image.py,target=/verify.py,readonly" multi-agent-os:local python /verify.py
+          bash scripts/ci/compose-gate.sh
+      - name: Committed-secret scan
+        run: python scripts/ops/scan_secrets.py --strict --allow-test-placeholders

@@ -9,12 +9,12 @@ and process overhead.
 
 - `AGENTS.md`: small entry map and authority boundary.
 - `README.md` and `docs/product/`: current product behavior.
-- `docs/ARCHITECTURE.md` and `docs/decisions/`: structural constraints and
+- `docs/architecture.md` and `docs/decisions/`: structural constraints and
   lasting decisions.
 - `docs/plans/active/`: complex work currently in progress.
 - `docs/plans/completed/`: completed execution history worth retaining.
 - Project code, tests, CI, and runtime signals: executable and observable truth.
-- `scripts/README.md`: upstream Harness development and compatibility commands.
+- `scripts/README.md`: current backend quality, Compose and security checks.
 
 Use `docs/README.md` for the map; prefer targeted search.
 
@@ -123,14 +123,26 @@ Git history, pull-request discussion, test artifacts, screenshots, videos,
 logs, metrics, and plan progress are preferred evidence because they arise from
 the work. Manual descriptions may add context but do not replace observed proof.
 
-## Compatibility Control Plane
+## Current Verification Commands
 
-The Rust CLI and SQLite durable layer remain supported for historical state and
-optional external orchestration. Their intake, story, matrix, trace, scoring,
-audit, intervention, proposal, snapshot, and changeset commands are not part of
-the default repository workflow.
+Install the locked Python developer environment as described in
+`CONTRIBUTING.md`, then use `bash scripts/ci/backend-gate.sh` for tests, Ruff,
+Black, strict MyPy and lockfile checks. Provide an isolated
+`MAOS_TEST_DATABASE_URL` for persistence/locking/recovery proof; tests without
+that capability are explicitly skipped and do not prove those acceptance items.
+`bash scripts/ci/compose-gate.sh` validates the canonical self-host configuration.
+`bash scripts/ci/all-gates.sh` adds the strict tracked-file secret scan and diff
+checks. No frontend or Node.js step is required.
 
-Use those commands only when a user explicitly requests them, a maintenance task
-targets that compatibility surface, or an external orchestrator's documented
-contract requires them. Compatibility documents are references, not authority
-to reintroduce mandatory control-plane writes.
+Live inference is separate and explicitly enabled. Follow the bounded smoke in
+`CONTRIBUTING.md`; fixture tests never substitute for actual provider evidence.
+Use `docs/release/verification.md` to distinguish PASS, FAIL, BLOCKED and NOT_RUN.
+
+## Historical Compatibility Tooling
+
+Old Rust/SQLite Harness commands and semantic-changeset tools are preserved in
+Git history at baseline `92e5f1cfb2b0144bdb39a48db99371974bd372a5`. Import,
+packaging and CI inventory found no dependency on them in the retained headless
+runtime, so they are outside the active distribution. They are not required to
+authorize product implementation. Historical documents never reintroduce
+mandatory control-plane writes into this workflow.

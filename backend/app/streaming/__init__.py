@@ -1,37 +1,14 @@
-"""Event streaming contracts and schemas."""
+"""Committed event identity notifications; PostgreSQL remains authoritative."""
 
-from app.streaming.contracts import (
-    WorkflowEventPublisher,
-    WorkflowEventSubscriber,
-    workflow_events_channel,
-)
-from app.streaming.redis_pubsub import (
-    RedisEventStreamError,
-    RedisEventStreamPublishError,
-    RedisEventStreamSubscribeError,
-    RedisWorkflowEventPublisher,
-    RedisWorkflowEventSubscriber,
-    create_redis_workflow_event_publisher,
-    create_redis_workflow_event_subscriber,
-)
-from app.streaming.schemas import (
-    WORKFLOW_EVENT_MESSAGE_TYPE,
-    WorkflowEventStreamMessage,
-    workflow_event_to_stream_message,
-)
+import json
+from typing import Any
 
-__all__ = [
-    "RedisEventStreamError",
-    "RedisEventStreamPublishError",
-    "RedisEventStreamSubscribeError",
-    "RedisWorkflowEventPublisher",
-    "RedisWorkflowEventSubscriber",
-    "WORKFLOW_EVENT_MESSAGE_TYPE",
-    "WorkflowEventPublisher",
-    "WorkflowEventStreamMessage",
-    "WorkflowEventSubscriber",
-    "create_redis_workflow_event_publisher",
-    "create_redis_workflow_event_subscriber",
-    "workflow_event_to_stream_message",
-    "workflow_events_channel",
-]
+from redis.asyncio import Redis
+
+
+async def publish_committed(redis_url: str, identity: dict[str, Any]) -> None:
+    client = Redis.from_url(redis_url, socket_connect_timeout=0.5, socket_timeout=0.5)
+    try:
+        await client.publish("maos:events", json.dumps(identity))
+    finally:
+        await client.aclose()

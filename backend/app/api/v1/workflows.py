@@ -1,712 +1,297 @@
-"""Workflow API router foundation."""
+"""Authenticated registry and durable run control; never executes provider calls."""
 
-from typing import Annotated
+import asyncio
+from typing import Annotated, Any, cast
 from uuid import UUID
 
 from fastapi import (
     APIRouter,
     Depends,
+    Header,
     HTTPException,
     Query,
     WebSocket,
     WebSocketDisconnect,
-    WebSocketException,
-    status,
 )
-from pydantic import BaseModel, ConfigDict
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import inspect
 
-from app.api.v1.workflow_errors import workflow_error_detail, workflow_http_exception
-from app.approvals import (
-    ApprovalDecisionRequest,
-    ApprovalDecisionResponse,
-    ApprovalHistoryResponse,
-    ApprovalInvalidStateError,
-    ApprovalPermissionDeniedError,
-    ApprovalService,
-    ApprovalTerminalStateError,
-    DuplicateFinalApprovalDecisionError,
-    ResumeNotAllowedError,
-    WorkflowResumeRequest,
-    WorkflowResumeResponse,
-)
-from app.auth.rbac import (
-    RoleDependency,
-    RoleName,
-    get_user_role_names,
-    normalize_role_name,
-    require_roles,
-)
-from app.config import Settings
-from app.core.dependencies import (
-    DbSessionDependency,
-    provide_approval_service,
-    provide_runtime_service,
-    provide_settings,
-    provide_workflow_event_service,
-    provide_workflow_event_subscriber,
-    provide_workflow_service,
-)
+from app.auth.rbac import RoleName, require_any_role
+from app.composition import get_registry, get_run_service
+from app.db import get_session_factory
+from app.definitions import DefinitionError
 from app.models import User
-from app.models.enums import WorkflowStatus
-from app.outbound import (
-    OutboundCommunicationDisabledError,
-    OutboundCommunicationPolicyError,
-    OutboundCommunicationPreview,
-    OutboundCommunicationService,
-    OutboundCommunicationUnavailableError,
-    OutboundSendDisabledError,
-)
-from app.runtime.service import (
-    RuntimeService,
-    WorkflowRuntimeNodeError,
-    WorkflowRuntimePreconditionError,
-)
-from app.schemas.workflows_api import (
-    WorkflowCreateRequest,
-    WorkflowEventListResponse,
-    WorkflowListResponse,
-    WorkflowResponse,
-    WorkflowRunResponse,
-    WorkflowStateUpdateRequest,
-    WorkflowTransitionRequest,
-)
 from app.services import AuthenticationError, AuthService
-from app.streaming import WorkflowEventStreamMessage, WorkflowEventSubscriber
-from app.streaming.schemas import workflow_event_to_stream_message
-from app.workflows.events import WorkflowEventService
-from app.workflows.exceptions import (
-    InvalidWorkflowTransitionError,
-    WorkflowNotFoundError,
-    WorkflowStateMismatchError,
-)
-from app.workflows.service import WorkflowService
+from app.workflows.service import RunError, RunService
 
-WorkflowLimitQuery = Annotated[int, Query(ge=1, le=100)]
-WorkflowOffsetQuery = Annotated[int, Query(ge=0)]
-WorkflowStatusQuery = Annotated[WorkflowStatus | None, Query(alias="status")]
-
-WorkflowServiceDependency = Annotated[
-    WorkflowService,
-    Depends(provide_workflow_service),
+router = APIRouter(tags=["workflows and runs"])
+Reader = Annotated[
+    User, Depends(require_any_role(RoleName.ADMIN, RoleName.OPERATOR, RoleName.VIEWER))
 ]
-WorkflowEventServiceDependency = Annotated[
-    WorkflowEventService,
-    Depends(provide_workflow_event_service),
-]
-WorkflowEventSubscriberDependency = Annotated[
-    WorkflowEventSubscriber,
-    Depends(provide_workflow_event_subscriber),
-]
-RuntimeServiceDependency = Annotated[
-    RuntimeService,
-    Depends(provide_runtime_service),
-]
-ApprovalServiceDependency = Annotated[
-    ApprovalService,
-    Depends(provide_approval_service),
-]
-SettingsDependency = Annotated[
-    Settings,
-    Depends(provide_settings),
-]
-
-WORKFLOW_FULL_ACCESS_ROLES: tuple[RoleName, ...] = (
-    RoleName.ADMIN,
-    RoleName.MANAGER,
-)
-WORKFLOW_CREATE_ROLES: tuple[RoleName, ...] = (
-    RoleName.ADMIN,
-    RoleName.MANAGER,
-    RoleName.SALES,
-)
-WORKFLOW_READ_ROLES: tuple[RoleName, ...] = (
-    RoleName.ADMIN,
-    RoleName.MANAGER,
-    RoleName.SALES,
-    RoleName.LEGAL,
-    RoleName.FINANCE,
-    RoleName.VIEWER,
-)
-
-WorkflowFullAccessDependency = Annotated[
-    User,
-    Depends(require_roles(*WORKFLOW_FULL_ACCESS_ROLES)),
-]
-WorkflowCreateAccessDependency = Annotated[
-    User,
-    Depends(require_roles(*WORKFLOW_CREATE_ROLES)),
-]
-WorkflowReadAccessDependency = Annotated[
-    User,
-    Depends(require_roles(*WORKFLOW_READ_ROLES)),
-]
-
-WORKFLOW_STREAM_BACKLOG_LIMIT = 50
-WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE = status.WS_1008_POLICY_VIOLATION
-
-router = APIRouter(prefix="/workflows", tags=["workflows"])
-
-WORKFLOW_PLANNED_ENDPOINTS: tuple[str, ...] = (
-    "POST /api/v1/workflows",
-    "GET /api/v1/workflows",
-    "GET /api/v1/workflows/{workflow_id}",
-    "POST /api/v1/workflows/{workflow_id}/transition",
-    "PATCH /api/v1/workflows/{workflow_id}/state",
-    "GET /api/v1/workflows/{workflow_id}/events",
-    "POST /api/v1/workflows/{workflow_id}/run",
-    "POST /api/v1/workflows/{workflow_id}/approval",
-    "GET /api/v1/workflows/{workflow_id}/approval/history",
-    "POST /api/v1/workflows/{workflow_id}/resume",
-    "GET /api/v1/workflows/{workflow_id}/outbound/preview",
-    "WS /api/v1/workflows/{workflow_id}/stream",
-)
+Writer = Annotated[User, Depends(require_any_role(RoleName.ADMIN, RoleName.OPERATOR))]
+Service = Annotated[RunService, Depends(get_run_service)]
+Key = Annotated[str | None, Header(alias="Idempotency-Key", max_length=200)]
+Limit = Annotated[int, Query(ge=1, le=500)]
+Offset = Annotated[int, Query(ge=0)]
 
 
-@router.post(
-    "",
-    response_model=WorkflowResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create workflow",
-)
-async def create_workflow(
-    payload: WorkflowCreateRequest,
-    workflow_service: WorkflowServiceDependency,
-    session: DbSessionDependency,
-    current_user: WorkflowCreateAccessDependency,
-) -> WorkflowResponse:
-    """Create a workflow state record through the workflow service."""
-    workflow = await workflow_service.create_workflow(
-        payload,
-        created_by_id=current_user.id,
+class EmptyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class CreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    workflow_id: str = Field(min_length=1, max_length=100)
+    version: str = Field(min_length=1, max_length=40)
+    input: dict[str, Any]
+
+
+class DecisionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    decision: str = Field(pattern="^(approve|reject)$")
+    expected_revision: int = Field(ge=1)
+    content_revision: int = Field(ge=1)
+    content_hash: str = Field(pattern="^[a-f0-9]{64}$")
+    comment: str | None = Field(default=None, max_length=2000)
+
+
+def row(value: Any, *, summary: bool = False) -> dict[str, Any]:
+    excluded = (
+        {"definition_snapshot", "outputs", "input", "context"} if summary else set()
     )
-    await session.commit()
-    return WorkflowResponse(workflow=workflow)
-
-
-@router.get(
-    "",
-    response_model=WorkflowListResponse,
-    summary="List workflows",
-)
-async def list_workflows(
-    _current_user: WorkflowReadAccessDependency,
-    workflow_service: WorkflowServiceDependency,
-    limit: WorkflowLimitQuery = 100,
-    offset: WorkflowOffsetQuery = 0,
-    status_filter: WorkflowStatusQuery = None,
-) -> WorkflowListResponse:
-    """List workflow states with minimal pagination and optional status filter."""
-    workflows = await workflow_service.list_workflows(
-        status=status_filter,
-        limit=limit,
-        offset=offset,
-    )
-    return WorkflowListResponse(
-        workflows=workflows,
-        count=len(workflows),
-        limit=limit,
-        offset=offset,
-        status=status_filter,
-    )
-
-
-class WorkflowRouterMetadata(BaseModel):
-    """Static workflow router metadata for API validation."""
-
-    model_config = ConfigDict(frozen=True)
-
-    name: str
-    status: str
-    planned_endpoints: tuple[str, ...]
-
-
-@router.get(
-    "/_meta",
-    response_model=WorkflowRouterMetadata,
-    summary="Workflow API router metadata",
-)
-async def workflow_router_metadata(
-    _current_user: WorkflowReadAccessDependency,
-) -> WorkflowRouterMetadata:
-    """Return static workflow API metadata."""
-    return WorkflowRouterMetadata(
-        name="workflow-api",
-        status="implemented",
-        planned_endpoints=WORKFLOW_PLANNED_ENDPOINTS,
-    )
-
-
-@router.post(
-    "/{workflow_id}/transition",
-    response_model=WorkflowResponse,
-    summary="Transition workflow status",
-)
-async def transition_workflow_status(
-    workflow_id: UUID,
-    payload: WorkflowTransitionRequest,
-    workflow_service: WorkflowServiceDependency,
-    session: DbSessionDependency,
-    current_user: WorkflowFullAccessDependency,
-) -> WorkflowResponse:
-    """Transition one workflow status through the workflow service."""
-    try:
-        workflow = await workflow_service.transition_workflow_status(
-            workflow_id,
-            payload.to_status,
-            actor_type="user",
-            actor_id=current_user.id,
-            reason=payload.reason,
-        )
-    except (InvalidWorkflowTransitionError, WorkflowNotFoundError) as error:
-        raise workflow_http_exception(error) from error
-
-    await session.commit()
-    return WorkflowResponse(workflow=workflow)
-
-
-@router.patch(
-    "/{workflow_id}/state",
-    response_model=WorkflowResponse,
-    summary="Update workflow state",
-)
-async def update_workflow_state(
-    workflow_id: UUID,
-    payload: WorkflowStateUpdateRequest,
-    workflow_service: WorkflowServiceDependency,
-    session: DbSessionDependency,
-    current_user: WorkflowFullAccessDependency,
-) -> WorkflowResponse:
-    """Update one workflow state payload through the workflow service."""
-    try:
-        workflow = await workflow_service.update_workflow_state(
-            workflow_id,
-            payload.state,
-            actor_type="user",
-            actor_id=current_user.id,
-            reason=payload.reason,
-        )
-    except (WorkflowNotFoundError, WorkflowStateMismatchError) as error:
-        raise workflow_http_exception(error) from error
-
-    await session.commit()
-    return WorkflowResponse(workflow=workflow)
-
-
-@router.get(
-    "/{workflow_id}/events",
-    response_model=WorkflowEventListResponse,
-    summary="List workflow events",
-)
-async def list_workflow_events(
-    workflow_id: UUID,
-    _current_user: WorkflowReadAccessDependency,
-    workflow_event_service: WorkflowEventServiceDependency,
-    limit: WorkflowLimitQuery = 100,
-    offset: WorkflowOffsetQuery = 0,
-) -> WorkflowEventListResponse:
-    """List workflow events in deterministic chronological order."""
-    try:
-        events = await workflow_event_service.list_events_for_workflow(
-            workflow_id,
-            limit=limit,
-            offset=offset,
-        )
-    except WorkflowNotFoundError as error:
-        raise workflow_http_exception(error) from error
-
-    return WorkflowEventListResponse(
-        events=events,
-        count=len(events),
-        limit=limit,
-        offset=offset,
-    )
-
-
-@router.post(
-    "/{workflow_id}/approval",
-    response_model=ApprovalDecisionResponse,
-    summary="Submit workflow approval decision",
-)
-async def submit_workflow_approval(
-    workflow_id: UUID,
-    payload: ApprovalDecisionRequest,
-    approval_service: ApprovalServiceDependency,
-    session: DbSessionDependency,
-    current_user: WorkflowFullAccessDependency,
-) -> ApprovalDecisionResponse:
-    """Persist a human approval decision for one workflow."""
-    try:
-        response = await approval_service.submit_approval_decision(
-            workflow_id,
-            payload,
-            current_user,
-        )
-    except (
-        ApprovalInvalidStateError,
-        ApprovalTerminalStateError,
-        DuplicateFinalApprovalDecisionError,
-        InvalidWorkflowTransitionError,
-    ) as error:
-        raise approval_conflict_http_exception(error) from error
-    except ApprovalPermissionDeniedError as error:
-        raise approval_forbidden_http_exception() from error
-    except WorkflowNotFoundError as error:
-        raise workflow_http_exception(error) from error
-
-    await session.commit()
-    return response
-
-
-@router.get(
-    "/{workflow_id}/approval/history",
-    response_model=ApprovalHistoryResponse,
-    summary="Get workflow approval history",
-)
-async def get_workflow_approval_history(
-    workflow_id: UUID,
-    _current_user: WorkflowReadAccessDependency,
-    approval_service: ApprovalServiceDependency,
-) -> ApprovalHistoryResponse:
-    """Return approval history for one workflow without mutating state."""
-    try:
-        return await approval_service.get_approval_history(workflow_id)
-    except WorkflowNotFoundError as error:
-        raise workflow_http_exception(error) from error
-
-
-@router.get(
-    "/{workflow_id}/outbound/preview",
-    response_model=OutboundCommunicationPreview,
-    summary="Get approved outbound communication preview",
-)
-async def get_workflow_outbound_preview(
-    workflow_id: UUID,
-    current_user: WorkflowFullAccessDependency,
-    workflow_service: WorkflowServiceDependency,
-    settings: SettingsDependency,
-) -> OutboundCommunicationPreview:
-    """Return a preview-only outbound communication after approval and resume."""
-    workflow = await workflow_service.workflow_repository.get_by_id(workflow_id)
-    if workflow is None:
-        raise workflow_http_exception(
-            WorkflowNotFoundError(f"Workflow {workflow_id} was not found"),
-        )
-
-    outbound_service = OutboundCommunicationService(
-        enabled=settings.outbound_communication_enabled,
-        send_enabled=settings.outbound_send_enabled,
-        provider=settings.outbound_provider,
-        require_approval=settings.outbound_require_approval,
-        max_body_chars=settings.outbound_max_body_chars,
-        max_subject_chars=settings.outbound_max_subject_chars,
-        max_recipients=settings.outbound_max_recipients,
-    )
-    actor_roles = sorted(get_user_role_names(current_user))
-    actor_role = actor_roles[0] if actor_roles else None
-    try:
-        return outbound_service.build_preview(workflow, actor_role=actor_role)
-    except OutboundCommunicationDisabledError as error:
-        raise outbound_preview_http_exception(
-            code="outbound_preview_disabled",
-            message=str(error),
-        ) from error
-    except OutboundCommunicationPolicyError as error:
-        raise outbound_preview_http_exception(
-            code="outbound_preview_not_allowed",
-            message=str(error),
-        ) from error
-    except OutboundCommunicationUnavailableError as error:
-        raise outbound_preview_http_exception(
-            code="outbound_preview_unavailable",
-            message=str(error),
-        ) from error
-    except OutboundSendDisabledError as error:
-        raise outbound_preview_http_exception(
-            code="outbound_preview_provider_unavailable",
-            message=str(error),
-        ) from error
-    except ValueError as error:
-        raise outbound_preview_http_exception(
-            code="outbound_preview_invalid",
-            message="Outbound preview content is unavailable for safety review.",
-        ) from error
-
-
-@router.post(
-    "/{workflow_id}/resume",
-    response_model=WorkflowResumeResponse,
-    summary="Resume workflow after approval",
-)
-async def resume_workflow_after_approval(
-    workflow_id: UUID,
-    payload: WorkflowResumeRequest,
-    runtime_service: RuntimeServiceDependency,
-    session: DbSessionDependency,
-    current_user: WorkflowFullAccessDependency,
-) -> WorkflowResumeResponse:
-    """Resume one approved workflow through the bounded post-approval runtime."""
-    try:
-        result = await runtime_service.resume_workflow_after_approval(
-            workflow_id,
-            payload,
-            actor_type="user",
-            actor_id=current_user.id,
-        )
-    except WorkflowNotFoundError as error:
-        raise workflow_http_exception(error) from error
-    except (ResumeNotAllowedError, InvalidWorkflowTransitionError) as error:
-        raise approval_conflict_http_exception(error) from error
-    except WorkflowRuntimeNodeError as error:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=workflow_error_detail(
-                code="workflow_runtime_resume_failed",
-                message="Workflow resume failed during runtime continuation.",
-                details={"failed_stage": error.stage.value},
-            ),
-        ) from error
-
-    await session.commit()
-    return WorkflowResumeResponse(
-        workflow_id=workflow_id,
-        previous_status=WorkflowStatus.APPROVED,
-        next_status=result.state.status,
-        resumed=result.completed and not result.failed,
-        message=result.message,
-        request_id=payload.request_id,
-    )
-
-
-@router.post(
-    "/{workflow_id}/run",
-    response_model=WorkflowRunResponse,
-    summary="Run workflow",
-)
-async def run_workflow(
-    workflow_id: UUID,
-    runtime_service: RuntimeServiceDependency,
-    session: DbSessionDependency,
-    current_user: WorkflowFullAccessDependency,
-) -> WorkflowRunResponse:
-    """Run one workflow through the deterministic runtime service."""
-    try:
-        result = await runtime_service.run_workflow(
-            workflow_id,
-            actor_type="user",
-            actor_id=current_user.id,
-        )
-    except WorkflowNotFoundError as error:
-        raise workflow_http_exception(error) from error
-    except WorkflowRuntimePreconditionError as error:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=workflow_error_detail(
-                code="workflow_runtime_precondition_failed",
-                message=str(error),
-            ),
-        ) from error
-
-    await session.commit()
-    return WorkflowRunResponse.from_runtime_result(result)
-
-
-@router.websocket("/{workflow_id}/stream")
-async def stream_workflow_events(
-    websocket: WebSocket,
-    workflow_id: UUID,
-    session: DbSessionDependency,
-    workflow_event_service: WorkflowEventServiceDependency,
-    subscriber: WorkflowEventSubscriberDependency,
-) -> None:
-    """Stream backlog and live workflow events over a WebSocket connection."""
-    await require_workflow_stream_access(websocket, session)
-    try:
-        backlog_messages = await _workflow_event_backlog_messages(
-            workflow_id,
-            workflow_event_service,
-        )
-    except WorkflowNotFoundError as error:
-        raise WebSocketException(
-            code=WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE,
-            reason="Workflow not found",
-        ) from error
-
-    await websocket.accept()
-    try:
-        for message in backlog_messages:
-            await send_workflow_stream_message(websocket, message)
-
-        async for message in subscriber.subscribe_workflow_events(workflow_id):
-            await send_workflow_stream_message(websocket, message)
-    except WebSocketDisconnect:
-        return
-
-
-@router.get(
-    "/{workflow_id}",
-    response_model=WorkflowResponse,
-    summary="Get workflow",
-)
-async def get_workflow(
-    workflow_id: UUID,
-    _current_user: WorkflowReadAccessDependency,
-    workflow_service: WorkflowServiceDependency,
-) -> WorkflowResponse:
-    """Return one workflow state by id."""
-    workflow = await workflow_service.get_workflow(workflow_id)
-    if workflow is None:
-        raise workflow_http_exception(
-            WorkflowNotFoundError(f"Workflow {workflow_id} was not found"),
-        )
-    return WorkflowResponse(workflow=workflow)
-
-
-def require_workflow_full_access() -> RoleDependency:
-    """Require Admin or Manager workflow API access."""
-    return require_roles(*WORKFLOW_FULL_ACCESS_ROLES)
-
-
-def require_workflow_create_access() -> RoleDependency:
-    """Require workflow creation access."""
-    return require_roles(*WORKFLOW_CREATE_ROLES)
-
-
-def require_workflow_read_access() -> RoleDependency:
-    """Require workflow read/event access."""
-    return require_roles(*WORKFLOW_READ_ROLES)
-
-
-def approval_conflict_http_exception(error: Exception) -> HTTPException:
-    """Return a safe conflict response for approval lifecycle errors."""
-    code = "approval_lifecycle_conflict"
-    if isinstance(error, ApprovalInvalidStateError):
-        code = "approval_invalid_state"
-    elif isinstance(error, ApprovalTerminalStateError):
-        code = "approval_terminal_state"
-    elif isinstance(error, DuplicateFinalApprovalDecisionError):
-        code = "approval_duplicate_final_decision"
-    elif isinstance(error, InvalidWorkflowTransitionError):
-        code = "invalid_workflow_transition"
-    elif isinstance(error, ResumeNotAllowedError):
-        code = "workflow_resume_not_allowed"
-
-    return HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail=workflow_error_detail(
-            code=code,
-            message=str(error),
+    return cast(
+        dict[str, Any],
+        jsonable_encoder(
+            {
+                c.key: getattr(value, c.key)
+                for c in inspect(type(value)).columns
+                if c.key not in excluded
+            }
         ),
     )
 
 
-def approval_forbidden_http_exception() -> HTTPException:
-    """Return a safe forbidden response for approval policy failures."""
-    return HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail=workflow_error_detail(
-            code="approval_forbidden",
-            message="Insufficient permissions for approval decision.",
+def definition(value: Any) -> dict[str, Any]:
+    snapshot = value.snapshot()
+    return {
+        "id": value.id,
+        "version": value.version,
+        "name": value.name,
+        "definition_hash": value.definition_hash,
+        "input_schema": snapshot["input"]["schema"],
+        "output_schema": snapshot["output"]["schema"],
+        "nodes": [n.id for n in value.nodes],
+        "limits": snapshot["limits"],
+        "extension": (
+            snapshot["extension"]
+            if "extension" in snapshot
+            else snapshot.get("extension_identity", {})
         ),
-    )
+    }
 
 
-def outbound_preview_http_exception(*, code: str, message: str) -> HTTPException:
-    """Return a safe conflict response for outbound preview errors."""
-    return HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail=workflow_error_detail(code=code, message=message),
-    )
-
-
-async def require_workflow_stream_access(
-    websocket: WebSocket,
-    session: DbSessionDependency,
-) -> User:
-    """Authenticate and authorize a workflow stream WebSocket connection."""
-    token = _websocket_bearer_token(websocket)
-    if token is None:
-        raise WebSocketException(
-            code=WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE,
-            reason="Authentication required",
-        )
-
-    auth_service = AuthService(session)
-    try:
-        current_user = await auth_service.get_current_user(token)
-    except AuthenticationError as error:
-        raise WebSocketException(
-            code=WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE,
-            reason="Authentication required",
-        ) from error
-
-    allowed_role_names = {normalize_role_name(role) for role in WORKFLOW_READ_ROLES}
-    if get_user_role_names(current_user).isdisjoint(allowed_role_names):
-        raise WebSocketException(
-            code=WORKFLOW_WEBSOCKET_POLICY_CLOSE_CODE,
-            reason="Insufficient permissions",
-        )
-    return current_user
-
-
-async def send_workflow_stream_message(
-    websocket: WebSocket,
-    message: WorkflowEventStreamMessage,
-) -> None:
-    """Send one schema-safe workflow event stream message as JSON."""
-    await websocket.send_json(message.model_dump(mode="json", by_alias=True))
-
-
-async def _workflow_event_backlog_messages(
-    workflow_id: UUID,
-    workflow_event_service: WorkflowEventService,
-) -> list[WorkflowEventStreamMessage]:
-    events = await workflow_event_service.list_events_for_workflow(
-        workflow_id,
-        limit=WORKFLOW_STREAM_BACKLOG_LIMIT,
-        offset=0,
-    )
+@router.get("/agents")
+async def agents(user: Reader) -> list[dict[str, Any]]:
     return [
-        workflow_event_to_stream_message(event, sequence=sequence)
-        for sequence, event in enumerate(events)
+        {
+            "id": a.id,
+            "version": a.version,
+            "name": a.name,
+            "responsibility": a.responsibility,
+            "input_schema": a.input_schema.model_json_schema(),
+            "output_schema": a.output_schema.model_json_schema(),
+        }
+        for a in get_registry().agents
     ]
 
 
-def _websocket_bearer_token(websocket: WebSocket) -> str | None:
-    authorization = websocket.headers.get("authorization")
-    if authorization is not None:
-        scheme, _, credentials = authorization.partition(" ")
-        if scheme.lower() == "bearer" and credentials:
-            return credentials
-
-    query_token = websocket.query_params.get("access_token")
-    if query_token:
-        return query_token
-
-    return None
+@router.get("/workflows")
+async def workflows(user: Reader) -> list[dict[str, Any]]:
+    return [definition(w) for w in get_registry().workflows.values()]
 
 
-__all__ = [
-    "WORKFLOW_CREATE_ROLES",
-    "WORKFLOW_FULL_ACCESS_ROLES",
-    "WORKFLOW_PLANNED_ENDPOINTS",
-    "WORKFLOW_READ_ROLES",
-    "WORKFLOW_STREAM_BACKLOG_LIMIT",
-    "RuntimeServiceDependency",
-    "ApprovalServiceDependency",
-    "SettingsDependency",
-    "WorkflowCreateAccessDependency",
-    "WorkflowEventServiceDependency",
-    "WorkflowEventSubscriberDependency",
-    "WorkflowFullAccessDependency",
-    "WorkflowReadAccessDependency",
-    "WorkflowRouterMetadata",
-    "WorkflowServiceDependency",
-    "approval_conflict_http_exception",
-    "approval_forbidden_http_exception",
-    "require_workflow_create_access",
-    "require_workflow_full_access",
-    "require_workflow_read_access",
-    "require_workflow_stream_access",
-    "router",
-    "send_workflow_stream_message",
-]
+@router.get("/workflows/{workflow_id}")
+async def workflow(
+    workflow_id: str, user: Reader, version: str | None = None
+) -> dict[str, Any]:
+    try:
+        return definition(get_registry().get(workflow_id, version))
+    except DefinitionError as error:
+        raise HTTPException(404, detail={"code": "definition_unavailable"}) from error
+
+
+@router.post("/runs", status_code=201)
+async def create(
+    payload: CreateRequest, user: Writer, service: Service, idempotency_key: Key = None
+) -> dict[str, Any]:
+    return row(
+        await service.create(
+            user.id,
+            payload.workflow_id,
+            payload.version,
+            payload.input,
+            idempotency_key=idempotency_key,
+        ),
+        summary=True,
+    )
+
+
+@router.get("/runs")
+async def runs(
+    user: Reader,
+    service: Service,
+    status: str | None = None,
+    workflow_id: str | None = None,
+    limit: Limit = 100,
+    offset: Offset = 0,
+) -> list[dict[str, Any]]:
+    return [
+        row(r, summary=True)
+        for r in await service.list(
+            status=status, workflow_id=workflow_id, limit=limit, offset=offset
+        )
+    ]
+
+
+@router.get("/runs/{run_id}")
+async def show(run_id: UUID, user: Reader, service: Service) -> dict[str, Any]:
+    return row(await service.get(run_id), summary=True)
+
+
+@router.get("/runs/{run_id}/nodes")
+async def nodes(
+    run_id: UUID, user: Reader, service: Service, limit: Limit = 100, offset: Offset = 0
+) -> list[dict[str, Any]]:
+    await service.get(run_id)
+    return [row(r) for r in await service.nodes(run_id, limit=limit, offset=offset)]
+
+
+@router.post("/runs/{run_id}/start", status_code=202)
+async def start(
+    run_id: UUID,
+    user: Writer,
+    service: Service,
+    idempotency_key: Key = None,
+    payload: EmptyRequest | None = None,
+) -> dict[str, Any]:
+    return row(
+        await service.start(run_id, user.id, idempotency_key=idempotency_key),
+        summary=True,
+    )
+
+
+@router.post("/runs/{run_id}/resume", status_code=202)
+async def resume(
+    run_id: UUID,
+    user: Writer,
+    service: Service,
+    idempotency_key: Key = None,
+    payload: EmptyRequest | None = None,
+) -> dict[str, Any]:
+    return row(
+        await service.resume(run_id, user.id, idempotency_key=idempotency_key),
+        summary=True,
+    )
+
+
+@router.post("/runs/{run_id}/cancel", status_code=202)
+async def cancel(run_id: UUID, user: Writer, service: Service) -> dict[str, Any]:
+    return row(await service.cancel(run_id, user.id), summary=True)
+
+
+@router.get("/runs/{run_id}/approvals")
+async def approvals(
+    run_id: UUID, user: Reader, service: Service, limit: Limit = 100, offset: Offset = 0
+) -> list[dict[str, Any]]:
+    await service.get(run_id)
+    return [row(r) for r in await service.approvals(run_id, limit=limit, offset=offset)]
+
+
+@router.post("/runs/{run_id}/approvals/{approval_id}/decision")
+async def decide(
+    run_id: UUID,
+    approval_id: UUID,
+    payload: DecisionRequest,
+    user: Writer,
+    service: Service,
+) -> dict[str, Any]:
+    return row(
+        await service.decide(
+            run_id,
+            approval_id,
+            user.id,
+            **{
+                **payload.model_dump(),
+                "decision": {"approve": "approved", "reject": "rejected"}[
+                    payload.decision
+                ],
+            },
+        ),
+        summary=True,
+    )
+
+
+@router.get("/runs/{run_id}/events")
+async def events(
+    run_id: UUID,
+    user: Reader,
+    service: Service,
+    after_sequence: int = Query(default=0, ge=0),
+    limit: Limit = 100,
+) -> list[dict[str, Any]]:
+    await service.get(run_id)
+    return [
+        row(r)
+        for r in await service.events(
+            run_id, after_sequence=after_sequence, limit=limit
+        )
+    ]
+
+
+@router.websocket("/runs/{run_id}/stream")
+async def stream(websocket: WebSocket, run_id: UUID, after_sequence: int = 0) -> None:
+    # Authorization only in header, never query parameters. Polling closes both
+    # notification gaps and the backlog/live handoff race.
+    header = websocket.headers.get("authorization", "")
+    if not header.startswith("Bearer ") or after_sequence < 0:
+        await websocket.close(code=4401)
+        return
+    try:
+        async with get_session_factory()() as session:
+            user = await AuthService(session).get_current_user(header[7:])
+            if not {r.name for r in user.roles} & {"admin", "operator", "viewer"}:
+                await websocket.close(code=4403)
+                return
+        service = get_run_service()
+        await service.get(run_id)
+    except (AuthenticationError, RunError):
+        await websocket.close(code=4401)
+        return
+    await websocket.accept()
+    try:
+        cursor = after_sequence
+        while True:
+            # Also reject expired access tokens during long-lived streams.
+            async with get_session_factory()() as session:
+                current = await AuthService(session).get_current_user(header[7:])
+                if not {r.name for r in current.roles} & {
+                    "admin",
+                    "operator",
+                    "viewer",
+                }:
+                    await websocket.close(code=4403)
+                    return
+            batch = await service.events(run_id, after_sequence=cursor, limit=100)
+            for event in batch:
+                await websocket.send_json(row(event))
+                cursor = event.sequence
+            if not batch:
+                try:
+                    message = await asyncio.wait_for(websocket.receive(), timeout=0.5)
+                    if message["type"] == "websocket.disconnect":
+                        return
+                except TimeoutError:
+                    pass
+    except (WebSocketDisconnect, AuthenticationError):
+        return

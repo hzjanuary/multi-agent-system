@@ -21,7 +21,7 @@ from app.llm import (
 
 def test_llm_provider_enum_supports_required_providers() -> None:
     assert {provider.value for provider in LLMProvider} == {
-        "fake",
+        "openai_compatible",
         "groq",
         "openrouter",
         "ollama",
@@ -55,8 +55,8 @@ def test_chat_request_accepts_provider_independent_messages() -> None:
                 metadata={"workflow_id": "workflow-1"},
             ),
         ),
-        provider=LLMProvider.FAKE,
-        model="fake-test-model",
+        provider=LLMProvider.OLLAMA,
+        model="configured-model",
         temperature=0,
         max_tokens=200,
         response_format=LLMResponseFormat.JSON_OBJECT,
@@ -65,10 +65,10 @@ def test_chat_request_accepts_provider_independent_messages() -> None:
         timeout_seconds=10,
     )
 
-    assert request.provider is LLMProvider.FAKE
+    assert request.provider is LLMProvider.OLLAMA
     assert request.messages[0].role is LLMMessageRole.SYSTEM
     assert request.messages[1].metadata == {"workflow_id": "workflow-1"}
-    assert request.model_dump(mode="json")["provider"] == "fake"
+    assert request.model_dump(mode="json")["provider"] == "ollama"
 
 
 def test_structured_json_requires_json_response_format() -> None:
@@ -81,8 +81,8 @@ def test_structured_json_requires_json_response_format() -> None:
 
 def test_chat_response_can_represent_structured_json() -> None:
     response = LLMChatResponse(
-        provider=LLMProvider.FAKE,
-        model="fake-test-model",
+        provider=LLMProvider.OLLAMA,
+        model="configured-model",
         content='{"domain":"it_equipment"}',
         structured_json={"domain": "it_equipment"},
         structured_metadata=LLMStructuredResponseMetadata(

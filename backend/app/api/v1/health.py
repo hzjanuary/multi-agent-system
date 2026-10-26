@@ -10,7 +10,7 @@ from app.core.dependencies import provide_readiness_checker, provide_settings
 from app.core.readiness import ReadinessChecker
 from app.schemas import HealthResponse, LiveResponse, ReadyResponse, RootResponse
 
-API_VERSION = "0.1.0"
+API_VERSION = "0.2.0"
 SettingsDependency = Annotated[Settings, Depends(provide_settings)]
 ReadinessCheckerDependency = Annotated[
     ReadinessChecker,

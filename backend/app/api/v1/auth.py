@@ -51,8 +51,14 @@ async def refresh(
 
 
 @router.post("/logout", response_model=LogoutResponse)
-async def logout() -> LogoutResponse:
-    """Return success for stateless MVP logout."""
+async def logout(
+    payload: RefreshRequest, session: DbSessionDependency
+) -> LogoutResponse:
+    """Revoke a refresh session; access tokens expire independently."""
+    try:
+        await AuthService(session).logout(payload.refresh_token)
+    except AuthenticationError:
+        raise_invalid_credentials()
     return LogoutResponse(success=True)
 
 
@@ -66,6 +72,6 @@ def raise_invalid_credentials() -> NoReturn:
     """Raise a generic authentication failure response."""
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid credentials",
+        detail={"code": "unauthorized", "message": "Invalid credentials"},
         headers={"WWW-Authenticate": "Bearer"},
     )

@@ -1,0 +1,13 @@
+Multi-Agent OS originated as a university graduation project maintained by
+hzjanuary. The maintainer explicitly selected MIT for project material they
+have the right to license in SPEC-029's implementation goal.
+
+The retained source was inspected for copyright/license/copy-attribution
+headers; no conflicting third-party source notice was identified. Git history
+at the reviewed baseline lists hzjanuary as its author. This records the scope
+of the review, not an independent legal ownership determination.
+
+Dependencies and container base images remain subject to their own licenses.
+Their installed package metadata and image notices are not replaced by the
+root MIT license. Model weights and remote provider terms are obtained by the
+operator separately and are not distributed by this project.

@@ -17,7 +17,8 @@ from app.llm.clients.http import (
     HTTPResponse,
     HTTPTimeoutError,
     HTTPTransportError,
-    UrllibAsyncJSONHTTPTransport,
+    HTTPXAsyncJSONHTTPTransport,
+    retry_after_seconds,
 )
 from app.llm.contracts import (
     LLMChatRequest,
@@ -46,7 +47,7 @@ class OpenAICompatibleLLMClient:
         self._api_key = api_key.strip()
         self._model = model.strip()
         self._endpoint_url = endpoint_url.strip()
-        self._transport = transport or UrllibAsyncJSONHTTPTransport()
+        self._transport = transport or HTTPXAsyncJSONHTTPTransport()
         self._default_timeout_seconds = default_timeout_seconds
 
     @property
@@ -61,7 +62,7 @@ class OpenAICompatibleLLMClient:
 
     def validate_ready(self) -> None:
         """Validate remote provider configuration without exposing secrets."""
-        if not self._api_key:
+        if not self._api_key and self.provider != LLMProvider.OPENAI_COMPATIBLE:
             raise LLMConfigurationError(
                 f"{self.provider.value} provider requires an API key",
                 provider=self.provider,
@@ -109,10 +110,9 @@ class OpenAICompatibleLLMClient:
         return self._normalize_response(response.payload, request=request, model=model)
 
     def _headers(self, request: LLMChatRequest) -> dict[str, str]:
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "User-Agent": "enterprise-os-backend/1.0",
-        }
+        headers = {"User-Agent": "multi-agent-os/0.2.0"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
         if request.request_id:
             headers["X-Request-ID"] = request.request_id
         return headers
@@ -194,7 +194,10 @@ def _raise_for_http_status(
         request=request,
         category=_category_for_status(response.status_code),
         message=f"provider returned HTTP {response.status_code}",
-        details={"http_status": response.status_code},
+        details={
+            "http_status": response.status_code,
+            "retry_after_seconds": retry_after_seconds(response),
+        },
     )
 
 

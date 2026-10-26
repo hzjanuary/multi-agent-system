@@ -21,6 +21,7 @@ def create_database_engine(database_url: str, *, echo: bool = False) -> AsyncEng
         database_url,
         echo=echo,
         pool_pre_ping=True,
+        hide_parameters=True,
     )
 
 

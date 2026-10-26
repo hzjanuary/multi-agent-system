@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base, TimestampMixin, UUIDPrimaryKeyMixin
-
-if TYPE_CHECKING:
-    from app.models.workflow import Workflow
 
 
 class AuditLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -23,7 +19,6 @@ class AuditLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     workflow_id: Mapped[UUID | None] = mapped_column(
         PostgresUUID(as_uuid=True),
-        ForeignKey("workflows.id", ondelete="SET NULL"),
         nullable=True,
     )
     actor_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -41,9 +36,4 @@ class AuditLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         JSONB,
         default=dict,
         nullable=False,
-    )
-
-    workflow: Mapped[Workflow | None] = relationship(
-        back_populates="audit_logs",
-        lazy="selectin",
     )

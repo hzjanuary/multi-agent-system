@@ -1,7 +1,7 @@
-"""Tests for infrastructure readiness checks."""
+"""Readiness separates required state from optional notification delivery."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from typing import Any
 
 import pytest
 
@@ -17,90 +17,71 @@ async def unhealthy() -> bool:
     return False
 
 
-async def raises_secret_error() -> bool:
-    raise RuntimeError("postgresql://user:super-secret@example.test/db")
+async def raises_secret() -> bool:
+    raise RuntimeError("postgresql://private:secret-value@host/db")
 
 
-async def slow_check() -> bool:
-    await asyncio.sleep(0.2)
-    return True
-
-
-def checker_with(
-    *,
-    postgres: Callable[[], Awaitable[bool]] = healthy,
-    redis: Callable[[], Awaitable[bool]] = healthy,
-    qdrant: Callable[[], Awaitable[bool]] = healthy,
-    object_storage: Callable[[], Awaitable[bool]] = healthy,
-    timeout: float = 2.0,
-) -> ReadinessChecker:
-    return ReadinessChecker(
-        Settings(READINESS_TIMEOUT_SECONDS=timeout),
-        postgres_check=postgres,
-        redis_check=redis,
-        qdrant_check=qdrant,
-        object_storage_check=object_storage,
+def config(**kwargs: Any) -> Settings:
+    return Settings(
+        _env_file=None,
+        database_url="postgresql+asyncpg://test:test@localhost/test",
+        jwt_secret_key="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        **kwargs,
     )
 
 
-def checker_with_failed(dependency: str) -> ReadinessChecker:
-    if dependency == "postgres":
-        return checker_with(postgres=unhealthy)
-    if dependency == "redis":
-        return checker_with(redis=unhealthy)
-    if dependency == "qdrant":
-        return checker_with(qdrant=unhealthy)
-    if dependency == "object_storage":
-        return checker_with(object_storage=unhealthy)
-    raise AssertionError(f"unknown dependency: {dependency}")
-
-
 @pytest.mark.asyncio
-async def test_readiness_checker_returns_ok_for_all_dependencies() -> None:
-    results = await checker_with().check_all()
-
-    assert [result.name for result in results] == [
-        "postgres",
-        "redis",
-        "qdrant",
-        "object_storage",
+async def test_redis_loss_is_visible_but_does_not_block_storage() -> None:
+    checker = ReadinessChecker(
+        config(),
+        postgres_check=healthy,
+        configuration_check=healthy,
+        redis_check=unhealthy,
+    )
+    checks = await checker.check_all()
+    assert [c.name for c in checks] == [
+        "postgres_schema",
+        "configuration",
+        "redis_notifications",
     ]
-    assert {result.status for result in results} == {"ok"}
-    assert all(result.required for result in results)
-    assert all(result.latency_ms is not None for result in results)
+    assert all(c.status == "ok" for c in checks if c.required)
+    redis = checks[-1]
+    assert redis.status == "failed" and redis.required is False
+    assert "degraded" in (redis.message or "")
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "dependency",
-    ["postgres", "redis", "qdrant", "object_storage"],
-)
-async def test_readiness_checker_reports_failed_dependency(
-    dependency: str,
-) -> None:
-    results = await checker_with_failed(dependency).check_all()
-
-    failed = [result for result in results if result.status == "failed"]
-    assert len(failed) == 1
-    assert failed[0].name == dependency
-    assert failed[0].message == "dependency check returned unhealthy"
+async def test_missing_schema_blocks_readiness_and_never_leaks_errors() -> None:
+    checks = await ReadinessChecker(
+        config(),
+        postgres_check=raises_secret,
+        configuration_check=healthy,
+        redis_check=healthy,
+    ).check_all()
+    assert checks[0].required and checks[0].status == "failed"
+    assert "private" not in checks[0].model_dump_json()
+    assert "secret-value" not in checks[0].model_dump_json()
 
 
 @pytest.mark.asyncio
-async def test_readiness_checker_sanitizes_exceptions() -> None:
-    results = await checker_with(postgres=raises_secret_error).check_all()
-
-    postgres = results[0]
-    assert postgres.status == "failed"
-    assert postgres.message == "dependency check failed"
-    assert "super-secret" not in postgres.model_dump_json()
-    assert "postgresql://" not in postgres.model_dump_json()
+async def test_missing_model_is_not_ready_without_any_model_call() -> None:
+    checks = await ReadinessChecker(
+        config(), postgres_check=healthy, redis_check=healthy
+    ).check_all()
+    assert checks[1].required and checks[1].status == "failed"
 
 
 @pytest.mark.asyncio
-async def test_readiness_checker_maps_timeout_safely() -> None:
-    results = await checker_with(redis=slow_check, timeout=0.1).check_all()
+async def test_health_checks_have_bounded_timeouts() -> None:
+    async def blocked() -> bool:
+        await asyncio.sleep(1)
+        return True
 
-    redis = results[1]
-    assert redis.status == "failed"
-    assert redis.message == "readiness check timed out"
+    checks = await ReadinessChecker(
+        config(readiness_timeout_seconds=0.1),
+        postgres_check=blocked,
+        configuration_check=healthy,
+        redis_check=healthy,
+    ).check_all()
+    assert checks[0].status == "failed"
+    assert checks[0].message == "readiness check timed out"

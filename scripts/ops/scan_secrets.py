@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only tracked-file secret scanner for SPEC-027."""
+"""Read-only tracked-file secret scanner for the headless distribution."""
 
 from __future__ import annotations
 
@@ -66,6 +66,10 @@ MAX_HUMAN_FINDINGS = 50
 TELEGRAM_TOKEN_RE = re.compile(r"\b\d{7,12}:[A-Za-z0-9_-]{30,}\b")
 JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b")
 PRIVATE_KEY_RE = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")
+GENERATED_SECRET_RE = re.compile(
+    r"\$\((?:python|python3) -c 'import secrets; "
+    r"print\(secrets\.(?:token_hex|token_urlsafe)\([1-9][0-9]*\)\)'\)"
+)
 BEARER_RE = re.compile(r"(?i)\bBearer\s+([A-Za-z0-9._~+/=-]{20,})")
 ASSIGNMENT_RE = re.compile(
     r"\b("
@@ -245,7 +249,10 @@ def scan_text(
         for match in ASSIGNMENT_RE.finditer(line):
             key = match.group(1).upper()
             value = match.group(2)
-            if is_allowed_placeholder(value, allow_test_placeholders) or is_code_declaration(value):
+            # Recognize only the complete, reviewed random-secret generator.
+            # Arbitrary shell substitutions can contain committed literals.
+            generated = value in {"$(python", "$(python3"} and GENERATED_SECRET_RE.search(line)
+            if generated or is_allowed_placeholder(value, allow_test_placeholders) or is_code_declaration(value):
                 continue
             findings.append(finding(path, line_number, f"secret_assignment:{key}"))
     return findings

@@ -2,7 +2,6 @@
 
 from typing import Any
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.config import AppEnvironment, Settings
@@ -31,9 +30,9 @@ def test_root_returns_service_information() -> None:
 
     assert response.status_code == 200
     assert data == {
-        "app_name": "Enterprise Multi-Agent OS",
-        "environment": AppEnvironment.DEVELOPMENT,
-        "version": "0.1.0",
+        "app_name": "Multi-Agent OS",
+        "environment": AppEnvironment.TESTING,
+        "version": "0.2.0",
         "docs_url": "/docs",
         "health_url": "/health",
     }
@@ -47,9 +46,9 @@ def test_health_returns_ok_status() -> None:
 
     assert response.status_code == 200
     assert data["status"] == "ok"
-    assert data["app_name"] == "Enterprise Multi-Agent OS"
-    assert data["environment"] == AppEnvironment.DEVELOPMENT
-    assert data["version"] == "0.1.0"
+    assert data["app_name"] == "Multi-Agent OS"
+    assert data["environment"] == AppEnvironment.TESTING
+    assert data["version"] == "0.2.0"
     assert isinstance(data["timestamp"], str)
 
 
@@ -168,22 +167,8 @@ def test_health_response_includes_request_id_header() -> None:
     assert response.headers[REQUEST_ID_HEADER]
 
 
-def test_app_startup_does_not_run_demo_seed_or_knowledge_ingestion(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from app.demo import seed as demo_seed
-    from app.knowledge import ingest_demo
-
-    def fail_if_called(*args: object, **kwargs: object) -> object:
-        raise AssertionError("startup must not run demo seed or knowledge ingestion")
-
-    monkeypatch.setattr(demo_seed, "run_demo_seed", fail_if_called)
-    monkeypatch.setattr(
-        ingest_demo,
-        "run_demo_knowledge_ingestion",
-        fail_if_called,
-    )
-
-    client = TestClient(create_app(Settings()))
-
-    assert client.get("/health").status_code == 200
+def test_app_has_no_retired_product_routes() -> None:
+    paths = build_client().get("/openapi.json").json()["paths"]
+    retired = ("knowledge", "quotation", "outbound", "/state", "/transition")
+    assert not any(any(word in path for word in retired) for path in paths)
+    assert "/api/v1/runs" in paths

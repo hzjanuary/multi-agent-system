@@ -62,7 +62,7 @@ def chat_request() -> LLMChatRequest:
     return LLMChatRequest(
         messages=(
             LLMChatMessage(role=LLMMessageRole.SYSTEM, content="Return JSON."),
-            LLMChatMessage(role=LLMMessageRole.USER, content="Analyze RFQ-001."),
+            LLMChatMessage(role=LLMMessageRole.USER, content="Analyze supplied text."),
         ),
         temperature=0,
         max_tokens=128,
@@ -108,14 +108,14 @@ async def test_groq_client_maps_request_and_normalizes_response() -> None:
     assert request.url == "https://api.groq.com/openai/v1/chat/completions"
     assert request.headers["Authorization"] == "Bearer groq-test-key"
     assert request.headers["X-Request-ID"] == "request-123"
-    assert request.headers["User-Agent"] == "enterprise-os-backend/1.0"
+    assert request.headers["User-Agent"] == "multi-agent-os/0.2.0"
     assert request.timeout_seconds == 12
     assert request.payload["model"] == "llama-3.3-70b-versatile"
     assert request.payload["stream"] is False
     assert request.payload["response_format"] == {"type": "json_object"}
     assert request.payload["messages"] == [
         {"role": "system", "content": "Return JSON."},
-        {"role": "user", "content": "Analyze RFQ-001."},
+        {"role": "user", "content": "Analyze supplied text."},
     ]
     assert response.provider is LLMProvider.GROQ
     assert response.structured_json == {"stage": "planner"}
@@ -202,7 +202,7 @@ async def test_openai_compatible_clients_send_stable_user_agent(
 
     request = transport.requests[0]
     assert request.headers["Authorization"] == expected_authorization
-    assert request.headers["User-Agent"] == "enterprise-os-backend/1.0"
+    assert request.headers["User-Agent"] == "multi-agent-os/0.2.0"
     assert request.headers["X-Request-ID"] == "request-xyz"
 
 
@@ -282,7 +282,7 @@ async def test_gemini_client_maps_generate_content_and_normalizes_response() -> 
         "parts": [{"text": "Return JSON."}],
     }
     assert request.payload["contents"] == [
-        {"role": "user", "parts": [{"text": "Analyze RFQ-001."}]},
+        {"role": "user", "parts": [{"text": "Analyze supplied text."}]},
     ]
     assert request.payload["generationConfig"] == {
         "temperature": 0.0,
