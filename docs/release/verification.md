@@ -521,3 +521,58 @@ outputs and the documented image/CLI approval-resume journey are still missing.
 No inference, push, merge, publication, remote deployment or deletion of retained
 resources occurred during this preparation. A later successful direct provider
 would not diagnose either earlier OpenRouter 429 or establish enterprise readiness.
+
+### Bounded metadata preflight correction (2026-10-27)
+
+After the maintainer entered both private credentials/account ID and confirmed
+the native Free plans, the old helper reported only `metadata_HTTP_403`. Its
+original response body/headers and request identity were not retained. Safe
+diagnostics were added before reproduction: URL-derived target/operation,
+GET/host/masked path, actual status/MIME, bounded error code/type, sourced
+request IDs/cf-ray and auth scheme/header presence. No messages, raw response,
+Authorization value, Account ID or resolved secret configuration are logged.
+
+Four authenticated metadata GETs were performed, without automatic retry:
+
+| Target / operation | Status | Request setup |
+| --- | --- | --- |
+| Groq `GET /openai/v1/models` | 403, JSON | Existing urllib default User-Agent |
+| Groq `GET /openai/v1/models` | 200, JSON | Explicit application User-Agent |
+| Cloudflare `GET /client/v4/accounts/{ACCOUNT_ID}/ai/models/search` | 200, JSON | Explicit application User-Agent |
+| Cloudflare `GET /client/v4/accounts/{ACCOUNT_ID}/ai/models/schema` | 200, JSON | Explicit application User-Agent |
+
+The narrow request fix sets
+`User-Agent: Multi-Agent-OS/SPEC-029-metadata-preflight`; the Groq credential,
+URL, method and Bearer auth remain identical. Full **PREFLIGHT_PASS** verifies
+both exact selected models and required Cloudflare schema parameters. This
+supports a client-header compatibility fix; the precise server-side blocking
+rule was not returned. The reproduced 403 captured no error code/type or Groq
+request identifier at the supported fields, but did return `header.cf-ray`.
+That edge ID does not identify Workers AI as the target. No invalid-key,
+paid-plan or unavailable-model conclusion follows from the 403 alone.
+
+Official Groq model-list and Cloudflare account-scoped search/schema endpoints
+and Bearer auth match the helper. Both Cloudflare metadata operations accept
+Workers AI Read or Workers AI Write for the intended account. No billing,
+administrative or token-management API was called; no broader token scope,
+account setting, credential replacement or Free-plan relaxation was needed.
+TLS verification and no-redirect/no-retry behavior remain intact.
+
+Only host helper/tests/documentation changed. The prepared runtime source
+`44a8c42373af1320986ad78d922aa79595775dbe` and image
+`sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`
+are unchanged; no rebuild is warranted. Ops regression: **53 PASS** (16 direct
+campaign methods); script Black/Ruff and canonical/override Compose PASS. Required
+backend gate: **242 PASS, zero skips/failures**, lock/Ruff/Black/strict MyPy PASS
+with two dependency deprecation warnings. See
+[sanitized diagnostic evidence](direct-preflight-diagnosis.json) for response
+IDs, limits, checks and preserved artifact identities.
+
+New generation remains **0**, historical OpenRouter requests **2**; campaign cap
+remains 2/provider, 4 new/6 cumulative. No campaign/attempt marker was created,
+no operator service was started, and credentials/configuration/plan bindings,
+input/CLI state and all 43 historical artifact hashes remain unchanged. The
+existing campaign is ready for explicit initiation after the documented local
+start/doctor/auth prerequisites. **30 PASS / 2 BLOCKED** remains unchanged:
+AC-08 and live AC-29 still require genuine workflow execution. No push, merge,
+publication, remote deployment or deletion of retained resources occurred.

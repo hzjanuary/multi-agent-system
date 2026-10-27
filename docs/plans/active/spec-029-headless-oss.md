@@ -296,9 +296,10 @@ runtime or within a provider-pinned run. No inference during preparation.
   and [source/image/content preparation evidence](../../release/direct-smoke-preparation.json)
   updated. Zero new generation; no campaign/phase markers reserved. AC-08/AC-29
   stay BLOCKED (30 PASS / 2 BLOCKED). Final handoff is documentation/evidence only.
-- [ ] Maintainer enters Groq key, Cloudflare Account ID/token through hidden local
-  helper and confirms native Free plans. Authenticated GET-only preflight/access
-  remains pending. On explicit initiation only, execute once with `run --approve`
+- [x] Maintainer entered Groq key, Cloudflare Account ID/token through hidden local
+  helper and confirmed native Free plans. Initial `metadata_HTTP_403` required
+  the bounded non-inference diagnosis below; authenticated preflight now PASS.
+- [ ] On explicit initiation only, execute once with `run --approve`
   (2/provider, 4 new, 6 cumulative); retain all outcomes, stop isolated services.
   Genuine success is still required before changing AC-08/live AC-29.
 
@@ -306,3 +307,33 @@ Groq Free organization and Cloudflare Workers Free account must be checked local
 while entering credentials. Native free-plan quota enforcement, not portable
 max_price fields, protects the free-use objective. No billing, paid plan, shared
 data-sharing change, remote deployment, push or retained-resource deletion.
+
+## Direct metadata preflight 403 diagnosis (2026-10-27)
+
+Authority: maintainer requested diagnosis and the smallest demonstrated fix,
+metadata GETs only; no inference/campaign/service start. Preserve credential
+values, plan bindings, records, profile pins, budget and default privacy.
+
+- [x] Original helper retained only generic HTTP status, so prior request identity,
+  body and headers cannot be reconstructed. Both private configurations/plan
+  bindings validated without exposing values; endpoints match official Groq
+  models and Cloudflare account-scoped model search/schema, not billing/admin APIs.
+- [x] Add closed sanitized diagnostics and strict metadata URL allowlist before
+  reproduction. Groq `GET /openai/v1/models` reproduced HTTP 403, JSON, no returned
+  code/type or separate request ID; header cf-ray recorded without attributing
+  the request to Cloudflare Workers AI. Bearer header present; no raw body saved.
+- [x] Only request change: explicit application User-Agent instead of urllib
+  default. Same key and URL then Groq 200, Cloudflare search 200, schema 200;
+  full preflight PASS. Four metadata GETs total, no auto retry/redirect or
+  generation. Exact server-side blocking rule remains undisclosed.
+- [x] Ops 53 PASS (16 direct-campaign test methods), script Black/Ruff and
+  canonical/override Compose PASS. Required backend gate 242 PASS, zero skips/
+  failures; lock/Ruff/Black/strict MyPy PASS, two dependency deprecation warnings.
+  Strict tracked-file secret scan (199 files) and Git diff check PASS.
+  [Sanitized diagnosis](../../release/direct-preflight-diagnosis.json) retained.
+  Host helper/tests/docs only, no image-input changes;
+  reuse source `44a8c42` / image `sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`.
+
+Campaign remains unreserved and all isolated operator services remain stopped.
+Historical requests = 2; new generation = 0; cap remains 2/provider, 4 new,
+6 cumulative. AC-08 and live AC-29 stay BLOCKED, acceptance 30 PASS / 2 BLOCKED.

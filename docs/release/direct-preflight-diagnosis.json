@@ -1,0 +1,277 @@
+{
+  "recorded_at": "2026-10-27T10:09:49.115206+00:00",
+  "scope": "Bounded non-inference diagnosis of direct-provider metadata preflight HTTP 403",
+  "starting_handoff_head": "f57fbbf0a6798bf1cf73d2e9f0eeb04ce29122ae",
+  "original_operator_failure": {
+    "status": "metadata_HTTP_403",
+    "request_identity": "not retained by original helper; reproduced observation below establishes current target",
+    "body_headers": "not retained; no reconstruction or claim about original response fields"
+  },
+  "observations": [
+    {
+      "target_provider": "groq",
+      "operation": "models.list",
+      "method": "GET",
+      "hostname": "api.groq.com",
+      "path": "/openai/v1/models",
+      "collected_at": "2026-10-27T10:05:01.436588+00:00",
+      "auth_scheme": "Bearer",
+      "authorization_header_sent": true,
+      "http_status": 403,
+      "content_type": "application/json",
+      "content_type_state": "returned_or_withheld_if_unsafe",
+      "body_collected": true,
+      "body_complete": true,
+      "body_persisted": false,
+      "response_kind": "json",
+      "error_code": null,
+      "error_type": null,
+      "error_fields_state": "not_returned",
+      "response_identifiers": {
+        "header.x-request-id": {
+          "value": null,
+          "state": "not_returned"
+        },
+        "header.x-groq-request-id": {
+          "value": null,
+          "state": "not_returned"
+        },
+        "header.cf-ray": {
+          "value": "a510e143bf0a9c47-SIN",
+          "state": "returned"
+        }
+      },
+      "request_user_agent_source_note": "Not recorded by first instrumentation; original urllib default confirmed locally as Python-urllib/3.12 without HTTP."
+    },
+    {
+      "target_provider": "groq",
+      "operation": "models.list",
+      "method": "GET",
+      "hostname": "api.groq.com",
+      "path": "/openai/v1/models",
+      "collected_at": "2026-10-27T10:06:37.678833+00:00",
+      "auth_scheme": "Bearer",
+      "authorization_header_sent": true,
+      "http_status": 200,
+      "content_type": "application/json",
+      "content_type_state": "returned",
+      "body_collected": true,
+      "body_complete": true,
+      "body_persisted": false,
+      "response_kind": "json",
+      "error_code": null,
+      "error_type": null,
+      "error_code_state": "not_returned",
+      "error_type_state": "not_returned",
+      "error_fields_state": "not_returned",
+      "response_identifiers": {
+        "header.x-request-id": {
+          "value": "req_01m5yd6zexe70sf41q91tk8m83",
+          "state": "returned"
+        },
+        "header.x-groq-request-id": {
+          "value": null,
+          "state": "not_returned"
+        },
+        "header.cf-ray": {
+          "value": "a510e39ba85f9c47-SIN",
+          "state": "returned"
+        }
+      },
+      "request_user_agent": "Multi-Agent-OS/SPEC-029-metadata-preflight"
+    },
+    {
+      "target_provider": "cloudflare",
+      "operation": "models.search",
+      "method": "GET",
+      "hostname": "api.cloudflare.com",
+      "path": "/client/v4/accounts/{ACCOUNT_ID}/ai/models/search",
+      "collected_at": "2026-10-27T10:06:38.293343+00:00",
+      "auth_scheme": "Bearer",
+      "authorization_header_sent": true,
+      "http_status": 200,
+      "content_type": "application/json",
+      "content_type_state": "returned",
+      "body_collected": true,
+      "body_complete": true,
+      "body_persisted": false,
+      "response_kind": "json",
+      "error_code": null,
+      "error_type": null,
+      "error_code_state": "not_returned",
+      "error_type_state": "not_returned",
+      "error_fields_state": "not_returned",
+      "response_identifiers": {
+        "header.x-request-id": {
+          "value": null,
+          "state": "not_returned"
+        },
+        "header.x-groq-request-id": {
+          "value": null,
+          "state": "not_returned"
+        },
+        "header.cf-ray": {
+          "value": "a510e39e7a5b9c47-SIN",
+          "state": "returned"
+        }
+      },
+      "request_user_agent": "Multi-Agent-OS/SPEC-029-metadata-preflight"
+    },
+    {
+      "target_provider": "cloudflare",
+      "operation": "models.schema",
+      "method": "GET",
+      "hostname": "api.cloudflare.com",
+      "path": "/client/v4/accounts/{ACCOUNT_ID}/ai/models/schema",
+      "collected_at": "2026-10-27T10:06:38.805084+00:00",
+      "auth_scheme": "Bearer",
+      "authorization_header_sent": true,
+      "http_status": 200,
+      "content_type": "application/json",
+      "content_type_state": "returned",
+      "body_collected": true,
+      "body_complete": true,
+      "body_persisted": false,
+      "response_kind": "json",
+      "error_code": null,
+      "error_type": null,
+      "error_code_state": "not_returned",
+      "error_type_state": "not_returned",
+      "error_fields_state": "not_returned",
+      "response_identifiers": {
+        "header.x-request-id": {
+          "value": null,
+          "state": "not_returned"
+        },
+        "header.x-groq-request-id": {
+          "value": null,
+          "state": "not_returned"
+        },
+        "header.cf-ray": {
+          "value": "a510e3a20d6c9c47-SIN",
+          "state": "returned"
+        }
+      },
+      "request_user_agent": "Multi-Agent-OS/SPEC-029-metadata-preflight"
+    }
+  ],
+  "diagnosis": {
+    "confirmed": "Groq models.list GET returned 403 with default urllib User-Agent; the same credential, endpoint, method and auth with explicit application User-Agent returned 200, followed by both Cloudflare metadata GETs 200 and full preflight PASS.",
+    "request_fix": "Explicit honest application User-Agent Multi-Agent-OS/SPEC-029-metadata-preflight; no browser impersonation.",
+    "limitation": "Exact server-side rule not returned. No error code/type or Groq request ID was supplied in the observed 403. Header cf-ray is an edge identifier, not evidence the request targeted Workers AI. No claim of invalid key, billing requirement or unavailable model from 403 alone.",
+    "credential_mapping": "Existing private loader and plan bindings validated; Groq key only to api.groq.com; Workers AI token only to api.cloudflare.com, intended account in private URL. All credential/account values withheld.",
+    "official_endpoint_checks": {
+      "groq": {
+        "method": "GET",
+        "url": "https://api.groq.com/openai/v1/models",
+        "auth": "Bearer Groq API key",
+        "source": "https://console.groq.com/docs/api-reference#models-list"
+      },
+      "cloudflare_search": {
+        "method": "GET",
+        "url": "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/models/search",
+        "auth": "Bearer Workers AI token scoped to intended account",
+        "accepted_permissions": "Workers AI Read or Workers AI Write, at least one per official endpoint reference",
+        "source": "https://developers.cloudflare.com/api/resources/ai/subresources/models/methods/list/"
+      },
+      "cloudflare_schema": {
+        "method": "GET",
+        "url": "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/models/schema",
+        "accepted_permissions": "Workers AI Read or Workers AI Write",
+        "source": "https://developers.cloudflare.com/api/resources/ai/subresources/models/subresources/schema/methods/get/"
+      }
+    },
+    "admin_billing_token_api_calls": 0
+  },
+  "request_counts": {
+    "metadata_gets_this_task": 4,
+    "groq_models_list": 2,
+    "cloudflare_model_search": 1,
+    "cloudflare_model_schema": 1,
+    "automatic_retries": 0,
+    "redirects_followed": 0,
+    "generation_new": 0,
+    "historical_openrouter_generation": 2,
+    "campaign_max_per_provider": 2,
+    "campaign_max_new": 4,
+    "campaign_max_cumulative": 6
+  },
+  "preflight": {
+    "status": "PREFLIGHT_PASS",
+    "checked_at": "2026-10-27T10:06:37.209604+00:00",
+    "generation_requests": 0,
+    "profiles": {
+      "groq-smoke": {
+        "model": "openai/gpt-oss-20b",
+        "active": true,
+        "free_plan": "operator-confirmed; no tier field in models API"
+      },
+      "cloudflare-smoke": {
+        "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+        "json_and_token_schema": true,
+        "free_plan": "operator-confirmed Workers Free hard quota; not zero model pricing"
+      }
+    }
+  },
+  "preservation": {
+    "private_config_plan_input_cli_sha256_unchanged": true,
+    "historical_artifact_hashes_unchanged": 43,
+    "campaign_marker_created": false,
+    "provider_attempt_markers_created": false,
+    "operator_services_started": false,
+    "credential_reentry_required": false,
+    "tls_verification": "unchanged default verified HTTPS",
+    "free_plan_fallback_budget_privacy_rules": "unchanged"
+  },
+  "provenance": {
+    "runtime_image_source": "44a8c42373af1320986ad78d922aa79595775dbe",
+    "runtime_image_id": "sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959",
+    "rebuild": false,
+    "reason": "Changes confined to host scripts/tests/documentation; backend, dependencies, examples, migrations, Docker inputs, Compose and configuration templates unchanged from handoff.",
+    "host_helper_sha256": "d3df2338fb279e255abadcf2b30652b18562c9c2b976d8520d19b045332305ab"
+  },
+  "offline_verification": {
+    "ops_unittests": {
+      "passed": 53,
+      "direct_campaign_test_methods": 16
+    },
+    "script_black": "PASS",
+    "script_ruff": "PASS",
+    "compose_canonical_and_override": "PASS",
+    "backend_gate": {
+      "status": "PASS",
+      "passed": 242,
+      "skipped": 0,
+      "failed": 0,
+      "dependency_deprecation_warnings": 2,
+      "lock": "PASS",
+      "ruff": "PASS",
+      "black": "PASS (124 files)",
+      "mypy": "PASS (122 files)",
+      "isolated_database": "Explicit MAOS_TEST_DATABASE_URL; operator database not used",
+      "private_log": ".maos/direct-smoke/preparation/preflight-fix-backend-gate.log",
+      "log_sha256": "4142049a23edbdd9ca9bd64a5e93ed3b1fc0051e5783509c2260de32d82742e7"
+    },
+    "secret_scan": "PASS strict tracked-file scan (199 files); no findings",
+    "git_diff_check": "PASS"
+  },
+  "evidence_paths": {
+    "private_diagnostics": [
+      ".maos/direct-smoke/metadata-diagnostics/06ba3e1013b64c098e834769ed50c509.json",
+      ".maos/direct-smoke/metadata-diagnostics/85cc1bdb53974653ae3477ab4357bcff.json",
+      ".maos/direct-smoke/metadata-diagnostics/fbb239d331db49dcafffc9d1bef3aebc.json",
+      ".maos/direct-smoke/metadata-diagnostics/5546a5dd8a0b4b59b5cb1f65b3965dc1.json"
+    ],
+    "private_preflight": ".maos/direct-smoke/preflight.json"
+  },
+  "acceptance": {
+    "pass": 30,
+    "blocked": 2,
+    "blocked_items": [
+      "AC-08",
+      "AC-29 real-model portion"
+    ],
+    "generation_evidence": "none; no campaign started"
+  },
+  "next_action": "Preflight PASS; existing campaign is ready for separately initiated execution after documented local start/doctor/CLI-auth prerequisites. No credential replacement needed. No run --approve executed during this task."
+}

@@ -15,9 +15,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
-from uuid import UUID
+from uuid import UUID, uuid4
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -40,6 +40,7 @@ CREDENTIALS = (
     "OPENAI_COMPATIBLE_API_KEY",
     "GEMINI_API_KEY",
 )
+METADATA_USER_AGENT = "Multi-Agent-OS/SPEC-029-metadata-preflight"
 check, Failure, save = common.check, common.Failure, common.save_json
 
 
@@ -333,30 +334,173 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
-def metadata_get(url, key):
+class MetadataFailure(Failure):
+    """Only closed, sanitized diagnostics may cross the CLI error boundary."""
+
+    def __init__(self, code, diagnostic):
+        super().__init__(code)
+        self.diagnostic = diagnostic
+
+
+def metadata_target(url):
+    parsed = urlsplit(url)
+    groq = (
+        parsed.netloc == "api.groq.com"
+        and parsed.path == "/openai/v1/models"
+        and not parsed.query
+    )
+    cloudflare = parsed.netloc == "api.cloudflare.com" and re.fullmatch(
+        r"/client/v4/accounts/[a-fA-F0-9]{32}/ai/models/(search|schema)",
+        parsed.path,
+    )
     check(
-        url.startswith("https://api.groq.com/openai/v1/models")
-        or bool(
-            re.fullmatch(
-                r"https://api\.cloudflare\.com/client/v4/accounts/[a-fA-F0-9]{32}/ai/models/(search|schema)\?.+",
-                url,
-            )
-        ),
+        parsed.scheme == "https"
+        and not parsed.fragment
+        and (groq or (cloudflare and bool(parsed.query))),
         "non_inference_metadata_url_required",
     )
+    return {
+        "target_provider": "groq" if groq else "cloudflare",
+        "operation": "models.list" if groq else "models." + cloudflare.group(1),
+        "method": "GET",
+        "hostname": parsed.hostname,
+        "path": re.sub(r"/accounts/[^/]+/", "/accounts/{ACCOUNT_ID}/", parsed.path),
+    }
+
+
+def metadata_diagnostic(target, response, raw, key, url):
+    """Never keep raw bodies, messages, arbitrary headers or account identifiers."""
+    denied = [key, *re.findall(r"/accounts/([^/]+)/", url)]
+
+    def label(value):
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value if abs(value) <= 999999 else None
+        if not isinstance(value, str) or not re.fullmatch(
+            r"[A-Za-z0-9_.:/;-]{1,128}", value
+        ):
+            return None
+        if any(v and v in value for v in denied) or re.search(
+            r"(?i)bearer|authorization|sk-|eyJ", value
+        ):
+            return None
+        return value
+
+    headers = response.headers
+    content_type = headers.get("Content-Type")
+    mime = content_type.split(";", 1)[0].strip().lower() if content_type else None
+    result = {
+        **target,
+        "collected_at": now(),
+        "auth_scheme": "Bearer",
+        "authorization_header_sent": True,
+        "http_status": response.code,
+        "content_type": label(mime),
+        "content_type_state": (
+            "not_returned"
+            if content_type is None
+            else "returned" if label(mime) is not None else "withheld_unsafe"
+        ),
+        "body_collected": True,
+        "body_complete": len(raw) <= 2097152,
+        "body_persisted": False,
+        "response_kind": "unknown",
+        "error_code": None,
+        "error_type": None,
+        "error_code_state": "not_returned",
+        "error_type_state": "not_returned",
+        "error_fields_state": "not_returned",
+        "response_identifiers": {},
+    }
+    for name in ("x-request-id", "x-groq-request-id", "cf-ray"):
+        value = headers.get(name)
+        safe = label(value)
+        result["response_identifiers"]["header." + name] = {
+            "value": safe,
+            "state": (
+                "not_returned"
+                if value is None
+                else "returned" if safe is not None else "withheld_unsafe"
+            ),
+        }
+    try:
+        body = json.loads(raw) if result["body_complete"] else None
+    except (ValueError, UnicodeError):
+        body = None
+    if isinstance(body, (dict, list)):
+        result["response_kind"] = "json"
+        error = body.get("error") if isinstance(body, dict) else None
+        if not isinstance(error, dict):
+            errors = body.get("errors") if isinstance(body, dict) else None
+            error = errors[0] if isinstance(errors, list) and errors else None
+        if isinstance(error, dict):
+            for name in ("code", "type"):
+                value = error.get(name)
+                result["error_" + name] = label(value)
+                result["error_" + name + "_state"] = (
+                    "not_returned"
+                    if name not in error
+                    else (
+                        "returned_null"
+                        if value is None
+                        else (
+                            "returned"
+                            if label(value) is not None
+                            else "withheld_unsafe"
+                        )
+                    )
+                )
+            result["error_fields_state"] = "collected; absent_or_unsafe_values_are_null"
+            result["error_fields_source"] = "json.error_or_errors[0]"
+    else:
+        result["response_kind"] = (
+            "html"
+            if mime == "text/html"
+            else "text" if mime == "text/plain" else "non_json"
+        )
+        # Recognize only a numeric error marker, never free-form HTML/text.
+        match = re.search(rb"(?i)\berror\s*(?:code\s*)?[:\s]\s*([0-9]{3,5})\b", raw)
+        if match:
+            result["error_code"] = int(match.group(1))
+            result["error_code_state"] = "returned"
+            result["error_fields_state"] = "numeric_marker_returned; type_not_returned"
+            result["error_fields_source"] = "non_json_numeric_error_marker"
+        if not result["body_complete"]:
+            result["error_fields_state"] = "not_fully_collected_body_exceeds_limit"
+            result["error_code_state"] = result["error_type_state"] = (
+                "not_fully_collected"
+            )
+    return result
+
+
+def metadata_get(url, key):
+    target = metadata_target(url)
     request = Request(
         url,
         method="GET",
-        headers={"Authorization": "Bearer " + key, "Accept": "application/json"},
+        headers={
+            "Authorization": "Bearer " + key,
+            "Accept": "application/json",
+            "User-Agent": METADATA_USER_AGENT,
+        },
     )
     try:
         response = build_opener(ProxyHandler({}), NoRedirect()).open(
             request, timeout=25
         )
     except HTTPError as error:
-        raise Failure(f"metadata_HTTP_{error.code}") from None
+        response = error
     with response:
         raw = response.read(2097153)
+    diagnostic = metadata_diagnostic(target, response, raw, key, url)
+    diagnostic["request_user_agent"] = METADATA_USER_AGENT
+    folder = PRIVATE / "metadata-diagnostics"
+    folder.mkdir(mode=0o700, exist_ok=True)
+    save(folder / (uuid4().hex + ".json"), diagnostic, exclusive=True)
+    if not 200 <= response.code < 300:
+        raise MetadataFailure(
+            f"metadata_{target['target_provider']}_{target['operation']}_HTTP_{response.code}",
+            diagnostic,
+        ) from None
     check(len(raw) <= 2097152, "metadata_too_large")
     return json.loads(raw)
 
@@ -956,6 +1100,11 @@ def main():
                         else type(error).__name__
                     ),
                     "generation": "NEVER_AUTOMATICALLY_RETRIED",
+                    **(
+                        {"metadata_diagnostic": error.diagnostic}
+                        if isinstance(error, MetadataFailure)
+                        else {}
+                    ),
                 }
             ),
             file=sys.stderr,

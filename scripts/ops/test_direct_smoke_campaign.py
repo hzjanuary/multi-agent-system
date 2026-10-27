@@ -5,8 +5,10 @@ import json
 import subprocess
 import tempfile
 import unittest
+from email.message import Message
 from pathlib import Path
 from unittest.mock import patch
+from urllib.error import HTTPError
 
 from scripts.ops import direct_smoke_campaign as runner
 
@@ -177,16 +179,136 @@ class CampaignTests(unittest.TestCase):
             )
             self.assertNotIn("test-cf-token", json.dumps(result))
         response = io.BytesIO(b'{"data":[]}')
+        response.code = 200
+        response.headers = Message()
+        response.headers["Content-Type"] = "application/json"
         with patch.object(runner, "build_opener") as opener:
             opener.return_value.open.return_value = response
             runner.metadata_get("https://api.groq.com/openai/v1/models", "test-key")
             request = opener.return_value.open.call_args.args[0]
             self.assertEqual(request.get_method(), "GET")
             self.assertIsNone(request.data)
+            self.assertEqual(request.get_header("Authorization"), "Bearer test-key")
+            self.assertEqual(
+                request.get_header("User-agent"), runner.METADATA_USER_AGENT
+            )
         with self.assertRaisesRegex(runner.Failure, "metadata_url"):
             runner.metadata_get(
                 "https://openrouter.ai/api/v1/chat/completions", "test-key"
             )
+
+    def test_metadata_errors_identify_target_not_edge_and_never_retain_secrets(self):
+        for url, provider, operation, body, mime, code in (
+            (
+                "https://api.groq.com/openai/v1/models",
+                "groq",
+                "models.list",
+                b"error code: 1010\n test-key PRIVATE_INPUT",
+                "text/plain",
+                1010,
+            ),
+            (
+                "https://api.cloudflare.com/client/v4/accounts/"
+                + "c" * 32
+                + "/ai/models/search?search=model",
+                "cloudflare",
+                "models.search",
+                b'{"success":false,"errors":[{"code":10000,"type":"authentication_error","message":"test-key PRIVATE_INPUT"}]}',
+                "application/json",
+                10000,
+            ),
+        ):
+            headers = Message()
+            headers["Content-Type"] = mime
+            headers["Server"] = "cloudflare"
+            headers["cf-ray"] = "123abc-SIN"
+            headers["x-request-id"] = "metadata-request-1"
+            error = HTTPError(url, 403, "not retained", headers, io.BytesIO(body))
+            with self.subTest(provider=provider), patch.object(
+                runner, "build_opener"
+            ) as opener:
+                opener.return_value.open.side_effect = error
+                with self.assertRaises(runner.MetadataFailure) as caught:
+                    runner.metadata_get(url, "test-key")
+                value = caught.exception.diagnostic
+                self.assertEqual(value["target_provider"], provider)
+                self.assertEqual(value["operation"], operation)
+                self.assertEqual(value["http_status"], 403)
+                self.assertEqual(value["error_code"], code)
+                self.assertEqual(value["auth_scheme"], "Bearer")
+                self.assertTrue(value["authorization_header_sent"])
+                self.assertFalse(value["body_persisted"])
+                self.assertEqual(
+                    value["response_identifiers"]["header.cf-ray"]["value"],
+                    "123abc-SIN",
+                )
+                self.assertEqual(
+                    value["response_identifiers"]["header.x-groq-request-id"]["state"],
+                    "not_returned",
+                )
+                opener.return_value.open.assert_called_once()
+        for path in (self.directory / "metadata-diagnostics").glob("*.json"):
+            text = path.read_text()
+            self.assertNotIn("test-key", text)
+            self.assertNotIn("PRIVATE_INPUT", text)
+            self.assertNotIn("c" * 32, text)
+            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+
+    def test_metadata_diagnostic_withholds_echoes_and_handles_html_or_missing_fields(
+        self,
+    ):
+        class Response:
+            code = 403
+            headers = Message()
+
+        target = runner.metadata_target("https://api.groq.com/openai/v1/models")
+        response = Response()
+        response.headers["x-request-id"] = "test-key"
+        value = runner.metadata_diagnostic(
+            target,
+            response,
+            b'{"error":{"code":"test-key","type":"Bearer-secret","message":"PRIVATE_INPUT"}}',
+            "test-key",
+            "https://api.groq.com/openai/v1/models",
+        )
+        self.assertEqual(value["content_type_state"], "not_returned")
+        self.assertIsNone(value["error_code"])
+        self.assertIsNone(value["error_type"])
+        self.assertEqual(value["error_code_state"], "withheld_unsafe")
+        self.assertEqual(value["error_type_state"], "withheld_unsafe")
+        self.assertEqual(
+            value["response_identifiers"]["header.x-request-id"]["state"],
+            "withheld_unsafe",
+        )
+        self.assertNotIn("test-key", json.dumps(value))
+        self.assertNotIn("PRIVATE_INPUT", json.dumps(value))
+        response.headers["Content-Type"] = "text/html; charset=utf-8"
+        html = runner.metadata_diagnostic(
+            target, response, b"<h1>Error 1010</h1><p>PRIVATE_INPUT</p>", "test-key", ""
+        )
+        self.assertEqual(html["response_kind"], "html")
+        self.assertEqual(html["error_code"], 1010)
+        self.assertNotIn("PRIVATE_INPUT", json.dumps(html))
+
+    def test_metadata_exact_hosts_paths_and_no_redirect_forwarding(self):
+        for url in (
+            "https://api.groq.com/openai/v1/models/../chat/completions",
+            "https://api.groq.com/openai/v1/models?other=secret",
+            "https://api.groq.com.evil/openai/v1/models",
+            "https://user@api.groq.com/openai/v1/models",
+            "https://api.cloudflare.com/client/v4/accounts/"
+            + "c" * 32
+            + "/ai/v1/models",
+        ):
+            with self.subTest(url=url), patch.object(runner, "build_opener") as opener:
+                with self.assertRaisesRegex(runner.Failure, "metadata_url"):
+                    runner.metadata_get(url, "test-key")
+                opener.assert_not_called()
+        self.assertIsNone(
+            runner.NoRedirect().redirect_request(
+                None, None, 302, "", {}, "https://other.invalid"
+            )
+        )
 
     def test_groq_success_never_invokes_cloudflare(self):
         def execute(name):

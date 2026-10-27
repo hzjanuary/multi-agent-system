@@ -75,9 +75,18 @@ and file 0600 permissions, outside the backend Docker context:
 Prepared source is `44a8c42373af1320986ad78d922aa79595775dbe`; immutable image
 `sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`
 is pinned in the private overlay. The handoff HEAD can differ for documentation
-only. See [preparation proof](release/direct-smoke-preparation.json). Credentials,
-Account ID and free-plan confirmation remain pending; preparation did not invoke
-either provider. Existing input stays at `.maos/openrouter-free-smoke/input.txt`.
+only. See [preparation proof](release/direct-smoke-preparation.json). At that
+initial handoff, credentials, Account ID and free-plan confirmation were pending;
+preparation did not invoke either provider. Existing input stays at
+`.maos/openrouter-free-smoke/input.txt`.
+
+Subsequent local setup supplied both credentials and Free-plan confirmations.
+The initial metadata preflight returned 403 on Groq's models list. The host
+helper now sends the explicit application User-Agent
+`Multi-Agent-OS/SPEC-029-metadata-preflight`; the same Groq key/URL then returned
+200, followed by Cloudflare search/schema 200 and `PREFLIGHT_PASS`. See the
+[bounded diagnosis](release/direct-preflight-diagnosis.json). No image inputs
+changed, so the prepared image above remains pinned. No generation occurred.
 
 Create a scoped Cloudflare token for **only the intended account**, with
 **Workers AI Read + Edit** (the Workers AI REST token template), without Worker
@@ -101,6 +110,7 @@ ready so a fallback cannot accidentally use an unconfigured/paid account.
 
 ```bash
 direct() { python3 scripts/ops/direct_smoke_campaign.py "$@"; }
+# First setup only; already completed for the retained environment:
 direct set-credentials
 direct preflight
 direct start
@@ -125,6 +135,17 @@ If login is needed, run only the documented local login action. Do not bootstrap
 or regenerate secrets. CLI state persists across the separate CLI invocations.
 Resolved Compose settings are validated in memory, never printed; API and worker
 must match the pinned image/profile and have no CLI credential mounts.
+
+Each metadata GET records only sanitized fields in private
+`.maos/direct-smoke/metadata-diagnostics/*.json`: target provider/operation,
+method/hostname/path (Account ID masked), status, MIME type, bounded error
+code/type and explicitly sourced response IDs including `header.cf-ray`.
+Missing, withheld and incompletely collected fields are distinguished. A
+`cf-ray` identifies an edge response, not which provider API was targeted; the
+target is established from the allowlisted URL. No messages, raw body, arbitrary
+headers, Authorization value or resolved configuration are logged. TLS remains
+verified; redirects and retries remain disabled. A 403 is a blocker, never proof
+by itself of invalid credentials, paid-plan requirements or model unavailability.
 
 ## Fallback, reservations and retained evidence
 
