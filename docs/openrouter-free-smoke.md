@@ -181,3 +181,12 @@ For the later opt-in **direct Groq → direct Cloudflare** preparation and its
 separate four-new/six-cumulative request ledger, see
 [direct smoke campaign](direct-smoke-campaign.md). That runner never calls
 OpenRouter, changes an old run's provider, or resets these attempt markers.
+
+## Latest release verification status
+
+The separately authorized direct Groq campaign completed with two genuine chained
+calls and the approval/resume/assembly journey; independent current-image clean
+installation/CLI proof brings SPEC-029 to **32 PASS / 0 BLOCKED**. See
+[completed evidence](release/direct-campaign-completed.json). The retained
+OpenRouter attempts remain failed historical evidence with unchanged provenance;
+this success does not diagnose their 429s or authorize another OpenRouter call.

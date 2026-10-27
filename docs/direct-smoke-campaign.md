@@ -1,5 +1,17 @@
 # Optional direct-provider smoke campaign
 
+**Latest authorized campaign completed; do not rerun it.**
+`groq-permissions-20261027` completed on direct Groq `openai/gpt-oss-20b`, run
+`dd922648-beb2-4afb-94e5-8bea36a2070f`, with 2 calls, normal approval/explicit
+resume and pure assembly. Cloudflare stayed unused. Total history is now 5
+(2 OpenRouter failures, 1 original Groq permission failure, 2 new successes),
+within the separate maximum of 7. The exclusive allocation and all attempt
+records remain sealed. No further campaign is authorized by unused allowance.
+[Completed live/current-image proof](release/direct-campaign-completed.json)
+justifies 32 PASS / 0 BLOCKED. All isolated services are stopped and data retained.
+The commands below document the executed procedure; they are not a repeat-run
+instruction for this retained environment.
+
 **Retained campaign ended; do not rerun it.** The authorized execution on
 2026-10-27 consumed one Groq request and failed at analyst with HTTP 403,
 `model_permission_blocked_project` / `permissions_error`. Cloudflare was not

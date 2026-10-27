@@ -4,12 +4,14 @@ Started: 2026-10-26. Updated: 2026-10-27.
 
 ## Status
 
-Original engineering and isolated OpenRouter preparation are complete. The
-two separately authorized live attempts each failed on their first request with
-`provider_rate_limit`; two client generation requests consumed cumulatively.
-No retry or third attempt followed. Release verification remains BLOCKED at AC-08
-and the real-model portion of AC-29. Keep this
-one plan active until that gate is resolved; do not archive as fully verified.
+SPEC-029 implementation and local release verification are complete: **32 PASS /
+0 BLOCKED**. The separately authorized `groq-permissions-20261027` campaign
+completed on Groq, run `dd922648-beb2-4afb-94e5-8bea36a2070f`, with two genuine
+chained calls, explicit approval/resume and pure assembly. The same current image
+passed an independent fresh clean-local-clone installation/CLI walkthrough.
+Three prior failed requests remain historical; total consumed is five. No further
+campaign is authorized. Plan archived only after validation; all isolated
+services stopped, volumes/configuration/credentials/input/history retained.
 
 Branch: `feat/spec-029-headless-oss`. Historical baseline:
 `92e5f1cfb2b0144bdb39a48db99371974bd372a5`. Checked implementation:
@@ -71,9 +73,9 @@ independent definitions/providers, runtime/persistence and packaging work.
 - [x] M5 English README/operator/developer docs, MIT/NOTICE/security/contribution
   files and backend-only CI updated; links and secret/dependency checks passed.
 - [x] M6 all non-live checks and acceptance evidence matrix completed.
-- [ ] M6 live text_review and full README model journey: BLOCKED by explicit
-  provider rate limit: the authorized analyst request failed; reviewer/approval
-  and final real-model journey were not reached.
+- [x] M6 genuine live text_review and current-image clean-install/CLI journey:
+  Groq analyst/reviewer, WAITING_APPROVAL, decision/resume/pure assembly PASS;
+  [final proof](../../release/direct-campaign-completed.json), 32 PASS / 0 BLOCKED.
 
 ## Verification and decisions
 
@@ -180,7 +182,8 @@ Preserve those original release obligations and keep the plan active.
   The final containing handoff commit updates evidence only; no image rebuild.
   [Scoped proof](../../release/openrouter-preparation.json) retains limits and
   separates original evidence from this preparation. AC counts unchanged.
-- [ ] Genuine live model evidence and dependent first-run acceptance: BLOCKED.
+- [x] Originally BLOCKED during OpenRouter preparation; later resolved by the
+  separately authorized completed Groq campaign and current-image clean install.
 
 ## Authorized bounded live attempt (2026-10-27)
 
@@ -398,11 +401,32 @@ remain closed. No retries/probes/model switching or fatal-error fallback.
   and reinvocation guards. Script Black/Ruff PASS.
 - [x] Required backend gate 242 PASS, zero skips/failures; lock/Ruff/Black/strict
   MyPy PASS, two dependency deprecation warnings. No image inputs changed.
-- [ ] Source commit and non-inference preflight;
-  allocate `groq-permissions-20261027` once, start only isolated services,
-  doctor/discover with existing CLI login (local refresh only if expired).
-- [ ] Exactly one selected `run --approve`; inspect real outputs/chaining,
-  durable events, approval/resume/assembly or safe fatal failure. Preserve
-  reported usage/cost and diagnostics; never infer unknown values.
-- [ ] Independently assess AC-08/live AC-29, close only with sufficient evidence;
-  retain all history and stop isolated services. No push/publication/deletion.
+- [x] Host source `d688138d3c270a21670d115f8b2f46524562d9d6`, single allocation
+  `groq-permissions-20261027`, preflight/doctor/CLI PASS; retained login reused,
+  no campaign bootstrap. Image source `44a8c42` / digest `sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959` unchanged.
+- [x] Exactly one selected `run --approve` PASS: run
+  `dd922648-beb2-4afb-94e5-8bea36a2070f`, Groq `openai/gpt-oss-20b`, both agents
+  attempt 1, two durable reservations, 16 events, approval/resume/pure assembly
+  and COMPLETED. Independent READ ONLY DB proof validates actual analyst output
+  mapping, immutable definition, approval and final assembly. Usage 1638 prompt /
+  635 completion / 2273 total; cost/currency unknown. Cloudflare unused. Two new /
+  five cumulative requests; no additional campaign authorized.
+- [x] AC-08 PASS from genuine chaining; AC-29 PASS from independent fresh
+  clean-local-clone actual-image install/CLI plus same-image live journey.
+  Zero records before explicit isolated verification bootstrap, no campaign
+  administrator replaced. Initial wrong-tag verification assertion retained as
+  FAIL; corrected fresh namespace pins exact digest and passes. Both walkthroughs
+  make zero generation calls and retain their data. All campaign/verification
+  services stopped; 83 linked historical artifact hashes intact. All 32 acceptance
+  items PASS, no BLOCKED. Archive this plan and close original release-verification
+  goal after final docs/evidence/secret checks. No push/publication/deletion.
+
+## Final closeout
+
+[Completed campaign and current-image proof](../../release/direct-campaign-completed.json)
+records separate host/runtime/image identities, full private output/evidence paths
+and safe public metadata. Prior failed run/campaign artifacts are unmodified.
+Final handoff changes are docs/evidence and validated plan archival only. No
+runtime/image rebuild or generation followed successful completion. The old
+OpenRouter 429s remain undiagnosed; Cloudflare is not live-verified. Local SPEC-029
+acceptance is complete without a remote CI, publication or enterprise-readiness claim.

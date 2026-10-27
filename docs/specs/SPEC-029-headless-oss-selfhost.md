@@ -634,7 +634,7 @@ Do not describe fixture-based CI as real model inference. Distinguish contract-t
 | docs/migration.md | Legacy isolation, breaking contracts, backup and restore. |
 | docs/release/verification.md | Acceptance matrix with concrete evidence and unresolved gates. |
 | AGENTS.md and docs/WORKFLOW.md | Concise current product boundaries and actual verification commands. |
-| docs/plans/active/spec-029-headless-oss.md | One resumable implementation plan; archive only after its criteria are honestly assessed. |
+| docs/plans/completed/spec-029-headless-oss.md | One resumable implementation plan; archive only after its criteria are honestly assessed. |
 
 Root SPEC.md should become a short pointer to the current specification or a concise current product contract. Remove conflicting active .ai product contracts or replace them with explicit pointers. Rename/reconcile existing uppercase/lowercase architecture and documentation files and update all active links so there is one current authority. Do not leave the deleted web/RAG architecture marked immutable.
 

@@ -10,5 +10,5 @@
 - [Legacy boundary](migration.md)
 - [Release verification](release/verification.md)
 - [Active specification](specs/SPEC-029-headless-oss-selfhost.md)
-- [Implementation plan](plans/active/spec-029-headless-oss.md)
+- [Implementation plan](plans/completed/spec-029-headless-oss.md)
 - [Contributor workflow](WORKFLOW.md)

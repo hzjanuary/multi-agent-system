@@ -1,26 +1,35 @@
 # SPEC-029 acceptance evidence
 
-The original implementation and recorded non-live checks remain preserved.
-Release readiness is **BLOCKED** by AC-08 and the real-model portion of AC-29.
-Two separately authorized OpenRouter attempts failed on their first analyst
-request with `provider_rate_limit`. The later explicitly initiated direct
-Groq → Cloudflare campaign also failed on its first analyst request: HTTP 403,
-`model_permission_blocked_project` / `permissions_error`. Cloudflare was correctly
-not invoked for this fatal permission failure. **Three generation HTTP requests
-consumed cumulatively: two OpenRouter + one Groq; Cloudflare zero.** No reviewer,
-approval/resume or assembly was reached. The consumed campaign/attempt markers
-must not be reset; unused allowance does not authorize another campaign. See
-[direct campaign evidence](direct-campaign-attempt.json),
-[original evidence](openrouter-live-attempt.json) and
-[additional-attempt evidence](openrouter-additional-attempt.json). Fixture success
-is never counted as genuine chained execution.
+SPEC-029 local release verification is complete: **32 PASS / 0 BLOCKED**.
+The explicitly authorized campaign `groq-permissions-20261027` completed genuine
+Groq analyst/reviewer execution, WAITING_APPROVAL, authenticated content-bound
+approval, explicit resume and pure final assembly. Run
+`dd922648-beb2-4afb-94e5-8bea36a2070f` is COMPLETED with exactly two provider
+calls and sixteen durable events. A separate clean-local-clone installation of
+the same actual image independently verifies the remaining first-run scope.
+See [completed campaign and current-image proof](direct-campaign-completed.json).
+
+Consumed history is **5**: two failed OpenRouter requests, one failed original
+Groq request and two successful new Groq requests. Cloudflare is configured and
+offline-tested, but unused and not live-verified. All failed evidence retains
+its original provenance; the old OpenRouter 429s are not diagnosed by this success.
+Both campaigns remain sealed. No further campaign/request is authorized by unused
+allowance. No push, merge, publication, remote deployment or data deletion occurred.
 
 ## Checked source and artifacts
 
+Current live-tested runtime source: `44a8c42373af1320986ad78d922aa79595775dbe`;
+image `sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`,
+with matching OCI revision and 93 source-matching shipped files. Tested host
+runner/clean-clone checkout: `d688138d3c270a21670d115f8b2f46524562d9d6`;
+its backend Git tree is identical to that image's source. Later handoff commits
+only update docs/evidence and archive the validated plan. Earlier proof below
+keeps its original source/image identities.
+
 - Local branch: `feat/spec-029-headless-oss`; no push, merge or publication.
 - Reviewed historical baseline: `92e5f1cfb2b0144bdb39a48db99371974bd372a5`.
-- Checked implementation: `98854a807643566b720bff8ffd7feda85fa23746`.
-- Actual runtime image: `sha256:fa2e6d17b8a3a99c0abf4289cbcbe42f0740173d13d700c2a10de6c15153fb69`.
+- Original checked implementation: `98854a807643566b720bff8ffd7feda85fa23746`.
+- Original runtime image: `sha256:fa2e6d17b8a3a99c0abf4289cbcbe42f0740173d13d700c2a10de6c15153fb69`.
   Its OCI revision label names that implementation commit. All **91** shipped
   application/example/migration files match source hashes, excluding test code.
 - [Image/content evidence](image-evidence.json),
@@ -390,7 +399,7 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-05 | PASS | S bounded retained-import/dependency inventory; B import tests; I release package inspection. |
 | AC-06 | PASS | B `test_two_unrelated_workflows_one_graph`: distinct typed text/arithmetic definitions without core modifications; I external test extension uses the same image. |
 | AC-07 | PASS | B production parser→LangGraph→PostgreSQL composition covers agent/tool steps through one orchestration path; I/C exercise actual deterministic tools. Live inference is AC-08. |
-| AC-08 | BLOCKED | Two historical OpenRouter analyst requests failed with `provider_rate_limit`; the direct Groq analyst request failed HTTP 403 `model_permission_blocked_project`. Counts 1+1+1=3, no successful output/reviewer/chaining. Each attempt retains separate provenance; Cloudflare was not invoked. |
+| AC-08 | PASS | Completed direct Groq campaign: two genuine calls on openai/gpt-oss-20b; validated outputs persisted. Independent read-only DB session verifies immutable definition and actual analyst output passed through production mapping into reviewer input. [Live proof](direct-campaign-completed.json). |
 | AC-09 | PASS | B missing model/key/endpoint, auth rejection, timeout, exhausted transient retries, invalid output and budget refusal fail without fake success. Provider-specific tests use fixtures. |
 | AC-10 | PASS | B `test_parser_failure_is_durable_and_stops_downstream`: production parser failure persists through worker transaction end, read from a new DB session; later nodes absent. |
 | AC-11 | PASS | N accepted client disconnect without consuming response, API restart, one durable job and independent worker completion; B independent process/recovery tests. Rejected/unreceived requests are not accepted submissions. |
@@ -408,19 +417,19 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-23 | PASS | B enumerates HTTP controls/details and WS auth/RBAC; viewer mutations denied, query-token WS denied, no arbitrary PATCH/state bypass. C anonymous CLI read denied. |
 | AC-24 | PASS | B persisted reservation/input/output/event/config bounds, nonfinite input rejection, request/log/error redaction; I/C private CLI files and safe failure output. |
 | AC-25 | PASS | I doctor before schema and before worker returns nonzero/not_ready; running worker reports available. B missing configuration/schema/unavailable dependency and timeout tests; N degraded Redis/health. No hidden model calls. |
-| AC-26 | PASS | I image command/content checks and 91 matching shipped file hashes; same image supplies CLI/migrations/example and excludes tests/fakes/demo/UI/removed services. |
+| AC-26 | PASS | Original I proof: 91 shipped hashes; current image: 93 matching shipped hashes and actual package inspection, CLI/migrations/example present, tests/fakes/private config excluded. Both identities remain separately recorded. |
 | AC-27 | PASS | B disposable legacy/unknown/unmarked relation/schema/view/type/function cases refused before DDL; marker/revision and existing data preserved on repeat migration. Old operator volumes untouched. |
 | AC-28 | PASS | R real separate-database pg_dump/pg_restore rehearsal preserves outputs/events/pending approval/auth and independent restored resume. |
-| AC-29 | BLOCKED | I/C preserve historical clean-clone/image installation/bootstrap/login and CLI/tool evidence under its original provenance. Current direct image doctor and separate CLI discovery/login PASS, but real-model approval/resume/completion journey stopped at Groq analyst permission failure. No independent completed real-model journey is claimed. |
-| AC-30 | PASS | B 218 passed, zero skipped; Ruff/Black/strict MyPy/lock checks pass. Canonical+dev Compose checks and image/CLI/content CI commands pass. Backend-only CI updated; no remote CI run claimed. |
+| AC-29 | PASS | Independent clean local clone uses exact current image, private digest overlay, real fresh migration with zero records, explicit separate verification bootstrap, ready API/worker, and 0600 login across separate CLI containers. Same-image live operator campaign independently completes approval/resume/assembly with existing administrator/DB. [Current proof](direct-campaign-completed.json). |
+| AC-30 | PASS | Original B: 218 passed. Current backend gate: 242 passed, zero skipped/failed; lock/Ruff/Black/strict MyPy PASS. Host ops 58 PASS; Compose and actual image checks PASS. Backend-only CI updated; no remote CI run claimed. |
 | AC-31 | PASS | S current 58-package main audit has zero known findings; strict source secret checks pass. No broader host/OS/model or exhaustive history-cleanliness assertion. |
 | AC-32 | PASS | S current English README/docs/AGENTS/WORKFLOW, reconciled authority/links, MIT/NOTICE review and verified existing issue channel. Manual/unverified model/publication commands explicitly labeled. |
 
-Result: **30 PASS, 2 BLOCKED, 0 FAIL, 0 NOT_RUN** at the acceptance-item level.
-Both historical OpenRouter smokes and the direct campaign failed at their first
-request; the two acceptance items remain externally BLOCKED. This
-supports engineering completion; it does not support fully verified release
-readiness or a production-ready claim.
+Result: **32 PASS, 0 BLOCKED, 0 FAIL, 0 NOT_RUN** at the acceptance-item level.
+The historical failed attempts remain FAIL; the separately authorized successful
+campaign supplies the previously missing evidence. This completes the recorded
+SPEC-029 local verification scope. It does not assert Cloudflare live success,
+universal model availability or enterprise readiness.
 
 ## Removal / retained-obligation mapping
 
@@ -439,29 +448,20 @@ provider normalization/errors/retries, lifecycle/approval, events, persistence a
 recovery invariants have current executable coverage in B; they were not globally
 skipped or replaced with production fakes.
 
-## Remaining release action
+## Release verification closeout
 
-Keep AC-08 and the real-model portion of AC-29 BLOCKED. Both OpenRouter attempts
-ended with provider_rate_limit, and the direct Groq campaign ended with a fatal
-project model-permission failure. Total consumed is **three** (2 OpenRouter,
-1 Groq, 0 Cloudflare). Do not delete any marker, rerun/resume failed work, probe,
-or reset a budget. No further campaign is authorized. The direct-provider record
-does not reuse or extend either historical run's allowance.
+AC-08 and AC-29 now have independently justified PASS evidence, as summarized
+above and detailed in the completed campaign artifact. The implementation plan
+is [archived after validation](../plans/completed/spec-029-headless-oss.md).
+All source/image, restart/recovery/approval and prior failed-provider evidence
+is retained. Historical sections below describe their status at that time.
 
-The missing release proof remains genuine successful analyst/reviewer chaining,
-validated persisted outputs/events, WAITING_APPROVAL, content-bound approval and
-explicit resume, pure assembly without a third call, and the documented real-model
-image/CLI journey. Existing metadata/quota and fixture checks do not satisfy it.
-The original 429 remains unresolved; the new model's failure does not diagnose it.
-Keep the plan active and preserve all previous source/image evidence. Any future
-live work needs a separate explicit decision, without erasing consumed requests
-or changing shared privacy/account policy automatically. Reviewing the intended
-isolated Groq project's model permission is the smallest supported next action;
-no policy or billing change was made automatically.
-
-Both attempt records, credentials/CLI state, input, database volume and private
-raw API evidence remain retained; only the isolated verification services were
-stopped. No push, merge, publication or remote deployment was performed.
+The final live campaign consumed 2 new / 5 cumulative requests within the
+separate 4-new / 7-cumulative authorization. Do not reset any campaign/attempt
+marker or spend the unused allowance on another campaign. All smoke and
+clean-install verification services are stopped; volumes, application/provider
+configuration, administrator/CLI credentials and input are retained.
+No push, merge, publication, remote deployment or retained-data deletion occurred.
 
 ## Direct Groq → Cloudflare preparation (2026-10-27)
 
@@ -653,3 +653,67 @@ weakening shared production policy or changing billing. No settings were
 changed automatically. Any later live attempt needs a separate explicit decision
 while retaining this consumed campaign and all historical counts. No push,
 merge, publication, remote deployment or retained-data deletion occurred.
+
+## Successful separately authorized campaign and final acceptance (2026-10-27)
+
+One explicit `new-campaign groq-permissions-20261027` allocation created a
+separate durable authorization, manifest and provider directories. Its historical
+base is three requests; maxima are 2/provider, 4 new and 7 cumulative. The
+exclusive root allocation prevents creating another ID to bypass the budget;
+the selected campaign/provider markers prevent reinvocation. All 83 linked
+historical artifact hashes match, including the closed original Groq campaign.
+Only the trusted host helper/tests changed; no shipped runtime/image input did.
+Backend gate 242 PASS, zero skips/failures; lock/Ruff/Black/strict MyPy PASS,
+two dependency deprecation warnings. Ops 58 PASS (21 direct-campaign methods).
+
+Current metadata preflight and doctor PASS. The retained administrator/CLI
+session worked, including separate CLI workflow discovery; no replacement
+administrator was created for the campaign. Exactly one selected `run --approve`
+created run `dd922648-beb2-4afb-94e5-8bea36a2070f`. Both actual responses report
+`openai/gpt-oss-20b` through direct Groq. Analyst and reviewer each have attempt 1,
+one durable pre-dispatch reservation and validated persisted output. Completion
+response IDs are `chatcmpl-f7e76b04-d0d5-4f02-ae86-c6fad9b64afc` and
+`chatcmpl-396eb0fa-48ff-40e5-921b-d7134ca6c354` (response body IDs, not HTTP
+request-header IDs). Successful node metadata does not retain those HTTP header
+IDs or the generated application request IDs; they remain unknown.
+
+The normal API journey observed WAITING_APPROVAL, content-bound APPROVED after
+explicit decision, then explicit resume and COMPLETED. Sixteen durable events
+are contiguous; `approval.requested` sequence 9 precedes `approval.decided` 11,
+`run.resumed` 12 and assembly start 14. A fresh independent READ ONLY DB
+transaction through the actual image verifies the immutable stored definition,
+strict outputs, production review mapping `analysis = nodes.analyze`, the same
+persisted analyst-output hash in review input, content-bound approval and pure
+assembly equality. Final call count stays two; assembly has no provider reservation.
+Raw outbound prompts were intentionally not retained; this proof uses the
+immutable definition, committed outputs and checked production mapping path.
+
+Provider-reported usage: analyst 662 prompt + 335 completion = 997 tokens;
+reviewer 976 + 300 = 1276; totals **1638 prompt / 635 completion / 2273 tokens**.
+Provider-reported cost/currency are absent and remain unknown, not assumed zero.
+Groq success stops the campaign; Cloudflare made zero generation requests and
+is not live-verified. Counts refer to observable client attempts/reservations,
+not unobservable upstream internal behavior.
+
+AC-29 additionally has an independent clean local clone at
+`/tmp/maos-spec029-ac29-pinned-20261027`, with the same backend tree and exact
+current image pinned in a private Compose overlay. Image config initialization,
+fresh actual migration, zero users/runs/nodes/events/approvals/jobs, one explicit
+disposable verification administrator in a separate DB, API/worker readiness,
+private CLI login and two separate successful workflow-discovery containers all
+PASS. The campaign administrator/database/configuration were untouched. The
+existing image was reused; its source was not replaced by the handoff SHA.
+
+An initial non-inference walkthrough correctly failed its actual-image assertion:
+base Compose hardcodes `multi-agent-os:local`, so an unused MAOS_IMAGE variable
+had not selected the intended image. That result is not claimed as current-image
+proof. Its test data/services were retained/stopped; the corrected check used a
+new fresh namespace plus explicit digest override. No global image tag, runtime
+code or provider setting was changed, and neither walkthrough created a run or
+sent generation. Both verification projects are stopped with data retained.
+
+The complete safe trace, node/event/approval identities, actual usage, output
+hashes/private structured-output references, clean-install proof and provenance
+are in [completed campaign evidence](direct-campaign-completed.json). Earlier
+failed runs remain unchanged. **AC-08 PASS; AC-29 PASS; 32 PASS / 0 BLOCKED.**
+No additional campaign, fallback test, provider probe or retry was initiated.

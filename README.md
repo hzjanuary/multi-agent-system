@@ -88,10 +88,12 @@ logout; refresh sessions are stored as digests, rotated and revoked.
 
 ## Execute your text
 
-The model-dependent commands in this section are manual deployment examples
-pending AC-08. The maintainer chose to keep live inference blocked for this
-verification pass; the release evidence separates those commands from the
-verified installation and CLI checks.
+The packaged workflow has been live-verified with direct Groq
+`openai/gpt-oss-20b`, two chained agent calls, explicit approval/resume and pure
+assembly on the recorded release image. The [release evidence](docs/release/verification.md)
+also records its independent clean-local-clone installation and CLI checks.
+Other provider/model configurations require their own verification. The retained
+smoke campaigns are closed; do not reuse their markers or budgets.
 
 Create `.maos/cli/input.json` with your own text: `{"text":"your text here"}`.
 There are no bundled answers. `text_review` chains an analyst agent into a
