@@ -155,3 +155,14 @@ pending. For a future authorized push, enforce the exact clean owner-approved SH
 checks in the signoff procedure; record push event/headSha/image/DB/artifact and
 every required step outcome. A skipped check is NOT_RUN. This task did not push
 or invoke a workflow, change settings/policy, rebuild or archive the plan.
+
+
+## v0.1.0 early source-only publication
+
+The owner explicitly authorized an early source preview on 2026-10-28; see the
+[scope decision](v0.1.0-source-preview.md). Review source/secrets/history/archive,
+record genuine remote CI outcomes, and respect branch protections. Known disclosed
+OS failure is not converted to PASS. Private reporting was confirmed enabled
+live; recheck after release. No binary/image assets or production-security
+approval are included. All full-image risk/security gates remain open and the
+SPEC-030 plan remains active.

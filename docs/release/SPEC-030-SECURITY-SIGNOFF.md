@@ -208,3 +208,14 @@ source/image; Phase 3 adds reconciliation, read-only component evidence and
 focused documentation/index/integrity checks only. No backend-suite rerun or
 image rebuild is claimed. SPEC-029 remains 32 PASS / 0 BLOCKED at its original
 live provenance. **Stop at owner decision boundary: NO-GO, plan stays active.**
+
+
+## Later owner decision — source-only publication
+
+On 2026-10-28 the owner separately authorized the early v0.1.0 source preview
+with disclosed residual OS risks. [Decision](v0.1.0-source-preview.md). This is not
+a risk exception, image-distribution clearance or security-reviewer signature.
+All technical findings, raw scan severity, gate FAIL and full-image NO-GO above
+remain unchanged. The SPEC-030 plan stays active. Private reporting has since
+been confirmed enabled during the publication session; prior disabled evidence
+remains historical. Actual remote CI/publication results are recorded separately.

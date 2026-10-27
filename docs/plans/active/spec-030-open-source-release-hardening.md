@@ -228,3 +228,47 @@ clean e3ec3f7. Keep raw Phase2 scan and all prior evidence byte-for-byte.
   SPEC030 stays active/unarchived pending owner/security decisions, genuine remote
   CI, verified private disclosure and separate publication authority. No inference,
   push/merge/tag/publication/deployment/history rewrite or retained-data deletion.
+
+## v0.1.0 early SOURCE preview — owner publication authority (2026-10-28)
+
+Owner explicitly authorizes reviewed source branch push, PR to main, normal merge
+if protections permit, and v0.1.0 pre-release with GitHub-generated source only.
+This supersedes prior no-remote-action boundary only for this source publication.
+Known OS findings remain disclosed; no security gate/policy downgrade, reviewer
+signature, Docker-image publication or production-security approval is authorized.
+Stop for real secrets/private artifacts, integrity defects, unexpected blockers
+or branch protection; no force push/bypass. Keep this SPEC030 plan active.
+
+- [x] Confirm live main/remotes/tag collision/protections/PVR; inspect new history.
+- [x] Visitor-focused README with visible security notice; source-only owner
+  decision, current disclosure evidence and honest historical image provenance.
+- [x] Local secrets/private-path/source/license/link/meaningful test checks.
+- [ ] Push reviewed branch, create/review PR; record actual Actions outcomes.
+- [ ] Normal merge only if protections permit and no unexpected blocker; verify
+  resulting tree contains headless code and excludes retired active demo stack.
+- [ ] Create v0.1.0 pre-release, source archives only; verify tag/main/release/
+  archive/disclosure read-only; record outcome without claiming image signoff.
+
+
+### Source preview pre-push checkpoint
+
+- Live public main92e5f1c is the retired product and an ancestor; intended
+  replacement removes legacy frontend/demo/RAG/Telegram active files (not operator
+  volumes). Normal merge retains history. No v0.1.0 tag/release exists. Main is
+  unprotected (protection404), rulesets empty at read-only preflight.
+- Live PVR GET true recorded, owner enabled it independently. README security
+  section is before installation and discloses exact recorded raw counts/image
+  limits. Source-only owner scope is distinct from image NO-GO; internal version
+  0.2.0 preserved, source milestone v0.1.0 per explicit owner authority.
+- New-range history27commits/332blobs reviewed:7 findings in one historical
+  scanner-test blob (temporary scanner inputs/redaction assertions, deterministic
+  token scaffolds/incomplete key marker), no confirmed real credential. No blanket
+  exception or current scanner policy change. Current tree has no legacy active
+  modules/private paths; links/LICENSE/NOTICE PASS.
+- Local ops79PASS; lock/Ruff/Black124files/MyPy122files PASS; scanner/index248
+  files PASS. Historical full backend242PASS remains bound to original source;
+  actual remote backend/database suite will run for the publication candidate.
+  Source archive is checked after the local doc commit and before push.
+- Known raw image findings remain0C/40H/58M/60L/1U and gateFAIL. No model calls,
+  image publication, changed policy or security reviewer signature. Remaining
+  remote outcomes will be recorded as observed, not assumed.

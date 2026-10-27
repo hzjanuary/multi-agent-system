@@ -1,5 +1,10 @@
 # SPEC-030 — Publication readiness
 
+> **2026-10-28 source-only owner decision:** early public source preview is
+> authorized with disclosed residual OS risks. See [v0.1.0 decision](v0.1.0-source-preview.md).
+> This does not clear the Docker image or change the existing security gate.
+> The unrestricted image/security **NO-GO remains**; no reviewer approval is invented.
+
 > **Phase 3 — owner decision package:** [SECURITY-SIGNOFF](SPEC-030-SECURITY-SIGNOFF.md).
 > 40 HIGH rows reconciled: 0 supported-fix available, 6 confirmed affected/no-fix,
 > 31 unresolved binary attribution, 3 not affected by concrete component absence.
