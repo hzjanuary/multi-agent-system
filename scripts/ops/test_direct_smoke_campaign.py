@@ -531,6 +531,169 @@ class CampaignTests(unittest.TestCase):
             self.assertEqual(result["new_consumed"], 4)
             self.assertEqual(result["cumulative_consumed"], 6)
             self.assertEqual(phase.call_count, 2)
+
             with self.assertRaisesRegex(runner.Failure, "already_reserved"):
                 runner.campaign(True)
             self.assertEqual(phase.call_count, 2)
+
+    def seal_parent(self):
+        self.ready()
+        run = {
+            "id": "33333333-3333-3333-3333-333333333333",
+            "status": "FAILED",
+            "call_count": 1,
+            "owner": None,
+            "lease_expires_at": None,
+        }
+        runner.save(
+            self.directory / "campaign.json", {"old_marker": True}, exclusive=True
+        )
+        runner.save(
+            self.directory / "outcome.json",
+            {
+                "status": "FAIL",
+                "new_consumed": 1,
+                "cumulative_consumed": 3,
+                "attempts": [
+                    {"profile": "groq-smoke", "run_id": run["id"], "calls": 1}
+                ],
+            },
+            exclusive=True,
+        )
+        runner.save(
+            self.directory / "groq-smoke/api-evidence.json",
+            {"run": run},
+            exclusive=True,
+        )
+        runner.save(
+            self.directory / "groq-smoke/attempt.json", {"consumed": 1}, exclusive=True
+        )
+        return run
+
+    def test_additional_campaign_preserves_parent_and_allocates_once_across_ids(self):
+        self.seal_parent()
+        before = {p: p.read_bytes() for p in self.directory.rglob("*") if p.is_file()}
+        result = runner.new_campaign("permission-fix")
+        self.assertEqual(result["generation_requests"], 0)
+        self.assertTrue(all(p.read_bytes() == raw for p, raw in before.items()))
+        self.assertFalse(
+            (self.directory / "campaigns/permission-fix/campaign.json").exists()
+        )
+        for identifier in ("permission-fix", "other-id"):
+            with self.assertRaisesRegex(runner.Failure, "already_allocated"):
+                runner.new_campaign(identifier)
+        with self.assertRaisesRegex(runner.Failure, "already_reserved"):
+            runner.campaign(True)
+        runner.select_campaign("permission-fix")
+        m = runner.manifest()
+        self.assertEqual(
+            (m["historical_consumed"], m["new_limit"], m["cumulative_limit"]), (3, 4, 7)
+        )
+        self.assertEqual(len(m["historical_runs"]), 3)
+        for n in runner.ORDER:
+            config = runner.config_for(n, ready=True)
+            parent = runner.common.read_config(self.directory / n / "private.env")
+            self.assertEqual(config, parent)
+
+    def test_additional_campaign_requires_confirmed_history_terminal_parent_and_keys(
+        self,
+    ):
+        run = self.seal_parent()
+        for changed in (
+            {"call_count": 2},
+            {"status": "RUNNING"},
+            {"owner": "worker"},
+            {"lease_expires_at": "future"},
+        ):
+            runner.save(
+                self.directory / "groq-smoke/api-evidence.json",
+                {"run": {**run, **changed}},
+            )
+            with self.assertRaisesRegex(runner.Failure, "terminal"):
+                runner.new_campaign("permission-fix")
+            self.assertFalse((self.directory / "new-campaign.json").exists())
+        runner.save(self.directory / "groq-smoke/api-evidence.json", {"run": run})
+        for identifier in ("../escape", "UPPER", ""):
+            with self.assertRaisesRegex(runner.Failure, "identifier"):
+                runner.new_campaign(identifier)
+        config = runner.config_for("groq-smoke")
+        config["GROQ_API_KEY"] = ""
+        runner.write_env(self.directory / "groq-smoke/private.env", config)
+        with self.assertRaisesRegex(runner.Failure, "credentials"):
+            runner.new_campaign("permission-fix")
+        self.assertFalse((self.directory / "new-campaign.json").exists())
+
+    def test_additional_campaign_validates_parent_artifacts_and_selection(self):
+        self.seal_parent()
+        runner.new_campaign("permission-fix")
+        with self.assertRaisesRegex(runner.Failure, "not_authorized"):
+            runner.select_campaign("different-id")
+        runner.select_campaign("permission-fix")
+        runner.save(self.directory / "campaign.json", {"modified": True})
+        with self.assertRaisesRegex(runner.Failure, "historical_evidence_changed"):
+            runner.manifest()
+
+    def test_additional_campaign_checks_all_three_historical_runs(self):
+        parent = self.seal_parent()
+        (self.legacy / "attempts" / runner.common.ADDITIONAL_ID).mkdir(parents=True)
+        records = [
+            {"id": v, "status": "FAILED", "call_count": 1}
+            for v in runner.HISTORICAL_RUNS
+        ] + [parent]
+        runner.save(self.legacy / "api-evidence.json", {"run": records[0]})
+        runner.save(
+            self.legacy
+            / "attempts"
+            / runner.common.ADDITIONAL_ID
+            / "api-evidence.json",
+            {"run": records[1]},
+        )
+        runner.new_campaign("permission-fix")
+        runner.select_campaign("permission-fix")
+        with patch.object(runner, "api_get", side_effect=records) as get:
+            self.assertTrue(runner.verify_history("groq-smoke"))
+            self.assertEqual(get.call_count, 3)
+
+    def test_additional_campaign_four_new_seven_total_and_cannot_repeat(self):
+        self.seal_parent()
+        runner.new_campaign("permission-fix")
+        runner.select_campaign("permission-fix")
+        outcomes = [
+            failed(calls=2),
+            {"profile": "cloudflare-smoke", "status": "PASS", "calls": 2},
+        ]
+
+        def execute(name):
+            marker = json.loads((runner.PRIVATE / "campaign.json").read_text())
+            self.assertEqual(
+                (
+                    marker["historical_consumed"],
+                    marker["new_reserved_max"],
+                    marker["cumulative_max"],
+                ),
+                (3, 4, 7),
+            )
+            self.assertEqual(marker["campaign_id"], "permission-fix")
+            return outcomes.pop(0)
+
+        with patch.object(runner, "preflight"), patch.object(
+            runner, "resolved"
+        ), patch.object(runner, "api_get"), patch.object(
+            runner, "verify_history"
+        ), patch.object(
+            runner, "phase", side_effect=execute
+        ) as phase, patch.object(
+            runner, "activate"
+        ), patch.object(
+            runner, "compose"
+        ):
+            result = runner.campaign(True)
+            self.assertEqual(
+                (result["new_consumed"], result["cumulative_consumed"]), (4, 7)
+            )
+            with self.assertRaisesRegex(runner.Failure, "already_reserved"):
+                runner.campaign(True)
+            self.assertEqual(phase.call_count, 2)
+        self.assertEqual(
+            json.loads((self.directory / "outcome.json").read_text())["new_consumed"], 1
+        )

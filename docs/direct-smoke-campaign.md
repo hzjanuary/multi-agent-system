@@ -6,8 +6,9 @@
 invoked, as required for fatal permission failures. Run
 `8573b056-b869-416b-87e6-e03569dbfb5f`, campaign/attempt markers and all data remain
 retained; all four isolated services are stopped. Cumulative requests: 3
-(2 historical OpenRouter + 1 Groq), not a new allowance to spend. No new campaign
-is authorized. See [actual campaign evidence](release/direct-campaign-attempt.json).
+(2 historical OpenRouter + 1 Groq), not a reusable allowance. That campaign stays
+closed. A subsequent explicit authorization permits exactly one separate campaign
+below. See [original campaign evidence](release/direct-campaign-attempt.json).
 
 The actual release image's Groq transport already serialized
 `User-Agent: multi-agent-os/0.2.0`. An offline HTTPX capture inside that pinned
@@ -22,6 +23,49 @@ The maintainer may review the intended isolated project at
 do not weaken shared production restrictions or change billing. Fixing a policy
 does not authorize rerunning the consumed campaign. Any later attempt requires
 a separate explicit decision and preserved historical counts/records.
+
+## One separately authorized campaign after the project-permission change
+
+The maintainer confirmed allowing `openai/gpt-oss-20b` in the intended Groq
+project and explicitly authorized **one new campaign: at most 4 additional /
+7 cumulative requests**, with 2/provider, retries 0, cap 1024 and the same fatal
+failure/whole-workflow fallback rules. Metadata still does not prove inference
+permission. The host helper adds one bounded creation operation; no runtime,
+adapter, default privacy or image inputs change.
+
+```bash
+# Allocate exactly once; this performs no inference or service startup:
+python3 scripts/ops/direct_smoke_campaign.py new-campaign groq-permissions-20261027
+direct() { python3 scripts/ops/direct_smoke_campaign.py --campaign groq-permissions-20261027 "$@"; }
+direct preflight
+direct start
+direct compose run --rm --no-deps api python -m app.cli doctor
+# Only if the existing administrator's session has expired:
+direct compose --profile cli run --rm cli auth login
+direct compose --profile cli run --rm cli workflow list
+direct run --approve
+# Stop only the shared isolated project, retaining all volumes/configuration:
+direct compose stop
+```
+
+The root `new-campaign.json` allocates this authorization exclusively across
+different IDs and processes. It cannot be invoked again to create another
+allowance. New records live at
+`.maos/direct-smoke/campaigns/groq-permissions-20261027/`; the previous campaign
+directory and all its files remain byte-for-byte intact. The new manifest hashes
+all prior artifacts, links all three historical run records and reserves a
+4-request ceiling above the 3 consumed. It copies the same private credentials/
+Free-plan confirmations and pins the same release image, database/application
+identity, volume, CLI directory and original input. No replacement administrator,
+configuration initialization or bootstrap is performed.
+
+The selected campaign has its own exclusive `campaign.json` and per-provider
+`attempt.json`. Repeated `run` or creation invocations cannot reset it. The
+original command without `--campaign` remains locked by the original record.
+The runner verifies all three historical runs before/after each new provider
+attempt. Unknown/partial outcomes retain the reservation and stop; no automatic
+second campaign is authorized. Old limits below describe the original campaign,
+not the separately authorized 3+4=7 allocation.
 
 This guide does not itself initiate inference. The
 fixed order is **groq-smoke → cloudflare-smoke**. Each provider gets a new

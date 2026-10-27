@@ -186,21 +186,150 @@ def manifest():
         "private_campaign_directory_required",
     )
     value = json.loads((PRIVATE / "manifest.json").read_text())
+    additional = "campaign_id" in value
     check(
         value["order"] == list(ORDER)
         and value["per_provider_limit"] == 2
         and value["new_limit"] == 4
-        and value["cumulative_limit"] == 6
-        and value["historical_consumed"] == 2,
+        and value["cumulative_limit"] == (7 if additional else 6)
+        and value["historical_consumed"] == (3 if additional else 2),
         "campaign_budget_identity_changed",
     )
-    check(value["historical_runs"] == list(HISTORICAL_RUNS), "historical_links_changed")
+    expected_runs = list(HISTORICAL_RUNS)
+    if additional:
+        parent = Path(value["parent_directory"])
+        check(parent == PRIVATE.parent.parent, "campaign_parent_changed")
+        authorization = json.loads((parent / "new-campaign.json").read_text())
+        check(
+            authorization["campaign_id"] == value["campaign_id"] == PRIVATE.name
+            and authorization["historical_consumed"] == 3
+            and authorization["new_limit"] == 4
+            and authorization["cumulative_limit"] == 7,
+            "campaign_authorization_changed",
+        )
+        prior = json.loads((parent / "outcome.json").read_text())
+        expected_runs.extend(a["run_id"] for a in prior["attempts"])
+    check(value["historical_runs"] == expected_runs, "historical_links_changed")
     for path, checksum in value["historical_artifacts"].items():
         check(
             digest((ROOT / path).read_bytes()) == checksum,
             "historical_evidence_changed",
         )
     return value
+
+
+def new_campaign(identifier):
+    """Allocate this explicit authorization once; never unlock the parent campaign."""
+    check(
+        bool(re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", identifier)),
+        "invalid_campaign_identifier",
+    )
+    parent = PRIVATE
+    m = manifest()
+    check("campaign_id" not in m, "new_campaign_requires_original_parent")
+    check(
+        not (parent / "new-campaign.json").exists(),
+        "additional_campaign_already_allocated",
+    )
+    configs = {n: config_for(n, ready=True) for n in ORDER}
+    prior = json.loads((parent / "outcome.json").read_text())
+    check(
+        prior["status"] == "FAIL"
+        and prior["new_consumed"] == 1
+        and prior["cumulative_consumed"] == 3
+        and len(prior["attempts"]) == 1,
+        "confirmed_three_request_history_required",
+    )
+    previous = json.loads((parent / ORDER[0] / "api-evidence.json").read_text())["run"]
+    check(
+        previous["status"] == "FAILED"
+        and previous["call_count"] == 1
+        and "owner" in previous
+        and "lease_expires_at" in previous
+        and previous.get("owner") is None
+        and previous.get("lease_expires_at") is None
+        and previous["id"] == prior["attempts"][0]["run_id"],
+        "parent_run_not_confirmed_terminal",
+    )
+    rows = common.process(
+        compose_args(ORDER[0]) + ["ps", "--all", "--format", "json"], configs[ORDER[0]]
+    ).stdout.splitlines()
+    check(
+        all(json.loads(v)["State"] == "exited" for v in rows if v.strip()),
+        "stop_isolated_services_first",
+    )
+    artifacts = dict(m["historical_artifacts"])
+    for path in parent.rglob("*"):
+        if path.is_file():
+            check(not path.is_symlink(), "historical_symlink_refused")
+            artifacts[str(path.relative_to(ROOT))] = digest(path.read_bytes())
+    campaigns = parent / "campaigns"
+    check(not campaigns.is_symlink(), "campaign_directory_symlink_refused")
+    campaigns.mkdir(mode=0o700, exist_ok=True)
+    target = campaigns / identifier
+    check(not target.exists(), "campaign_already_exists")
+    allocation = {
+        "campaign_id": identifier,
+        "allocated_at": now(),
+        "historical_consumed": 3,
+        "new_limit": 4,
+        "cumulative_limit": 7,
+        "parent_record_sha256": digest((parent / "campaign.json").read_bytes()),
+    }
+    # One durable slot across identifiers/processes. Partial preparation keeps it
+    # reserved; a second invocation must never manufacture another allowance.
+    save(parent / "new-campaign.json", allocation, exclusive=True)
+    artifacts[str((parent / "new-campaign.json").relative_to(ROOT))] = digest(
+        (parent / "new-campaign.json").read_bytes()
+    )
+    target.mkdir(mode=0o700)
+    for name, config in configs.items():
+        (target / name).mkdir(mode=0o700)
+        write_env(target / name / "private.env", config)
+        common.private_write(
+            target / name / "plan.json",
+            (parent / name / "plan.json").read_text(),
+            exclusive=True,
+        )
+    evidence = [
+        str(common.PRIVATE / "api-evidence.json"),
+        str(common.PRIVATE / "attempts" / common.ADDITIONAL_ID / "api-evidence.json"),
+        str(parent / ORDER[0] / "api-evidence.json"),
+    ]
+    m.update(
+        campaign_id=identifier,
+        parent_directory=str(parent),
+        historical_consumed=3,
+        cumulative_limit=7,
+        historical_runs=[*HISTORICAL_RUNS, previous["id"]],
+        historical_run_evidence=evidence,
+        historical_artifacts=artifacts,
+    )
+    save(target / "manifest.json", m, exclusive=True)
+    common.private_write(
+        target / "compose.private.json",
+        (parent / "compose.private.json").read_text(),
+        exclusive=True,
+    )
+    return {
+        "status": "NEW_CAMPAIGN_PREPARED",
+        "campaign_id": identifier,
+        "generation_requests": 0,
+    }
+
+
+def select_campaign(identifier):
+    global PRIVATE
+    check(
+        bool(re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", identifier)),
+        "invalid_campaign_identifier",
+    )
+    allocation = json.loads((PRIVATE / "new-campaign.json").read_text())
+    check(allocation["campaign_id"] == identifier, "campaign_not_authorized")
+    target = PRIVATE / "campaigns" / identifier
+    check(not target.parent.is_symlink(), "campaign_directory_symlink_refused")
+    PRIVATE = target
+    manifest()
 
 
 def config_for(name, *, ready=False):
@@ -760,14 +889,20 @@ def api_get(name, path):
 
 
 def verify_history(name):
-    expected = [
-        json.loads((common.PRIVATE / "api-evidence.json").read_text())["run"],
-        json.loads(
-            (
+    m = manifest()
+    paths = m.get(
+        "historical_run_evidence",
+        [
+            str(common.PRIVATE / "api-evidence.json"),
+            str(
                 common.PRIVATE / "attempts" / common.ADDITIONAL_ID / "api-evidence.json"
-            ).read_text()
-        )["run"],
-    ]
+            ),
+        ],
+    )
+    expected = [json.loads(Path(p).read_text())["run"] for p in paths]
+    check(
+        [r["id"] for r in expected] == m["historical_runs"], "historical_links_changed"
+    )
     for record in expected:
         check(
             api_get(name, "/runs/" + record["id"]) == record, "historical_run_mutated"
@@ -786,6 +921,7 @@ def phase(name):
         folder / "attempt.json",
         {
             "profile": name,
+            "campaign_id": m.get("campaign_id", "original"),
             "model": MODELS[name],
             "max_calls": 2,
             "source": m["source"],
@@ -990,14 +1126,15 @@ def campaign(approve):
     save(
         PRIVATE / "campaign.json",
         {
+            "campaign_id": m.get("campaign_id", "original"),
             "started_at": now(),
             "source": m["source"],
             "image_id": m["image_id"],
             "historical_runs": m["historical_runs"],
-            "historical_consumed": 2,
+            "historical_consumed": m["historical_consumed"],
             "per_provider_reserved_max": 2,
             "new_reserved_max": 4,
-            "cumulative_max": 6,
+            "cumulative_max": m["cumulative_limit"],
             "order": list(ORDER),
             "input_sha256": m["input_sha256"],
         },
@@ -1008,7 +1145,14 @@ def campaign(approve):
         result = execute_sequence(phase, activate)
         result["new_consumed"] = sum(v["calls"] for v in result["attempts"])
         check(result["new_consumed"] <= 4, "campaign_budget_violation")
-        result["cumulative_consumed"] = 2 + result["new_consumed"]
+        result["campaign_id"] = m.get("campaign_id", "original")
+        result["cumulative_consumed"] = (
+            m["historical_consumed"] + result["new_consumed"]
+        )
+        check(
+            result["cumulative_consumed"] <= m["cumulative_limit"],
+            "cumulative_budget_violation",
+        )
         save(PRIVATE / "outcome.json", result, exclusive=True)
         return result
     except Exception as error:
@@ -1021,7 +1165,7 @@ def campaign(approve):
                     "new_consumed": None,
                     "cumulative_consumed": None,
                     "new_reserved_max": 4,
-                    "cumulative_max": 6,
+                    "cumulative_max": m["cumulative_limit"],
                     "partial_evidence_retained": True,
                     "retry": False,
                 },
@@ -1034,8 +1178,10 @@ def campaign(approve):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--campaign", help="Explicit separately allocated campaign ID")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("prepare").add_argument("--image", required=True)
+    sub.add_parser("new-campaign").add_argument("identifier")
     sub.add_parser("set-credentials")
     sub.add_parser("preflight")
     sub.add_parser("start")
@@ -1045,8 +1191,16 @@ def main():
     command.add_argument("arguments", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     try:
+        if args.campaign:
+            check(
+                args.action not in {"prepare", "new-campaign"},
+                "creation_requires_original_parent",
+            )
+            select_campaign(args.campaign)
         if args.action == "prepare":
             value = prepare(args.image)
+        elif args.action == "new-campaign":
+            value = new_campaign(args.identifier)
         elif args.action == "set-credentials":
             value = credentials()
         elif args.action == "preflight":
@@ -1076,6 +1230,7 @@ def main():
                     if k
                     in (
                         "status",
+                        "campaign_id",
                         "source",
                         "image_id",
                         "generation_requests",

@@ -380,3 +380,29 @@ shared privacy or billing policy was changed. A maintainer may review only the
 intended isolated project's model restrictions; later live execution requires a
 separate explicit decision. Do not reset/rerun the consumed campaign. No push,
 merge, publication, remote deployment or retained-resource deletion occurred.
+
+## One new explicit campaign authorization (2026-10-27)
+
+Maintainer reports the intended Groq project's model permission updated and
+authorizes exactly one separate Groq → Cloudflare campaign, at most 4 new calls
+above 3 historically consumed, cumulative maximum 7. The previous campaigns
+remain closed. No retries/probes/model switching or fatal-error fallback.
+
+- [x] Inspect branch/HEAD, existing sealed ledger, runner and guide. Add bounded
+  `new-campaign <id>` plus explicit `--campaign <id>` selection: one exclusive
+  authorization slot across IDs, separate directory/markers/budget, all prior
+  artifact hashes and three run records linked. Reuse credential/plan/DB/volume/
+  CLI/input/image identities; no runtime/image change or rebuild.
+- [x] Focused ops 58 PASS (21 direct-campaign methods), including preservation,
+  unsafe-parent refusal, explicit selection, old-run verification, 4+3=7 limits
+  and reinvocation guards. Script Black/Ruff PASS.
+- [x] Required backend gate 242 PASS, zero skips/failures; lock/Ruff/Black/strict
+  MyPy PASS, two dependency deprecation warnings. No image inputs changed.
+- [ ] Source commit and non-inference preflight;
+  allocate `groq-permissions-20261027` once, start only isolated services,
+  doctor/discover with existing CLI login (local refresh only if expired).
+- [ ] Exactly one selected `run --approve`; inspect real outputs/chaining,
+  durable events, approval/resume/assembly or safe fatal failure. Preserve
+  reported usage/cost and diagnostics; never infer unknown values.
+- [ ] Independently assess AC-08/live AC-29, close only with sufficient evidence;
+  retain all history and stop isolated services. No push/publication/deletion.
