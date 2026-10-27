@@ -7,9 +7,9 @@ cross-provider fallback, or inference during startup/readiness.
 | Provider | Required settings | HTTP subset | Current evidence |
 | --- | --- | --- | --- |
 | `ollama` | `LLM_MODEL`, `OLLAMA_BASE_URL` | Non-streaming `POST /api/chat`, JSON format, `options.num_predict` | Injected transport contract/error tests; live verification pending |
-| `openai_compatible` | `LLM_MODEL`, `OPENAI_COMPATIBLE_BASE_URL`; optional `OPENAI_COMPATIBLE_API_KEY` | Non-streaming `POST <base>/chat/completions`, JSON-object response format, `max_tokens` | Injected transport and typed invocation tests; no server verified live yet |
-| `groq` | `LLM_MODEL`, `GROQ_API_KEY` | OpenAI-style chat completions | Injected transport contract/error tests; live verification pending |
-| `openrouter` | `LLM_MODEL`, `OPENROUTER_API_KEY` | OpenAI-style chat completions | Injected transport contract tests; live verification pending |
+| `openai_compatible` | `LLM_MODEL`, `OPENAI_COMPATIBLE_BASE_URL`; optional `OPENAI_COMPATIBLE_API_KEY` | Non-streaming `POST <base>/chat/completions`, JSON-object response format, `max_tokens` | Contract tests; Cloudflare Workers AI configured/offline-tested only, not live-verified |
+| `groq` | `LLM_MODEL`, `GROQ_API_KEY` | OpenAI-style chat completions | Real openai/gpt-oss-20b analyst → reviewer, approval/resume/assembly completed; SPEC-029 32 PASS / 0 BLOCKED |
+| `openrouter` | `LLM_MODEL`, `OPENROUTER_API_KEY` | OpenAI-style chat completions | Contract tests; two historical HTTP 429 attempts, no successful live workflow |
 | `gemini` | `LLM_MODEL`, `GEMINI_API_KEY` | Non-streaming `generateContent`, JSON MIME type | Injected transport contract/error tests; live verification pending |
 
 These contract tests use test-only responses. They do not prove model quality,
@@ -58,3 +58,13 @@ in [CONTRIBUTING](../CONTRIBUTING.md). It refuses an unbounded server
 configuration; run it against a dedicated installation with two calls, no
 retries and the chosen output token limit. There is no live model call in default
 CI.
+
+
+Default OpenRouter preferences require ZDR and deny provider data collection.
+The private `openrouter-free-smoke` opt-in explicitly relaxed those preferences
+for authorized non-sensitive tests; it is never ordinary startup configuration.
+These flags do not apply to Groq or Cloudflare. Provider/model terms govern
+remote data retention/training independently. No account-wide sharing is enabled
+by the application. Historical OpenRouter failures do not leave SPEC-029 open;
+direct Groq supplied the genuine completed workflow evidence. Cloudflare remains
+configured/offline-tested, not live-verified. No new calls are part of SPEC-030.

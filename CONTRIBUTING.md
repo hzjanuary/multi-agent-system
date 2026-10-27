@@ -30,3 +30,5 @@ failing acceptance checks or substitute fabricated successful output.
 Contributions are under the project MIT license for material you have the right
 to contribute. Preserve third-party notices. Do not commit secrets, auth files,
 operator backups, database volumes or generated model data.
+
+Release candidates must also follow the [publication checklist](docs/release/RELEASE-CHECKLIST.md), including license, tracked-path, source/image manifest and vulnerability gates. Build context is the repository root, with `--file backend/Dockerfile`; backend-only context cannot include canonical project licenses.

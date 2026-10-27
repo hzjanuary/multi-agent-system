@@ -5,9 +5,10 @@ Use the README's ordered first-run procedure and consult
 The supported primary target is Docker Engine/Compose on Linux. Container images
 are built locally; publication and remote deployment are separate operator work.
 
-API/worker/migrations/CLI share the same image. The verified Linux image build
-uses `docker build --network=host --target runtime -t multi-agent-os:local
-./backend`: this host's Docker bridge could not resolve the package index.
+API/worker/migrations/CLI share the same image. Build from the repository root with `docker build --file backend/Dockerfile
+--target runtime --build-arg VCS_REF="$(git rev-parse HEAD)"
+-t multi-agent-os:local .`. `--network=host` is optional when the host cannot
+resolve package indexes through Docker bridge networking.
 The build network flag does not publish runtime ports. Build before Compose secret
 interpolation. `config init` works without settings imports, creates generated
 secrets and UID/GID configuration, preserves existing values, and stores `.env`
@@ -82,3 +83,18 @@ set explicit CORS origins if a client needs them, and use the same auth controls
 Do not expose database or Redis ports. Configure certificate issuance, request
 limits and access logs for your environment; avoid recording auth headers/body
 content. The project does not provision remote infrastructure.
+
+
+Keep this single-instance service behind a trusted network or authenticated VPN.
+For internet exposure, an operator-managed TLS proxy must enforce request/body
+and connection limits, login rate limiting, upstream access restrictions and
+WebSocket handling. There is no built-in login throttling, SSO, tenant isolation
+or untrusted-extension sandbox. Do not describe this recipe as enterprise
+security certification. Test proxy limits and recovery independently.
+
+Keep credentials outside shell history and logs; avoid resolved `compose config`
+output (use `--quiet`). Restrict logs/backups to operators, encrypt off-host
+backups, set retention, test restore, and redact Authorization/body content in
+proxy logs. Readers can see all instance runs, including stored input/output.
+Provider data policies are independent; optional smoke consent is not the
+production policy. See [release gates](release/RELEASE-CHECKLIST.md).

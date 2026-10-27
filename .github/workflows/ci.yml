@@ -1,17 +1,20 @@
-name: Backend CI
+name: Release candidate CI
 on:
   pull_request:
   push:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   backend:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
         env:
           POSTGRES_USER: maos
           POSTGRES_PASSWORD: ci-test-isolated-database-only
@@ -21,7 +24,7 @@ jobs:
           --health-cmd "pg_isready -U maos -d maos_test"
           --health-interval 5s --health-timeout 3s --health-retries 12
       redis:
-        image: redis:7-alpine
+        image: redis:7-alpine@sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af
         ports: [6379:6379]
         options: >-
           --health-cmd "redis-cli ping"
@@ -34,8 +37,10 @@ jobs:
       LLM_MODEL: contract-tests-only
       MAOS_EXTENSION_MODULES: maos_examples.text_review
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
       - name: Install locked tooling and dependencies
@@ -50,15 +55,34 @@ jobs:
         env:
           MAOS_TEST_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
         run: bash scripts/ci/backend-gate.sh
-      - name: Release image
-        run: docker build --target runtime -t multi-agent-os:local ./backend
-      - name: Validate release CLI and Compose configuration
+      - name: Operations and release-security tests
+        run: |
+          python -m unittest discover -s scripts/ops -p 'test_*.py'
+          poetry -C backend run ruff check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py
+          poetry -C backend run black --check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py
+      - name: Full tracked-file secret and private-path scan
+        run: |
+          python scripts/ops/scan_secrets.py --strict --allow-approved-fixtures
+          python scripts/ops/release_artifacts.py index
+      - name: Source archive, release build, revision, licenses and image manifest
+        env:
+          MAOS_RELEASE_IMAGE: multi-agent-os:local
+        run: bash scripts/ci/release-gate.sh
+      - name: Validate CLI and Compose without provider credentials
         run: |
           mkdir -p .maos
           chmod 700 .maos
           docker run --rm --user "$(id -u):$(id -g)" --mount "type=bind,source=$(pwd)/.maos,target=/config" multi-agent-os:local python -m app.cli config init --output /config/.env
           docker run --rm multi-agent-os:local python -m app.cli --version
-          docker run --rm --mount "type=bind,source=$(pwd)/scripts/ci/check-release-image.py,target=/verify.py,readonly" multi-agent-os:local python /verify.py
           bash scripts/ci/compose-gate.sh
-      - name: Committed-secret scan
-        run: python scripts/ops/scan_secrets.py --strict --allow-test-placeholders
+      - name: Python dependency vulnerability audit (no exceptions)
+        run: |
+          poetry -C backend export --only main --format requirements.txt --output /tmp/maos-main-requirements.txt
+          pip install pip-audit==2.10.1
+          pip-audit --require-hashes --disable-pip --no-deps -r /tmp/maos-main-requirements.txt --format json --output .maos/python-audit.json
+      - name: OS and language vulnerability scan, SBOM (HIGH/CRITICAL block release)
+        run: |
+          python scripts/ops/release_security.py install-trivy --tool .maos/tools/trivy
+          python scripts/ops/release_security.py scan-image --tool .maos/tools/trivy --image multi-agent-os:local --output .maos/security
+      - name: Diff hygiene
+        run: git diff --check

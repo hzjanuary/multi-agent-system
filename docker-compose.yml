@@ -1,8 +1,9 @@
 # One application image. All persistent services stay on the private network.
 x-application: &application
-  image: multi-agent-os:local
+  image: ${MAOS_IMAGE:-multi-agent-os:local}
   build:
-    context: ./backend
+    context: .
+    dockerfile: backend/Dockerfile
     target: runtime
   environment: &runtime-environment
     APP_NAME: ${APP_NAME:-Multi-Agent OS}
@@ -80,7 +81,7 @@ services:
       start_period: 15s
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-maos}
       POSTGRES_USER: ${POSTGRES_USER:-maos}
@@ -95,7 +96,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af
     command: [redis-server, --save, '', --appendonly, 'no']
     healthcheck:
       test: [CMD, redis-cli, ping]
@@ -120,7 +121,7 @@ services:
     restart: 'no'
 
   ollama:
-    image: ollama/ollama:0.13.5
+    image: ollama/ollama:0.13.5@sha256:2c9595c555fd70a28363489ac03bd5bf9e7c5bdf2890373c3a830ffd7252ce6d
     profiles: [ollama]
     volumes:
       - maos_ollama_data:/root/.ollama

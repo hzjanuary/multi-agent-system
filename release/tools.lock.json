@@ -1,0 +1,24 @@
+{
+  "trivy": {
+    "version": "v0.76.1",
+    "url": "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_Linux-64bit.tar.gz",
+    "archive_sha256": "c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0",
+    "binary_sha256": "d1dfca6ae10a1ad4540bb94e64f0510077c47008920a9b554986b39dca573d83",
+    "source": "https://api.github.com/repos/aquasecurity/trivy/releases/latest"
+  },
+  "pip-audit": {
+    "version": "2.10.1"
+  },
+  "actions": {
+    "actions/checkout": {
+      "tag": "v7.0.1",
+      "assets": [],
+      "commit": "3d3c42e5aac5ba805825da76410c181273ba90b1"
+    },
+    "actions/setup-python": {
+      "tag": "v7.1.0",
+      "assets": [],
+      "commit": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0"
+    }
+  }
+}

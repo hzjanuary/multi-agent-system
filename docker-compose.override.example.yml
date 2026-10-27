@@ -3,7 +3,8 @@ services:
   backend-test:
     image: multi-agent-os:test
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
       target: dev
     environment:
       APP_ENV: testing

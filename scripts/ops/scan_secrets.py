@@ -1,140 +1,191 @@
 #!/usr/bin/env python3
-"""Read-only tracked-file secret scanner for the headless distribution."""
-
+"""Fail-closed index/worktree secret and private-path gate. Values never enter reports."""
 from __future__ import annotations
 
 import argparse
+import ast
+import hashlib
 import json
 import re
+import stat
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-SKIP_PARTS = {
-    ".git",
-    ".next",
-    ".venv",
-    "__pycache__",
-    "build",
-    "coverage",
-    "dist",
-    "node_modules",
-    "target",
-}
-LOCAL_SENSITIVE_FILES = (
-    "docker-compose.override.yml",
-    ".env",
-    "backend/.env",
-    "frontend/.env.local",
-)
-SECRET_ASSIGNMENT_KEYS = (
-    "API_KEY",
-    "BEARER_TOKEN",
-    "DATABASE_URL",
-    "GEMINI_API_KEY",
-    "GROQ_API_KEY",
-    "JWT_SECRET",
-    "JWT_SECRET_KEY",
-    "MINIO_SECRET_KEY",
-    "OPENROUTER_API_KEY",
-    "PASSWORD",
-    "POSTGRES_PASSWORD",
-    "SECRET_KEY",
-    "TAVILY_API_KEY",
-    "TELEGRAM_BOT_TOKEN",
-    "TOKEN",
-)
-PLACEHOLDER_MARKERS = (
-    "${",
-    "<",
-    "...",
-    "change-me",
-    "changeme",
-    "demo",
-    "example",
-    "fake",
-    "localhost",
-    "minioadmin",
-    "placeholder",
-    "postgres",
-    "test",
-    "your-token-here",
-)
-MAX_HUMAN_FINDINGS = 50
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.ops.release_policy import prohibited_path
+
+ROOT = Path(__file__).resolve().parents[2]
+ALLOWLIST = "scripts/ci/secret-fixtures.json"
+MAX_BYTES = 16 * 1024 * 1024
 TELEGRAM_TOKEN_RE = re.compile(r"\b\d{7,12}:[A-Za-z0-9_-]{30,}\b")
-JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b")
+JWT_RE = re.compile(
+    r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"
+)
 PRIVATE_KEY_RE = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")
-GENERATED_SECRET_RE = re.compile(
-    r"\$\((?:python|python3) -c 'import secrets; "
-    r"print\(secrets\.(?:token_hex|token_urlsafe)\([1-9][0-9]*\)\)'\)"
+PROVIDER_RE = re.compile(
+    r"\b(?:gsk_[A-Za-z0-9]{24,}|sk-or-v1-[A-Za-z0-9]{32,}|sk-(?:proj-)?[A-Za-z0-9_-]{32,}|AIza[A-Za-z0-9_-]{30,}|tvly-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{20,})"
 )
 BEARER_RE = re.compile(r"(?i)\bBearer\s+([A-Za-z0-9._~+/=-]{20,})")
-ASSIGNMENT_RE = re.compile(
-    r"\b("
-    + "|".join(re.escape(key) for key in SECRET_ASSIGNMENT_KEYS)
-    + r")\b\s*[:=]\s*['\"]?([^'\"\s#]+)"
+DSN_RE = re.compile(
+    r'(?i)\b(?:postgres(?:ql)?(?:\+asyncpg)?|mysql(?:\+\w+)?|redis|rediss|mongodb(?:\+srv)?)://[^\s\'"<>/@:]+:([^@\s\'"<>]+)@'
 )
+ASSIGNMENT_RE = re.compile(
+    r"""(?i)(?<![\w])['"]?([A-Z][A-Z0-9_]*(?:API_KEY|PASSWORD|SECRET|SECRET_KEY|TOKEN)|API_KEY|PASSWORD|SECRET|TOKEN|DATABASE_URL)['"]?\s*[:=]\s*("(?:\\.|[^"\n])*"|'(?:\\.|[^'\n])*'|\$\{[^}\n]*\}|[^\s,;]+)"""
+)
+GENERATED_SECRET_RE = re.compile(
+    r"\$\((?:python|python3) -c 'import secrets; print\(secrets\.(?:token_hex|token_urlsafe)\([1-9][0-9]*\)\)'\)"
+)
+REFERENCE_RE = re.compile(r"\$\{[A-Z_][A-Z0-9_]*(?::[-?][^{}]*)?\}")
 
 
 @dataclass(frozen=True)
 class Finding:
-    """A redacted secret finding."""
-
     path: str
     line: int
     kind: str
-    severity: str
-    detail: str
+    severity: str = "blocking"
+    detail: str = "value withheld"
 
     def as_dict(self) -> dict[str, Any]:
-        """Return JSON-safe form."""
-        return {
-            "path": self.path,
-            "line": self.line,
-            "kind": self.kind,
-            "severity": self.severity,
-            "detail": self.detail,
-        }
+        return dict(
+            path=self.path,
+            line=self.line,
+            kind=self.kind,
+            severity=self.severity,
+            detail=self.detail,
+        )
 
 
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    """Parse CLI args."""
-    parser = argparse.ArgumentParser(
-        description=(
-            "Read-only tracked-file secret scan. Scans git-tracked files by "
-            "default, skips local env files, and never prints secret values."
-        ),
-    )
-    parser.add_argument("--repo-root", default=".", help="Repository root.")
-    parser.add_argument("--json", action="store_true", help="Emit JSON summary.")
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Exit nonzero when suspicious findings are present.",
-    )
-    parser.add_argument(
-        "--allow-test-placeholders",
-        action="store_true",
-        help="Allow demo/test/example placeholder values without blocking findings.",
-    )
-    return parser.parse_args(argv)
+def load_allowances(root: Path) -> dict[str, set[str]]:
+    data = json.loads((root / ALLOWLIST).read_text())
+    if data.get("version") != 1 or not isinstance(data.get("entries"), list):
+        raise ValueError("invalid fixture policy")
+    result: dict[str, set[str]] = {}
+    for entry in data["entries"]:
+        if (
+            set(entry) != {"path", "line_sha256", "reason"}
+            or not entry["reason"]
+            or not re.fullmatch("[a-f0-9]{64}", entry["line_sha256"])
+            or prohibited_path(entry["path"])
+        ):
+            raise ValueError("invalid fixture allowance")
+        result.setdefault(entry["path"], set()).add(entry["line_sha256"])
+    return result
 
 
-def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint."""
-    args = parse_args(argv)
-    result = scan_repository(
-        repo_root=Path(args.repo_root),
-        strict=bool(args.strict),
-        allow_test_placeholders=bool(args.allow_test_placeholders),
+def reference(value: str) -> bool:
+    # References are safe only without a concrete credential default. Error text
+    # does not become a credential; all provider-shaped tokens are scanned anyway.
+    match = REFERENCE_RE.fullmatch(value)
+    return bool(match and (":-" not in value or value.endswith(":-}")))
+
+
+def scan_text(
+    text: str,
+    *,
+    path: str,
+    allow_test_placeholders: bool,
+    allowances: dict[str, set[str]] | None = None,
+) -> list[Finding]:
+    approved = (
+        allowances
+        if allowances is not None
+        else (load_allowances(ROOT) if allow_test_placeholders else {})
     )
-    if args.json:
-        print(json.dumps(result, indent=2, sort_keys=True))
-    else:
-        print_human_summary(result)
-    return 0 if result["passed"] else 1
+    findings: list[Finding] = []
+    for number, line in enumerate(text.splitlines(), 1):
+        if allow_test_placeholders and hashlib.sha256(
+            line.encode()
+        ).hexdigest() in approved.get(path, set()):
+            continue
+        kinds: set[str] = set()
+        for name, pattern in [
+            ("private_key_marker", PRIVATE_KEY_RE),
+            ("provider_key", PROVIDER_RE),
+            ("telegram_bot_token", TELEGRAM_TOKEN_RE),
+            ("jwt_like_value", JWT_RE),
+            ("bearer_token", BEARER_RE),
+        ]:
+            if pattern.search(line):
+                kinds.add(name)
+        for match in DSN_RE.finditer(line):
+            if not reference(match.group(1)):
+                kinds.add("credential_connection_string")
+        for match in ASSIGNMENT_RE.finditer(line):
+            key, value = match.groups()
+            quoted = value[:1] in {'"', "'"} and value[-1:] == value[:1]
+            if quoted:
+                try:
+                    value = ast.literal_eval(value)
+                except (ValueError, SyntaxError):
+                    kinds.add("unparsed_secret_assignment")
+                    continue
+            if value == "" or reference(value):
+                continue
+            if value.startswith(
+                ("$(python", "$(python3")
+            ) and GENERATED_SECRET_RE.search(line[match.start() :]):
+                continue
+            if path.endswith(".py") and not quoted:
+                # Python names/calls are not literal credentials. Prefix/DSN
+                # detection above still inspects the entire source line.
+                continue
+            kinds.add("secret_assignment:" + key.upper())
+        findings.extend(Finding(path, number, kind) for kind in sorted(kinds))
+    return findings
+
+
+def index_entries(root: Path) -> list[tuple[str, str, str]]:
+    result = subprocess.run(
+        ["git", "ls-files", "--stage", "-z"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        timeout=60,
+    )
+    entries = []
+    for entry in result.stdout.split(b"\0"):
+        if not entry:
+            continue
+        metadata, path = entry.split(b"\t", 1)
+        mode, oid, stage = metadata.decode().split()
+        if stage != "0":
+            raise ValueError("unmerged index")
+        entries.append((path.decode("utf-8"), mode, oid))
+    if not entries:
+        raise ValueError("empty or unreadable index")
+    return entries
+
+
+def decode_text(data: bytes) -> str:
+    if len(data) > MAX_BYTES:
+        raise ValueError("input exceeds scan bound")
+    if data.startswith((b"\xff\xfe", b"\xfe\xff")):
+        return data.decode("utf-16")
+    text = data.decode("utf-8-sig")
+    if "\0" in text:
+        raise ValueError("binary input requires explicit review")
+    return text
+
+
+def read_input(root: Path, relative: str) -> bytes:
+    path = root
+    for part in Path(relative).parts:
+        path /= part
+        if path.is_symlink():
+            raise ValueError("symlink input")
+    info = path.stat()
+    if (
+        not stat.S_ISREG(info.st_mode)
+        or not info.st_mode & 0o444
+        or info.st_size > MAX_BYTES
+    ):
+        raise ValueError("unreadable input")
+    return path.read_bytes()
 
 
 def scan_repository(
@@ -144,36 +195,70 @@ def scan_repository(
     allow_test_placeholders: bool,
     tracked_files: Iterable[str] | None = None,
 ) -> dict[str, Any]:
-    """Scan tracked files for secret risks without printing values."""
     root = repo_root.resolve()
-    warnings = local_sensitive_file_warnings(root)
-    files = list(tracked_files) if tracked_files is not None else git_tracked_files(root)
     findings: list[Finding] = []
-    scanned_files = 0
-    for relative in files:
-        if should_skip_path(relative):
-            continue
-        path = root / relative
-        if not path.is_file():
-            continue
-        text = read_text_safely(path)
-        if text is None:
-            continue
-        scanned_files += 1
-        findings.extend(
-            scan_text(
-                text,
-                path=relative,
-                allow_test_placeholders=allow_test_placeholders,
-            ),
+    scanned = 0
+    failed = False
+    try:
+        approved = load_allowances(root) if allow_test_placeholders else {}
+        entries = (
+            [(p, "100644", None) for p in tracked_files]
+            if tracked_files is not None
+            else index_entries(root)
         )
-
-    blocking = [finding for finding in findings if finding.severity == "blocking"]
+        if tracked_files is None and allow_test_placeholders:
+            policy_entry = next((e for e in entries if e[0] == ALLOWLIST), None)
+            if policy_entry is None:
+                raise ValueError("untracked fixture policy")
+            indexed_policy = subprocess.run(
+                ["git", "cat-file", "blob", policy_entry[2]],
+                cwd=root,
+                check=True,
+                capture_output=True,
+                timeout=30,
+            ).stdout
+            if indexed_policy != read_input(root, ALLOWLIST):
+                raise ValueError("fixture policy differs from index")
+        for path, mode, oid in entries:
+            kind = prohibited_path(path)
+            if kind or mode not in ("100644", "100755"):
+                findings.append(Finding(path, 0, kind or "unsupported_index_mode"))
+                continue
+            try:
+                working = read_input(root, path)
+                contents = [working]
+                if oid:
+                    indexed = subprocess.run(
+                        ["git", "cat-file", "blob", oid],
+                        cwd=root,
+                        check=True,
+                        capture_output=True,
+                        timeout=30,
+                    ).stdout
+                    if indexed != working:
+                        contents.append(indexed)
+                for data in contents:
+                    findings.extend(
+                        scan_text(
+                            decode_text(data),
+                            path=path,
+                            allow_test_placeholders=allow_test_placeholders,
+                            allowances=approved,
+                        )
+                    )
+                scanned += 1
+            except (OSError, ValueError, subprocess.SubprocessError):
+                failed = True
+                findings.append(Finding(path, 0, "scan_input_error"))
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        failed = True
+        findings.append(Finding("<scan>", 0, "scan_setup_error"))
+    findings = list(dict.fromkeys(findings))
     return {
-        "passed": not (strict and blocking),
-        "findings": [finding.as_dict() for finding in findings],
-        "warnings": warnings,
-        "scanned_files": scanned_files,
+        "passed": not failed and not findings,
+        "findings": [f.as_dict() for f in findings],
+        "warnings": [],
+        "scanned_files": scanned,
         "deterministic": True,
         "destructive_actions": False,
         "provider_calls": False,
@@ -181,140 +266,47 @@ def scan_repository(
     }
 
 
-def git_tracked_files(repo_root: Path) -> list[str]:
-    """Return tracked files from git ls-files."""
-    completed = subprocess.run(
-        ["git", "ls-files"],
-        cwd=str(repo_root),
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    if completed.returncode != 0:
-        return []
-    return [line for line in completed.stdout.splitlines() if line.strip()]
-
-
-def local_sensitive_file_warnings(repo_root: Path) -> list[str]:
-    """Warn when common sensitive local files exist."""
-    warnings: list[str] = []
-    for relative in LOCAL_SENSITIVE_FILES:
-        if (repo_root / relative).exists():
-            warnings.append(f"Local sensitive file exists and was not scanned by default: {relative}")
-    return warnings
-
-
-def should_skip_path(relative: str) -> bool:
-    """Return true when a path should not be scanned."""
-    parts = set(Path(relative).parts)
-    return bool(parts.intersection(SKIP_PARTS))
-
-
-def read_text_safely(path: Path) -> str | None:
-    """Read text files and skip binary/unreadable files."""
-    try:
-        data = path.read_bytes()
-    except OSError:
-        return None
-    if b"\x00" in data:
-        return None
-    try:
-        return data.decode("utf-8")
-    except UnicodeDecodeError:
-        return None
-
-
-def scan_text(
-    text: str,
-    *,
-    path: str,
-    allow_test_placeholders: bool,
-) -> list[Finding]:
-    """Scan file text and return redacted findings."""
-    findings: list[Finding] = []
-    if allow_test_placeholders and is_test_fixture_path(path):
-        return findings
-    for line_number, line in enumerate(text.splitlines(), 1):
-        if PRIVATE_KEY_RE.search(line):
-            findings.append(finding(path, line_number, "private_key_marker"))
-        if TELEGRAM_TOKEN_RE.search(line):
-            findings.append(finding(path, line_number, "telegram_bot_token"))
-        if JWT_RE.search(line):
-            findings.append(finding(path, line_number, "jwt_like_value"))
-        if BEARER_RE.search(line):
-            token = BEARER_RE.search(line).group(1)  # type: ignore[union-attr]
-            if not is_allowed_placeholder(token, allow_test_placeholders):
-                findings.append(finding(path, line_number, "bearer_token"))
-        for match in ASSIGNMENT_RE.finditer(line):
-            key = match.group(1).upper()
-            value = match.group(2)
-            # Recognize only the complete, reviewed random-secret generator.
-            # Arbitrary shell substitutions can contain committed literals.
-            generated = value in {"$(python", "$(python3"} and GENERATED_SECRET_RE.search(line)
-            if generated or is_allowed_placeholder(value, allow_test_placeholders) or is_code_declaration(value):
-                continue
-            findings.append(finding(path, line_number, f"secret_assignment:{key}"))
-    return findings
-
-
-def finding(path: str, line: int, kind: str) -> Finding:
-    """Create a redacted finding."""
-    return Finding(
-        path=path,
-        line=line,
-        kind=kind,
-        severity="blocking",
-        detail="suspicious value redacted",
-    )
-
-
-def is_allowed_placeholder(value: str, allow_test_placeholders: bool) -> bool:
-    """Return true for empty/documented placeholder values."""
-    normalized = value.strip().strip('"').strip("'").lower()
-    if normalized == "":
-        return True
-    if any(marker in normalized for marker in PLACEHOLDER_MARKERS):
-        return True
-    if allow_test_placeholders and any(marker in normalized for marker in ("demo", "fixture", "local", "sample")):
-        return True
-    return False
-
-
-def is_test_fixture_path(path: str) -> bool:
-    """Return true for test fixture paths where fake secret samples are expected."""
-    parts = Path(path).parts
-    return any(part in {"tests", "testdata", "fixtures"} for part in parts) or any(
-        part.startswith("test_") for part in parts
-    )
-
-
-def is_code_declaration(value: str) -> bool:
-    """Return true for typed code declarations, not concrete secret values."""
-    normalized = value.strip().strip('"').strip("'")
-    return normalized in {
-        "Any",
-        "Field(",
-        "Optional",
-        "SecretStr",
-        "str",
-    } or normalized.startswith(("Field(", "SecretStr(", "SettingsConfigDict("))
-
-
 def print_human_summary(result: dict[str, Any]) -> None:
-    """Print bounded human summary."""
-    status = "PASS" if result["passed"] else "FAIL"
-    print(f"{status}: tracked-file secret scan")
-    print(f"Scanned files: {result['scanned_files']}")
-    for warning in result["warnings"]:
-        print(f"WARN: {warning}")
-    for item in result["findings"][:MAX_HUMAN_FINDINGS]:
-        print(f"{item['severity'].upper()}: {item['path']}:{item['line']} {item['kind']} ({item['detail']})")
-    omitted = len(result["findings"]) - MAX_HUMAN_FINDINGS
-    if omitted > 0:
-        print(f"... {omitted} additional redacted findings omitted from human output")
-    print("Safety: deterministic=true destructive_actions=false provider_calls=false secrets_printed=false")
+    print(
+        ("PASS" if result["passed"] else "FAIL")
+        + ": full tracked-file secret/path scan"
+    )
+    print("Scanned files:", result["scanned_files"])
+    for value in result["findings"][:100]:
+        print(f"{value['path']}:{value['line']} {value['kind']} (value withheld)")
+    if len(result["findings"]) > 100:
+        print("Additional findings:", len(result["findings"]) - 100)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Compatibility flag; blocking findings always fail",
+    )
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--allow-approved-fixtures",
+        "--allow-test-placeholders",
+        dest="allow_test_placeholders",
+        action="store_true",
+        help="Use exact file/full-line hashes in reviewed fixture policy; never skip test files",
+    )
+    args = parser.parse_args(argv)
+    result = scan_repository(
+        repo_root=Path(args.repo_root),
+        strict=args.strict,
+        allow_test_placeholders=args.allow_test_placeholders,
+    )
+    (
+        print(json.dumps(result, indent=2) if args.json else "", end="")
+        if args.json
+        else print_human_summary(result)
+    )
+    return 0 if result["passed"] else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

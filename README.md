@@ -42,15 +42,18 @@ Exact tested host/tool versions and verification status are in the evidence file
 Use a checkout containing the headless commits. The public clone command below
 is a manual distribution example until those commits are published; verification
 used an independent local clone of the exact revision in the evidence file.
-The verified Linux build uses host networking to reach package indexes on this
-host. Runtime services use the private Compose network.
+Build from the repository root so canonical license materials are included.
+If a host cannot resolve package indexes on Docker bridge networking, the
+optional build flag `--network=host` may be needed. Runtime services use the
+private Compose network. Release candidates use the stricter
+[release checklist](docs/release/RELEASE-CHECKLIST.md).
 
 ```bash
 git clone https://github.com/hzjanuary/multi-agent-system.git
 cd multi-agent-system
 mkdir -p .maos
 chmod 700 .maos
-docker build --network=host --target runtime -t multi-agent-os:local ./backend
+docker build --file backend/Dockerfile --target runtime --build-arg VCS_REF="$(git rev-parse HEAD)" -t multi-agent-os:local .
 docker run --rm \
   --user "$(id -u):$(id -g)" \
   --mount "type=bind,source=$(pwd)/.maos,target=/config" \
@@ -153,7 +156,10 @@ limits and secrets; `.env.example` is the public reference. The model/provider
 identity is pinned per run. Rotating credentials is allowed; rerouting an existing
 run to another profile is blocked. Remote inference sends inputs to that provider.
 User inputs and validated outputs are stored in PostgreSQL; prompts and raw model
-responses are not application logs. No telemetry is enabled.
+responses are not application logs. No telemetry is enabled. Default OpenRouter routing forbids data collection
+and requires ZDR; permissive smoke profiles require explicit operator opt-in.
+Provider/model terms still govern remote processing. Self-hosting this runtime
+does not make a remote model local or guarantee confidential processing.
 
 Stop with `docker compose --env-file .maos/.env stop`; restart with `up -d api
 worker`. Named volumes preserve data. Expired worker claims become INTERRUPTED;
@@ -176,14 +182,16 @@ integration tests exercise the same engine without core modifications.
 
 See [CONTRIBUTING](CONTRIBUTING.md) for locked Python setup, backend-only quality
 gates and isolated database tests. Default tests use injected test-only provider
-fixtures. The following bounded live probe is a manual deployment example pending AC-08:
+fixtures. SPEC-029 is complete: **32 PASS / 0 BLOCKED**, including real chained
+Groq calls and approval/resume. Publication and internet-facing deployment
+readiness are separate gates. This optional manual probe consumes a model call:
 
 ```bash
 docker compose --env-file .maos/.env exec api python -m app.cli provider check --max-calls 1 --max-tokens 128
 ```
 
 Remote probes additionally require `--enable-remote`. This probe does not prove
-the two-agent workflow; release evidence tracks that separate live smoke gate.
+the two-agent workflow; the completed release evidence records that journey.
 Do not infer live compatibility from adapter contract tests.
 
 ## Legacy and project policies
@@ -195,7 +203,7 @@ Existing data/volumes are not migrated or deleted. Use the baseline
 inspect legacy data. See [CHANGELOG](CHANGELOG.md).
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [MIT license](LICENSE)
-· [Notices](NOTICE) · [Architecture](docs/architecture.md)
+· [Notices](NOTICE) · [Release checklist](docs/release/RELEASE-CHECKLIST.md) · [Architecture](docs/architecture.md)
 
 The project originated as a university graduation project; the headless release
 retains that provenance while replacing its demonstration product contract.

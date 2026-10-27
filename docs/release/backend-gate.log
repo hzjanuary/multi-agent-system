@@ -1,7 +1,7 @@
 All set!
 ============================= test session starts ==============================
 platform linux -- Python 3.12.9, pytest-8.4.2, pluggy-1.6.0
-rootdir: /home/hzjanuary/Documents/multi-agent-system/backend
+rootdir: <repo>/backend
 configfile: pyproject.toml
 testpaths: app/tests
 plugins: anyio-4.15.1, langsmith-0.10.2, asyncio-0.26.0
@@ -37,11 +37,11 @@ app/tests/test_settings.py .....................                         [100%]
 
 =============================== warnings summary ===============================
 .venv/lib/python3.12/site-packages/fastapi/testclient.py:1
-  /home/hzjanuary/Documents/multi-agent-system/backend/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  <repo>/backend/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
     from starlette.testclient import TestClient as TestClient  # noqa
 
 .venv/lib/python3.12/site-packages/starlette/testclient.py:53
-  /home/hzjanuary/Documents/multi-agent-system/backend/.venv/lib/python3.12/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+  <repo>/backend/.venv/lib/python3.12/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
     _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

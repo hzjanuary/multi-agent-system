@@ -1,3 +1,5 @@
+> Historical diagnosis, retained unchanged below. Later direct Groq verification completed SPEC-029 (32 PASS / 0 BLOCKED); it does not establish the cause of these OpenRouter failures.
+
 # SPEC-029 — Chẩn đoán 429 không inference (27/10/2026)
 
 **Kết luận: HTTP 429 chưa xác định nguyên nhân vì thiếu bằng chứng nhận diện.**

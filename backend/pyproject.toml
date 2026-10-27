@@ -2,7 +2,8 @@
 name = "multi-agent-os"
 version = "0.2.0"
 description = "Headless self-hosted typed multi-agent workflow runtime."
-authors = ["Enterprise Multi-Agent OS"]
+authors = ["hzjanuary"]
+license = "MIT"
 readme = "README.md"
 packages = [{ include = "app" }, { include = "maos_examples" }]
 

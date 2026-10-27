@@ -269,7 +269,7 @@ python3 scripts/ops/direct_smoke_campaign.py compose stop
 ```
 
 Volumes, credentials, CLI session and all old/new attempt records are retained.
-AC-08/AC-29 remain BLOCKED during preparation. Genuine successful chained model
+Historical preparation state: AC-08/AC-29 were BLOCKED. The subsequent direct Groq campaign completed both; SPEC-029 is 32 PASS / 0 BLOCKED. Genuine successful chained model
 execution is needed for AC-08; the documented real-model image/CLI journey is
 also needed for AC-29. Neither a new provider nor successful metadata lookup
 explains the old OpenRouter 429s or establishes enterprise readiness.

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "checked_date": "2026-10-27",
+  "images": [
+    {
+      "image": "python",
+      "tag": "3.12-slim",
+      "digest": "sha256:12316debbfb86890f6b2d825820612741ba527ad5a44e3902759141d572bfe8f",
+      "reference": "python:3.12-slim@sha256:12316debbfb86890f6b2d825820612741ba527ad5a44e3902759141d572bfe8f",
+      "source": "https://registry-1.docker.io/v2/library/python/manifests/3.12-slim",
+      "verified": "HTTPS registry digest equals SHA256 of exact manifest bytes"
+    },
+    {
+      "image": "postgres",
+      "tag": "16-alpine",
+      "digest": "sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+      "reference": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+      "source": "https://registry-1.docker.io/v2/library/postgres/manifests/16-alpine",
+      "verified": "HTTPS registry digest equals SHA256 of exact manifest bytes"
+    },
+    {
+      "image": "redis",
+      "tag": "7-alpine",
+      "digest": "sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af",
+      "reference": "redis:7-alpine@sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af",
+      "source": "https://registry-1.docker.io/v2/library/redis/manifests/7-alpine",
+      "verified": "HTTPS registry digest equals SHA256 of exact manifest bytes"
+    },
+    {
+      "image": "ollama/ollama",
+      "tag": "0.13.5",
+      "digest": "sha256:2c9595c555fd70a28363489ac03bd5bf9e7c5bdf2890373c3a830ffd7252ce6d",
+      "reference": "ollama/ollama:0.13.5@sha256:2c9595c555fd70a28363489ac03bd5bf9e7c5bdf2890373c3a830ffd7252ce6d",
+      "source": "https://registry-1.docker.io/v2/ollama/ollama/manifests/0.13.5",
+      "verified": "HTTPS registry digest equals SHA256 of exact manifest bytes"
+    }
+  ],
+  "update_policy": "Review registry metadata and advisories monthly and before each release; verify new digests, version/license/support, scans and isolated gates. No automatic Redis replacement."
+}

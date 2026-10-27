@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "package": "certifi",
+      "version": "2026.10.23",
+      "license": "MPL-2.0",
+      "source_distribution_url": "https://files.pythonhosted.org/packages/fd/11/b524cbd9bbdaca58608e4cf4053fd463417549e1959fa8d3aa18319f9555/certifi-2026.10.23.tar.gz",
+      "source_distribution_sha256": "a9895e6e2758b371e0545e321a3a8fd1fcfd9829ada8824a936dfb16aaaf36cd",
+      "member": "certifi-2026.10.23/LICENSE",
+      "file": "release/third-party/certifi-2026.10.23-LICENSE",
+      "sha256": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7"
+    },
+    {
+      "package": "langchain-core",
+      "version": "1.4.9",
+      "license": "MIT",
+      "file": "release/third-party/langchain-core-1.4.9-LICENSE",
+      "sha256": "4ec67e4ca6e6721dba849b2ca82261597c86a61ee214bbf21416006b7b2d0478",
+      "upstream_url": "https://raw.githubusercontent.com/langchain-ai/langchain/1c3a4186cf2ba4f28face59118ac7786de009f91/LICENSE",
+      "upstream_revision": "1c3a4186cf2ba4f28face59118ac7786de009f91",
+      "version_evidence_url": "https://raw.githubusercontent.com/langchain-ai/langchain/1c3a4186cf2ba4f28face59118ac7786de009f91/libs/core/pyproject.toml",
+      "version_evidence_sha256": "d78adb0905d790726aeeefcdb110b13781b505174c13548ad7f60f5321fc883e",
+      "reason": "Wheel and exact-version sdist do not include a license file; supplement full upstream MIT text from immutable version-matching release commit."
+    },
+    {
+      "package": "langsmith",
+      "version": "0.10.2",
+      "license": "MIT",
+      "file": "release/third-party/langsmith-0.10.2-LICENSE",
+      "sha256": "34e0b9842c7a31d34e53bc7eb224e81e07a34996106e029bbc72dea2d449f496",
+      "upstream_url": "https://raw.githubusercontent.com/langchain-ai/langsmith-sdk/687fc8d527a28504432f52bd08c75f2894c209fe/LICENSE",
+      "upstream_revision": "687fc8d527a28504432f52bd08c75f2894c209fe",
+      "version_evidence_url": "https://raw.githubusercontent.com/langchain-ai/langsmith-sdk/687fc8d527a28504432f52bd08c75f2894c209fe/python/langsmith/__init__.py",
+      "version_evidence_sha256": "2748a9ee0e346d087f3e351cd1b38196c413155d2e7dac58859f34e5d561d11b",
+      "reason": "Wheel and exact-version sdist do not include a license file; supplement full upstream MIT text from immutable version-matching release commit."
+    }
+  ],
+  "license_references": [
+    {
+      "license": "MPL-2.0",
+      "file": "release/third-party/MPL-2.0.txt",
+      "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
+      "upstream_url": "https://www.mozilla.org/MPL/2.0/index.txt",
+      "reason": "Full official MPL-2.0 text accompanies certifi notice; certifi cacert.pem source is distributed as readable PEM with the installed package."
+    }
+  ]
+}
