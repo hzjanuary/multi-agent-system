@@ -13,6 +13,17 @@ Branch: `feat/spec-029-headless-oss`. Historical baseline:
 `98854a807643566b720bff8ffd7feda85fa23746`. Later evidence/prose commits do not
 change the checked backend. No remote push, merge, deployment or publication.
 
+Provenance closeout inspected pre-closeout handoff HEAD
+`f05bf56dfbe4a29394443e9711e75a708fd8a905`. The diff from the tested source
+contains documentation/evidence only: application/tests, examples, migrations,
+dependencies, Docker inputs, Compose, configuration templates, verification
+scripts and CI workflows have identical Git object identities. The 91 shipped
+file hashes and retained image ID/revision label still match. The changed README
+build flag `--network=host` matches the recorded clean-local-clone build; public
+cloning remains explicitly manual until publication. This closeout edits only
+the report and this plan, so its documentation commit is a handoff identity,
+not a replacement tested source SHA. No suite rerun or image rebuild is needed.
+
 ## Outcome and authority
 
 The supplied attachment activates SPEC-029 and selects MIT for appropriately
@@ -127,8 +138,15 @@ implemented and verified within the recorded non-live scope. Acceptance:
 unproven. The maintainer explicitly chose to keep AC-08 blocked; no model was
 downloaded and no paid/remote call was attempted.
 
-To resume release verification, explicitly configure an already installed local
-model/reachable endpoint and authorize the documented bounded two-call smoke
-with operator-supplied text. Hosted providers additionally require explicit
-remote enablement. Then update AC-08/AC-29 with actual outputs/provider metadata,
-verify the model-dependent README commands and only then archive this plan.
+AC-08 and the model-dependent portion of AC-29 remain BLOCKED. Only after explicit
+maintainer enablement, configure an already installed local model/reachable
+endpoint on API and worker, enable `maos_examples.text_review`, set
+`MAX_PROVIDER_CALLS=2`, `LLM_MAX_RETRIES=0`, `LLM_MAX_OUTPUT_TOKENS=1024`, and obtain
+a fresh admin/operator session. Run the exact future manual command in
+[Remaining release action](../../release/verification.md#remaining-release-action):
+`backend/.venv/bin/python scripts/ops/live_text_review.py` with the configuration,
+private auth file, operator text, `--max-calls 2 --max-output-tokens 1024 --approve`.
+Do not run it as part of this closeout. Preserve actual outputs/provider metadata,
+verify the remaining model-dependent README commands, then update AC-08/AC-29
+and only then archive this plan. Hosted providers would require separate explicit
+remote enablement; none is authorized here.

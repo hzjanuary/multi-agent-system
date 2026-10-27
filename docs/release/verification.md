@@ -25,6 +25,29 @@ application image. The implementation commit remains the reproducible source
 identity. Artifact JSON contains commands, safe status metadata and hashes; no
 operator password, bearer token, provider key or database backup is committed.
 
+### Bounded provenance closeout
+
+The pre-closeout handoff HEAD inspected was
+`f05bf56dfbe4a29394443e9711e75a708fd8a905`. Its only commit after the tested
+implementation is documentation/evidence-only. Git object identities are
+unchanged for application code/tests, packaged examples, migrations, dependency
+manifest/lock, Dockerfile/build exclusion rules, Compose files, configuration
+templates, verification/operator scripts and CI workflows. All 91 recorded
+shipped-file hashes still match; the retained image ID and OCI revision label
+also match the tested identities above.
+
+The README build command's added `--network=host` matches the recorded image
+build, with the same target, tag and backend context; the evidence command also
+sets a provenance label. The public clone command is explicitly a manual
+distribution example, not a claim that the unpublished commits exist on GitHub.
+Other runnable README commands did not change in the handoff commit.
+
+This closeout changes only this report and the active execution plan. Its
+containing documentation commit is a final handoff HEAD, not a new tested
+implementation or image identity. Existing acceptance evidence and counts are
+unchanged; no suite rerun, image rebuild, inference or retained-resource change
+was needed for this provenance check.
+
 Environment: Linux `7.0.0-38-generic` x86_64, Docker Engine `29.9.2`, Compose
 `5.6.1`, local test Python `3.12.9`. The clean-image build used:
 
@@ -201,12 +224,33 @@ skipped or replaced with production fakes.
 
 ## Remaining release action
 
-Keep AC-08/AC-29 blocked until the maintainer explicitly provides/enables an
-installed local model and requests the bounded smoke. Use the executable smoke
-with user-supplied text, two calls, configured output-token budget and explicit
-approval flag, as documented in CONTRIBUTING.md. A hosted provider additionally
-requires explicit remote enablement. Do not download models or make paid calls
-just to turn these cells green. No publication, remote deployment, push or merge
+Keep AC-08 and the model-dependent portion of AC-29 BLOCKED. The following is a
+future manual step, not authorization to run it during closeout. After explicit
+maintainer enablement, select an already installed local model and endpoint
+reachable from API/worker. For a dedicated smoke configuration set
+`MAOS_EXTENSION_MODULES=maos_examples.text_review`, `MAX_PROVIDER_CALLS=2`,
+`LLM_MAX_RETRIES=0` and `LLM_MAX_OUTPUT_TOKENS=1024` identically on both services;
+apply the configuration and obtain a fresh admin/operator CLI session. Supply
+operator-authored UTF-8 text and then run from the repository root:
+
+```bash
+backend/.venv/bin/python scripts/ops/live_text_review.py \
+  --api-url http://127.0.0.1:8000 \
+  --env-file .maos/.env \
+  --auth-file .maos/cli/auth.json \
+  --input /absolute/path/to/operator-text.txt \
+  --max-calls 2 --max-output-tokens 1024 --approve
+```
+
+Use the configured API port if different. This script checks two chained real
+agent invocations, recorded provider/model metadata, the content-bound approval
+pause, explicit resume, final output and complete event replay. Preserve that
+evidence and verify the remaining model-dependent README commands before changing
+AC-08/AC-29 or archiving the active plan. CONTRIBUTING.md supplies general safety
+rules; the exact smoke invocation is recorded here. A hosted provider remains
+outside this closeout and would require separate explicit remote enablement.
+Do not download models or make paid calls just to turn these cells green.
+No publication, remote deployment, push or merge
 was performed. [Cleanup evidence](cleanup-evidence.json) records stopping only
 task-created verification containers while retaining their volumes/configuration;
 unrelated services were left running.
