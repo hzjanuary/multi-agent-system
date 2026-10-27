@@ -737,3 +737,10 @@ private at the path and original SHA256 recorded in `spec-030-baseline.json`.
 Historical commands/image provenance in this report remain historical, including
 the former backend-only build context; current builds use the root context and
 canonical project licenses as documented in the release checklist.
+
+
+SPEC-030 Phase 2 subsequently reduced runtime attack surface and verified a new
+packaging image without model calls. See [OS triage](SPEC-030-OS-TRIAGE.md).
+SPEC-029's successful Groq workflow stays tied to its original source/image; it
+is not relabeled as live inference on the hardening candidate. New image proof
+is offline packaging/installation/integration only.

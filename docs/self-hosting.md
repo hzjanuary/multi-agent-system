@@ -98,3 +98,15 @@ backups, set retention, test restore, and redact Authorization/body content in
 proxy logs. Readers can see all instance runs, including stored input/output.
 Provider data policies are independent; optional smoke consent is not the
 production policy. See [release gates](release/RELEASE-CHECKLIST.md).
+
+
+The release Compose application services (including CLI/migrations) run without
+Linux capabilities and with `no-new-privileges`. Keep those options; using root,
+privileged containers or added capabilities invalidates the containment review.
+For manual application containers, also pass `--cap-drop ALL --security-opt
+no-new-privileges:true`. The runtime image excludes filesystem mount utilities
+and pip/ensurepip installers; dependencies/extensions belong in reviewed build
+stages, not ad-hoc package installation in running services. Python and the
+locked application packages remain installed. See the OS triage for unresolved
+vulnerabilities; these controls are not a substitute for vendor patches or
+enterprise security certification.

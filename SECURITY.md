@@ -37,3 +37,13 @@ TLS/reverse proxy, network access controls, login throttling, body/connection
 limits, backup encryption/restore and safe log retention belong to the operator.
 This project does not provide SSO or tenant isolation. See the self-hosting guide
 and release checklist. A clean local test is not security certification.
+
+
+SPEC-030 Phase 2 read-only observation (2026-10-27T16:08:12Z): the documented
+public GitHub endpoint returned HTTP 200 with `enabled=false` for this repository.
+Private reporting is disabled at that observation; enabling and verifying it
+remains an owner action before publication. No settings were changed. Current
+OS findings and pending risk decisions are in `docs/release/SPEC-030-OS-TRIAGE.md`.
+The canonical Compose application services drop all capabilities and set
+no-new-privileges. Manually overriding user/capabilities/security options changes
+the exposure assumptions and requires a fresh deployment security review.

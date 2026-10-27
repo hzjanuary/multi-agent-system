@@ -81,3 +81,64 @@ allowlist; context verification independently rejects modified, untracked or
 linked build inputs. Source archive and actual image manifests are independently
 compared to the committed source. Keep generated scans/logs/source archives in
 ignored private storage; publish only reviewed sanitized evidence.
+
+## Phase 2 OS disposition and current candidate
+
+Latest evidence: [OS triage](SPEC-030-OS-TRIAGE.md),
+[machine-readable rows](spec-030-phase2-triage.json),
+[provenance](spec-030-phase2-evidence.json). Original Phase 1 evidence is retained.
+The previous 171 rows mixed 164 OS and 7 Python findings; use the separate counts.
+Candidate has 158 OS + 1 Python row; **NO-GO, 40 HIGH not waived**. Removing the
+unused mount package and build-only installers is not a vendor-version fix.
+
+For comparable scans, copy the already downloaded Trivy `db/` to a new private
+cache, preserve metadata/DB hashes, then run both actual image IDs through
+`release_security.py scan-image --cache-dir <private-cache> --skip-db-update`.
+Normal CI still refreshes the advisory database; record its timestamp and separate
+DB drift from runtime changes. Never reuse old counts without binding the DB.
+The script refuses incomplete/no-OS results; all severities remain in its report.
+
+HIGH/CRITICAL gates remain active including unfixed issues. A supported applicable
+fix must be applied; otherwise owner/security review needs exact applicability,
+exposure, containment and residual risk, not just "no fix". MEDIUM needs an owner
+maintenance decision; LOW is tracked; UNKNOWN requires explicit investigation.
+No exceptions have been approved. Reassess current groups before release or
+2026-11-26, whichever is earlier. A future exception must name CVE/package/version,
+reason/proof, owner, review date and expiry/reassessment condition and require
+explicit approval; no broad ignore or automatic risk acceptance.
+
+## Remote CI — only after owner authorizes push
+
+Do not run this block during local hardening. It is the minimal future procedure
+for the reviewed candidate, not publication approval. The workflow push filter
+includes the SPEC-030 branch; no PR, merge, tag or release is required.
+
+```bash
+spec030_candidate_sha=$(git rev-parse HEAD)
+git status --short
+# Proceed only after owner approval of this exact clean candidate.
+git push origin HEAD:refs/heads/feat/spec-030-open-source-release-hardening
+gh run list --repo hzjanuary/multi-agent-system --workflow ci.yml --branch feat/spec-030-open-source-release-hardening --commit "$spec030_candidate_sha" --json databaseId,headSha,status,conclusion,url
+# Substitute the returned run ID; inspect that headSha equals the approved SHA.
+gh run watch <run-id> --repo hzjanuary/multi-agent-system --exit-status
+gh run view <run-id> --repo hzjanuary/multi-agent-system --log-failed
+gh run download <run-id> --repo hzjanuary/multi-agent-system --name "release-security-$spec030_candidate_sha" --dir .maos/remote-ci/<run-id>
+```
+
+Without GitHub CLI, use Actions → Release candidate CI, select the exact push
+commit, inspect job logs and download `release-security-<source-sha>`. Record run
+URL/ID, head SHA, workflow result, tool/DB identity and reviewed artifact hashes in
+a new evidence entry. Do not relabel local proof as remote PASS. Current known
+HIGHs are expected to fail the security step; investigate, do not disable it.
+Only exact sanitized scan/SBOM/audit/image-verification files are uploaded, even
+on failure; no whole `.maos/`, credentials, sessions, build logs or private inputs.
+
+## Disclosure and owner gate
+
+Read-only documented GitHub GET returned **200 / enabled=false** on
+2026-10-27T16:08:12Z. The connector did not support this endpoint; the fallback was
+the public unauthenticated API, not a privileged settings write. Owner must enable
+Private Vulnerability Reporting under repository Settings → Security and quality
+→ Advanced Security, then verify the private reporting form and update evidence.
+Remote CI NOT_RUN, private reporting disabled/pending owner action, residual-risk
+review and final explicit publication approval remain prerequisites.

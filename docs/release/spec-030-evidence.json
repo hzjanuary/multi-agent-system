@@ -56,6 +56,14 @@
     "policy": "All HIGH/CRITICAL findings block release, including unfixed; no exceptions or ignore-unfixed",
     "status": "FAIL"
   },
+  "phase2": {
+    "image": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+    "latest_evidence": "spec-030-phase2-evidence.json",
+    "publication": "NO-GO; original top-level artifact remains Phase1 historical provenance",
+    "runtime_source": "281537a24220f6a2fe2df2aaa438e1f9cb60a6a6",
+    "summary": "SPEC-030-OS-TRIAGE.md",
+    "triage": "spec-030-phase2-triage.json"
+  },
   "platform": "linux/amd64",
   "publication_recommendation": "NO-GO; OS HIGH findings require triage; remote CI/manual disclosure/owner approval outstanding",
   "python_distributions": 59,

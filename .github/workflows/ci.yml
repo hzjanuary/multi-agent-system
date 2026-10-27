@@ -2,7 +2,7 @@ name: Release candidate CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, feat/spec-030-open-source-release-hardening]
   workflow_dispatch:
 
 permissions:

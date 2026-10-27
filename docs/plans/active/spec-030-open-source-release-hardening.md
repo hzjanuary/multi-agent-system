@@ -124,12 +124,59 @@ actual runtime image. Preserve Python dependency lock, non-root runtime, license
 all release-security gates, SPEC-029 and operator/historical state. No provider
 requests, inference, remote write/publication or residual-risk approval.
 
-- [ ] P2.1 bind old artifact/scanner/database identity; compare current same-suite
+- [x] P2.1 bind old artifact/scanner/database identity; compare current same-suite
   base and supported updates; vendor data and actual runtime package/function proof.
-- [ ] P2.2 full HIGH/UNKNOWN and grouped MEDIUM/LOW machine-readable triage;
+- [x] P2.2 full HIGH/UNKNOWN and grouped MEDIUM/LOW machine-readable triage;
   distinguish OS/language rows, CVEs, packages, vendor severity/fixes/exposure.
-- [ ] P2.3 implement supported pinned minimal remediation and offline regressions.
-- [ ] P2.4 commit/build final candidate, comparable same-DB old/new scans, SBOM,
+- [x] P2.3 implement supported pinned minimal remediation and offline regressions.
+- [x] P2.4 commit/build final candidate, comparable same-DB old/new scans, SBOM,
   license/manifest; full backend/ops/lint/type/lock/security/audit/Compose/install.
-- [ ] P2.5 update release decision/evidence; read-only disclosure check, precise
+- [x] P2.5 update release decision/evidence; read-only disclosure check, precise
   future authorized remote CI steps, risk ownership and remaining decisions.
+
+
+### Phase 2 result / next boundary
+
+- Starting f185c02 clean. Runtime/code source 281537a24220f6a2fe2df2aaa438e1f9cb60a6a6;
+  local image sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c.
+  Host CI/triage refinement f5a1bc7 adds only CI/tool metadata/report assessment;
+  final docs do not change the 139-file build-input identity
+  86f6a9a6a47dfd34dc804c5ad8bd5558c7a40241e46dfaf2df7af726ae8a1e43.
+- Official registry same-suite tags still resolve existing base digest; apt
+  update/simulate upgrade has 0 upgrades. Bookworm supported amd64 LTS metadata
+  examined; same principal HIGHs open, not adopted. No unpinned apt upgrade or
+  unsupported source-package/ABI mixing, Python distribution change or Redis change.
+- Actual unused non-Essential mount purged; pip/ensurepip removed from merged
+  runtime, dependency installation remains in build stages. Essential ncurses-bin/
+  util-linux/coreutils and libraries retained; no scanner metadata deletion.
+  Compose drops ALL caps and enables NNP; actual API/worker HostConfig and runtime
+  CapEff=0/CapBnd=0/NoNewPrivs=1 observed with corresponding flags.
+- Original 171 rows =164 OS/7 language; baseline rescan with frozen DB reproduces
+  counts. Candidate 159 rows =158 OS/1 language: 0C/40H/58M/60L/1U. Twelve rows
+  removed due to actual mount/pip removal, 0 vendor-version fixes, 0 new rows.
+  OS unique CVEs 71 unchanged. OS supported-fixable rows 0; Mako Windows-path
+  MEDIUM with Trivy fixed1.4.2 remains separately pending; app lock preserved.
+- Trivy0.76.1 DB UpdatedAt2026-10-27T13:12:49.474279883Z; identical DB hash
+  9d08581c36e14a521489a0f659093fd0bf435151361e6b01c13d2d6ec6672047,
+  --skip-db-update, --ignorefile /dev/null, all severities/no ignore-unfixed.
+  HIGH gate FAIL; no exception. HIGH/UNKNOWN affected components checked; homed,
+  Archive::Tar, Pod::Text absent with actual module/file/package proof, without
+  suppressing rows or granting general source-package exemptions.
+- Full local backend242PASS+2warnings, lock/Ruff/Black/strictMyPyPASS; ops79PASS.
+  Source/index/context/image/licensingPASS:86OS/58Python/170shipped files. Fresh
+  isolated clone migrate empty/bootstrap/healthy API+worker/doctor/separate CLI
+  login/discovery/auth0600/containmentPASS. Python audit58/0known, Trivy retains
+  separate MEDIUM. All phase2 services stopped; every volume/config/CLI retained.
+- Full detailed public triage and provenance: docs/release/SPEC-030-OS-TRIAGE.md,
+  spec-030-phase2-triage.json, spec-030-phase2-evidence.json. Original scans, logs,
+  history and SPEC-02932PASS remain preserved; no provider request/inference.
+- Read-only GitHub public GET200/enabled=false proves disclosure disabled; owner
+  enable/verify pending, no settings writes. RemoteCI NOT_RUN; branch push filter
+  and exact sanitized proof artifact upload pinned/prepared; no push authorized.
+- **NO-GO**: remaining HIGH/no-fix applicability/exposure/mitigation/residual risk
+  requires owner/security decision, not automatic waiver. MEDIUM review and LOW
+  maintenance owned by maintainer, reassess before release or2026-11-26.
+  Plan stays active; required security release gate has not passed, so do not
+  declare all engineering Definition-of-Done/release prerequisites complete.
+  Next work requires vendor-fixed digest or explicit scoped risk decision; no
+  new campaign, paid inference, architecture migration or publication implied.

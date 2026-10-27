@@ -1,5 +1,15 @@
 # SPEC-030 — Publication readiness
 
+> **Phase 2 mới nhất (2026-10-27): NO-GO.** Đã remediation và scan cùng DB:
+> **40 HIGH / 58 MEDIUM / 60 LOW / 1 UNKNOWN**, 159 rows tổng (158 OS + 1 Python).
+> 242 backend + 79 ops tests và packaging/install gates PASS; security gate FAIL.
+> GitHub private vulnerability reporting được xác nhận **disabled** bằng GET.
+> Xem [triage đầy đủ](SPEC-030-OS-TRIAGE.md), [evidence mới](spec-030-phase2-evidence.json)
+> và [remote CI/disclosure checklist](RELEASE-CHECKLIST.md). Không có risk waiver,
+> remote CI, inference hay quyền publication. Nội dung Phase 1 dưới đây là lịch sử.
+
+## Phase 1 — historical result retained
+
 Ngày kiểm tra: 2026-10-27. **Khuyến nghị: NO-GO cho phát hành hiện tại.**
 Hai blocker ban đầu đã được sửa và có regression proof. Cổng scan OS của image
 ứng viên vẫn FAIL: **44 HIGH / 64 MEDIUM / 62 LOW / 1 UNKNOWN, 0 CRITICAL**.
