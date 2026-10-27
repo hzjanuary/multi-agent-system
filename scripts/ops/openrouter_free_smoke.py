@@ -587,8 +587,9 @@ def run_once(directory: Path, approve: bool) -> dict[str, Any]:
         and stat.S_IMODE(auth.stat().st_mode) == 0o600,
         "private_cli_login_required",
     )
+    text = (directory / "input.txt").read_text()
     check(
-        0 < len((directory / "input.txt").read_text().strip()) <= 16000,
+        bool(text.strip()) and len(text) <= 16000,
         "user_input_required_1_to_16000_characters",
     )
     attempt = {
@@ -730,6 +731,7 @@ def safe_compose_arguments(arguments: list[str]) -> list[str]:
         "--env",
         "-e",
         "--env-file",
+        "--env-from-file",
         "--volume",
         "--entrypoint",
         "--name",
@@ -762,8 +764,12 @@ def safe_compose_arguments(arguments: list[str]) -> list[str]:
         ),
         "compose_override_or_volume_deletion_forbidden",
     )
-    if arguments[0] in {"up", "run"}:
+    if arguments[0] == "up":
         arguments = [arguments[0], "--no-build", *arguments[1:]]
+    elif arguments[0] == "run":
+        # Compose run has no --no-build flag. The existing immutable local image,
+        # pull_policy=never and forbidden --build prevent a replacement build.
+        arguments = [arguments[0], "--pull", "never", *arguments[1:]]
     return prefix + arguments
 
 

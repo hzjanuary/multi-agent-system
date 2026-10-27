@@ -58,17 +58,19 @@ never printed or saved. Do not invoke raw `docker compose` with this env file.
 
 When you decide to make the bounded live attempt, use this sequence. `set-key`
 prompts without echo; never put the key in command arguments, shell history, or
-chat. CLI bootstrap/login separately prompt for the dedicated test user's
+chat. It fills only `OPENROUTER_API_KEY` in
+`.maos/openrouter-free-smoke/private.env`; you may instead edit that 0600 file
+locally without printing it. CLI bootstrap/login separately prompt for the dedicated test user's
 email and password. Choose a new local test user; no sample records are added.
 
 ```bash
 smoke() { python3 scripts/ops/openrouter_free_smoke.py "$@"; }
 smoke set-key
 smoke preflight
-smoke compose up -d postgres redis
+smoke compose up -d --wait postgres redis
 smoke compose run --rm --no-deps api python -m app.cli migrate
 smoke compose run --rm --no-deps api python -m app.cli admin bootstrap
-smoke compose up -d api worker
+smoke compose up -d --wait api worker
 smoke compose run --rm --no-deps api python -m app.cli doctor
 smoke compose run --rm cli auth login
 smoke compose run --rm cli workflow list

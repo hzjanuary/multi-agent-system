@@ -204,15 +204,13 @@ def test_invalid_policy_is_redacted_and_never_implicitly_consents() -> None:
 async def test_http_transport_explicitly_disables_connect_retries(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import app.llm.clients.http as transport_module
-
     captured = {}
 
     def transport_factory(**kwargs: Any) -> None:
         captured.update(kwargs)
         raise RuntimeError("stop before HTTP client creation")
 
-    monkeypatch.setattr(transport_module.httpx, "AsyncHTTPTransport", transport_factory)
+    monkeypatch.setattr(httpx, "AsyncHTTPTransport", transport_factory)
     with pytest.raises(RuntimeError, match="stop before"):
         await HTTPXAsyncJSONHTTPTransport().post_json(
             url="https://invalid.example", headers={}, payload={}, timeout_seconds=1
@@ -223,8 +221,6 @@ async def test_http_transport_explicitly_disables_connect_retries(
 async def test_httpx_serialization_of_production_openrouter_request(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import app.llm.clients.http as transport_module
-
     captured = []
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -232,7 +228,7 @@ async def test_httpx_serialization_of_production_openrouter_request(
         return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
 
     monkeypatch.setattr(
-        transport_module.httpx,
+        httpx,
         "AsyncHTTPTransport",
         lambda **kwargs: httpx.MockTransport(handler),
     )

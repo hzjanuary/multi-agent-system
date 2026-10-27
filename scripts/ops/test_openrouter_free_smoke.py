@@ -123,7 +123,17 @@ class IsolationTests(unittest.TestCase):
             smoke.safe_compose_arguments(
                 ["--profile", "cli", "run", "--rm", "cli", "auth", "login"]
             ),
-            ["--profile", "cli", "run", "--no-build", "--rm", "cli", "auth", "login"],
+            [
+                "--profile",
+                "cli",
+                "run",
+                "--pull",
+                "never",
+                "--rm",
+                "cli",
+                "auth",
+                "login",
+            ],
         )
         self.assertEqual(
             smoke.safe_compose_arguments(
@@ -140,6 +150,7 @@ class IsolationTests(unittest.TestCase):
             ["config", "--format", "json"],
             ["run", "-v/shared:/cli", "cli"],
             ["run", "--privileged", "cli"],
+            ["run", "--env-from-file=other.env", "cli"],
         ):
             with self.subTest(arguments=arguments), self.assertRaises(smoke.Failure):
                 smoke.safe_compose_arguments(arguments)
@@ -397,6 +408,22 @@ class IsolationTests(unittest.TestCase):
                 self.assertEqual(runner.call_count, 1)
             for path in directory.glob("*.json"):
                 self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+
+    def test_oversize_input_is_rejected_before_attempt_reservation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            (directory / "cli").mkdir()
+            smoke.private_write(
+                directory / "cli/auth.json", '{"access_token":"test-session"}'
+            )
+            smoke.private_write(directory / "input.txt", "x" * 16000 + "\n")
+            with patch.object(smoke, "preflight"), patch.object(
+                smoke, "load_private", return_value=({}, {})
+            ), patch.object(smoke.subprocess, "run") as run:
+                with self.assertRaisesRegex(smoke.Failure, "user_input"):
+                    smoke.run_once(directory, True)
+                run.assert_not_called()
+            self.assertFalse((directory / "attempt.json").exists())
 
 
 if __name__ == "__main__":
