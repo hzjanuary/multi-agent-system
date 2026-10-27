@@ -1,0 +1,53 @@
+{
+  "source": "d84aeea6af592b56738456039445f480778744cf",
+  "image": "sha256:21f4073e53b9f3a657a933867c6d6921fd9634c1d503618da25224cc59c42100",
+  "generation_requests": 0,
+  "retained_verification_database": true,
+  "doctor": {
+    "checks": [
+      {
+        "name": "postgres_schema",
+        "status": "ok",
+        "required": true,
+        "latency_ms": 149.33,
+        "message": "ready"
+      },
+      {
+        "name": "configuration",
+        "status": "ok",
+        "required": true,
+        "latency_ms": 38.31,
+        "message": "ready"
+      },
+      {
+        "name": "redis_notifications",
+        "status": "ok",
+        "required": false,
+        "latency_ms": 2.83,
+        "message": "ready"
+      }
+    ],
+    "worker_available": true,
+    "status": "ready"
+  },
+  "workflows": [
+    {
+      "id": "text_review",
+      "version": "1.0.0"
+    }
+  ],
+  "runs": [],
+  "status": "PASS",
+  "services_stopped_volumes_retained": true,
+  "empty_after_migration": {
+    "users": 0,
+    "runs": 0,
+    "events": 0
+  },
+  "after_explicit_bootstrap": {
+    "users": 1,
+    "runs": 0,
+    "events": 0
+  },
+  "auth_file_mode": "0o600"
+}

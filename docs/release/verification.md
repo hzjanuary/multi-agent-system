@@ -717,3 +717,23 @@ hashes/private structured-output references, clean-install proof and provenance
 are in [completed campaign evidence](direct-campaign-completed.json). Earlier
 failed runs remain unchanged. **AC-08 PASS; AC-29 PASS; 32 PASS / 0 BLOCKED.**
 No additional campaign, fallback test, provider probe or retry was initiated.
+
+
+## SPEC-030 publication hardening (separate release gate)
+
+SPEC-029 remains **32 PASS / 0 BLOCKED** with its original direct Groq source,
+image and live evidence. No inference was repeated. Cloudflare remains configured
+and offline-tested, not live-verified. The later packaging/security candidate is
+tracked independently in [SPEC-030 readiness](SPEC-030-PUBLICATION-READINESS.md)
+and [sanitized provenance](spec-030-evidence.json). Project license materials,
+scanner/index/artifact gates and release CI were hardened. Actual runtime image
+OS scanning remains a publication blocker; this does not retroactively relabel
+the completed SPEC-029 workflow acceptance. Publication/remote CI/owner approval
+remain separate from engineering acceptance.
+
+The current public `backend-gate.log` is a sanitized representation replacing the
+operator's host repository prefix with `<repo>`. Its byte-exact original remains
+private at the path and original SHA256 recorded in `spec-030-baseline.json`.
+Historical commands/image provenance in this report remain historical, including
+the former backend-only build context; current builds use the root context and
+canonical project licenses as documented in the release checklist.

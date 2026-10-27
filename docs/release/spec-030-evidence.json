@@ -1,0 +1,97 @@
+{
+  "artifact_gates": {
+    "context": "PASS; root allowlist and no symlinks/private/untracked inputs",
+    "image": "PASS; actual byte/hash comparison, non-root, importability, no private configuration/tests/fakes/demo",
+    "index": "PASS",
+    "source": "PASS; exact Git archive"
+  },
+  "backend": {
+    "black": "PASS; 124 files",
+    "mypy": "PASS; 122 source files",
+    "poetry_check_lock": "PASS",
+    "ruff": "PASS",
+    "tests_failed": 0,
+    "tests_passed": 242,
+    "warnings": 2
+  },
+  "build_input_sha256": "dd107140ece240d54d3226bf16d93ae976ba97bda8057c203d4be80a2421357a",
+  "clean_install": "PASS; no seeded data, explicit new verification bootstrap, ready API/worker, separate CLI login/discovery; no inference",
+  "commands": {
+    "audit": "pip-audit --require-hashes --disable-pip --no-deps -r <hashed locked main requirements> --format json",
+    "backend": "PATH=<repo>/backend/.venv/bin:$PATH bash scripts/ci/backend-gate.sh; APP_ENV=testing; explicit new MAOS_TEST_DATABASE_URL and MAOS_TEST_POSTGRES_CONTAINER; generated JWT_SECRET_KEY in process environment only",
+    "build": "MAOS_BUILD_NETWORK=host bash scripts/ci/release-gate.sh; repeated from independent clean local clone; caches reused, no byte-for-byte reproducibility claim",
+    "os": "python3 scripts/ops/release_security.py scan-image --tool .maos/spec-030/tools/trivy --image multi-agent-os:spec030-clean-build --output .maos/spec-030/evidence/clean-build-security"
+  },
+  "compose": "PASS; canonical plus development override, --quiet",
+  "date": "2026-10-27",
+  "dependency_audit": {
+    "exceptions": [],
+    "known_findings": 0,
+    "main_dependencies": 58,
+    "raw_private": ".maos/spec-030/evidence/python-audit.json",
+    "tool": "pip-audit 2.10.1"
+  },
+  "image": "sha256:21f4073e53b9f3a657a933867c6d6921fd9634c1d503618da25224cc59c42100",
+  "image_scope": "Local OCI image/index identity; not a published registry digest",
+  "new_generation_requests": 0,
+  "ops": {
+    "release_security_regressions": 26,
+    "tests_failed": 0,
+    "tests_passed": 73
+  },
+  "os_packages": 87,
+  "os_scan": {
+    "counts": {
+      "CRITICAL": 0,
+      "HIGH": 44,
+      "LOW": 62,
+      "MEDIUM": 64,
+      "UNKNOWN": 1
+    },
+    "gate": "OS_and_language_vulnerabilities",
+    "os": {
+      "Family": "debian",
+      "Name": "13.7"
+    },
+    "policy": "All HIGH/CRITICAL findings block release, including unfixed; no exceptions or ignore-unfixed",
+    "status": "FAIL"
+  },
+  "platform": "linux/amd64",
+  "publication_recommendation": "NO-GO; OS HIGH findings require triage; remote CI/manual disclosure/owner approval outstanding",
+  "python_distributions": 59,
+  "remote_actions": "NOT_RUN; no push authorized",
+  "runtime_manifest_sha256": "b9004c503edfdefe876766049d5f01ded2525472a825d4b56402c2ca3172c2d9",
+  "sbom": {
+    "format": "CycloneDX",
+    "path": ".maos/spec-030/evidence/clean-build-security/sbom.cdx.json",
+    "sha256": "42cde1a30e84432cfc5926621f3ebcb47e15cd7355d543238ef6a58c42db6df1"
+  },
+  "secret_scan": {
+    "scope": "actual index plus differing worktree; exact reviewed fixture policy",
+    "status": "PASS",
+    "tracked_files_at_tested_source": 225
+  },
+  "services": "Only task-created SPEC-030 services stopped; volumes, config, verification admin/CLI and historical operator state retained",
+  "shipped_files": 171,
+  "source": "d84aeea6af592b56738456039445f480778744cf",
+  "source_archive_sha256": "08fe92205d2c43fd12dd710d568c5613710456e2dd94e78db080c80b82ffeca6",
+  "spec029": {
+    "blocked": 0,
+    "historical_generation_requests": 5,
+    "live_evidence": "direct-campaign-completed.json",
+    "live_image": "sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959",
+    "live_runtime_source": "44a8c42373af1320986ad78d922aa79595775dbe",
+    "pass": 32
+  },
+  "tools": {
+    "black": "black, 25.12.0 (compiled: yes)",
+    "compose": "5.6.1",
+    "docker": "Docker version 29.9.2, build a82e528",
+    "mypy": "mypy 1.20.2 (compiled: yes)",
+    "poetry": "Poetry (version 1.8.5)",
+    "python": "Python 3.12.3",
+    "ruff": "ruff 0.15.20",
+    "trivy": "Version: 0.76.1"
+  },
+  "worktree_at_build": "clean"
+}
