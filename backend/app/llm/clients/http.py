@@ -21,6 +21,10 @@ class HTTPTransportError(Exception):
     pass
 
 
+class HTTPResponseLimitError(HTTPTransportError):
+    pass
+
+
 class HTTPTimeoutError(HTTPTransportError):
     pass
 
@@ -60,7 +64,7 @@ class HTTPXAsyncJSONHTTPTransport:
                 async for chunk in response.aiter_bytes():
                     chunks.extend(chunk)
                     if len(chunks) > 1048576:
-                        raise HTTPTransportError(
+                        raise HTTPResponseLimitError(
                             "provider response exceeds transport limit"
                         )
                 try:

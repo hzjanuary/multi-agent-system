@@ -65,6 +65,11 @@ class LLMService:
             identity["routing_hash"] = fingerprint(
                 self.settings.openrouter_provider_preferences.request_dict()
             )
+        if (
+            self.settings.provider == LLMProvider.GROQ
+            and self.settings.groq_reasoning_effort
+        ):
+            identity["reasoning_effort"] = self.settings.groq_reasoning_effort
         return identity
 
     def validate_ready(self) -> None:

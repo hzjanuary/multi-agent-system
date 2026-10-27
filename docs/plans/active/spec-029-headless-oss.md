@@ -265,3 +265,29 @@ quota is only a pre-attempt current observation, not workflow cost or a post-run
 free-request count. The unused cumulative allowance does not authorize retry or
 another attempt; preserve the one original plus one additional consumed request.
 Final handoff edits are documentation/evidence only; no rebuild or suite rerun.
+
+## Direct Groq → Cloudflare campaign preparation (2026-10-27)
+
+The maintainer authorizes preparation only now. Later explicit campaign initiation
+authorizes at most two Groq plus two Cloudflare calls, four new/six cumulative,
+including two preserved OpenRouter requests. Fallback exists only in this opt-in
+runner after eligible terminal Groq availability failure; never inside production
+runtime or within a provider-pinned run. No inference during preparation.
+
+- [x] Inspect adapters/configuration/ledgers/evidence and current official model,
+  JSON, reasoning, pricing/free-plan and metadata documentation.
+- [x] Narrow Groq token/reasoning mapping and shared safe diagnostics; two private
+  profiles, hidden credential/plan entry, GET-only model/schema preflight and
+  persistent campaign/per-provider guards implemented.
+- [x] Frozen backend gate 242 PASS; lock/Ruff/Black/strict MyPy PASS. Ops 50 PASS
+  (13 direct-campaign tests), plus focused provider wire/identity/CF error-shape
+  tests PASS. An earlier fingerprint fixture failed while source was being
+  edited; the full frozen rerun passed without weakening the fingerprint guard.
+- [ ] Build/inspect affected source-labeled image; prepare blank-credential files
+  against existing DB/admin/volume/CLI/input, preserving all historical evidence.
+- [ ] Guide/report/provenance handoff; AC-08/AC-29 stay BLOCKED.
+
+Groq Free organization and Cloudflare Workers Free account must be checked locally
+while entering credentials. Native free-plan quota enforcement, not portable
+max_price fields, protects the free-use objective. No billing, paid plan, shared
+data-sharing change, remote deployment, push or retained-resource deletion.

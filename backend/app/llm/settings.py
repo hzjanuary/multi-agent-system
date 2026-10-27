@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -20,6 +21,7 @@ class LLMSettings(BaseModel):
     max_retries: int = Field(default=2, ge=0, le=5)
     max_output_tokens: int = Field(default=1024, ge=1, le=32768)
     groq_api_key: str = Field(default="", repr=False)
+    groq_reasoning_effort: Literal["", "low", "medium", "high"] = ""
     openrouter_api_key: str = Field(default="", repr=False)
     openrouter_provider_preferences: OpenRouterProviderPreferences = Field(
         default_factory=OpenRouterProviderPreferences

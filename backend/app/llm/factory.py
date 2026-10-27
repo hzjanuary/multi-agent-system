@@ -83,6 +83,7 @@ def create_llm_client(
     if selected_provider is LLMProvider.GROQ:
         return GroqLLMClient(
             api_key=settings.groq_api_key,
+            reasoning_effort=settings.groq_reasoning_effort,
             model=model,
             transport=transport,
             default_timeout_seconds=default_timeout_seconds,

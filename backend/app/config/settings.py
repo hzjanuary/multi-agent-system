@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     llm_max_retries: int = Field(default=2, ge=0, le=5)
     llm_max_output_tokens: int = Field(default=1024, ge=1, le=32768)
     groq_api_key: str = Field(default="", repr=False)
+    groq_reasoning_effort: Literal["", "low", "medium", "high"] = ""
     openrouter_api_key: str = Field(default="", repr=False)
     openrouter_provider_preferences_raw: str = Field(
         default="", alias="OPENROUTER_PROVIDER_PREFERENCES", repr=False
@@ -98,6 +99,7 @@ class Settings(BaseSettings):
             max_retries=self.llm_max_retries,
             max_output_tokens=self.llm_max_output_tokens,
             groq_api_key=self.groq_api_key,
+            groq_reasoning_effort=self.groq_reasoning_effort,
             openrouter_api_key=self.openrouter_api_key,
             openrouter_provider_preferences=(
                 OpenRouterProviderPreferences.model_validate_json(

@@ -127,6 +127,8 @@ def selected_profile(config: dict[str, str]) -> dict[str, str]:
                 raise SmokeFailure("invalid_openrouter_price_caps")
             preferences["max_price"] = normalized
         profile["routing_hash"] = digest(preferences)
+    if provider == "groq" and config.get("GROQ_REASONING_EFFORT", ""):
+        profile["reasoning_effort"] = config["GROQ_REASONING_EFFORT"]
     return profile
 
 

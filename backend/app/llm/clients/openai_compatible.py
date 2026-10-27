@@ -15,6 +15,7 @@ from app.llm.clients.base import (
 from app.llm.clients.http import (
     AsyncJSONHTTPTransport,
     HTTPResponse,
+    HTTPResponseLimitError,
     HTTPTimeoutError,
     HTTPTransportError,
     HTTPXAsyncJSONHTTPTransport,
@@ -27,7 +28,7 @@ from app.llm.contracts import (
     LLMMessageRole,
     LLMProvider,
 )
-from app.llm.diagnostics import ProviderDiagnostics
+from app.llm.diagnostics import ProviderDiagnostics, extract_diagnostics
 from app.llm.errors import LLMConfigurationError, LLMProviderError
 
 
@@ -104,8 +105,12 @@ class OpenAICompatibleLLMClient:
             raise _provider_error(
                 provider=self.provider,
                 request=request,
-                category=LLMErrorCategory.UNAVAILABLE,
-                message="provider is unavailable",
+                category=(
+                    LLMErrorCategory.INVALID_RESPONSE
+                    if isinstance(exc, HTTPResponseLimitError)
+                    else LLMErrorCategory.UNAVAILABLE
+                ),
+                message="provider operation failed",
             ) from exc
         diagnostics = self._error_diagnostics(request, response)
         _raise_for_http_status(self.provider, request, response, diagnostics)
@@ -127,7 +132,7 @@ class OpenAICompatibleLLMClient:
     def _error_diagnostics(
         self, request: LLMChatRequest, response: HTTPResponse
     ) -> ProviderDiagnostics | None:
-        return None
+        return extract_diagnostics(response, request, self._api_key)
 
     def _headers(self, request: LLMChatRequest) -> dict[str, str]:
         headers = {"User-Agent": "multi-agent-os/0.2.0"}

@@ -173,3 +173,11 @@ bodies and `metadata.raw` are not persisted. Raw JSON may be parsed transiently
 only to select upstream code/status; secrets and request content are rejected
 from diagnostic string fields. Actual generated outputs still belong to the
 normal private workflow records, never diagnostic logs.
+
+## Separately authorized direct-provider campaign
+
+The original and additional OpenRouter attempts remain closed and immutable.
+For the later opt-in **direct Groq → direct Cloudflare** preparation and its
+separate four-new/six-cumulative request ledger, see
+[direct smoke campaign](direct-smoke-campaign.md). That runner never calls
+OpenRouter, changes an old run's provider, or resets these attempt markers.

@@ -90,7 +90,13 @@ def extract_diagnostics(
 
     body = response.payload
     error = body.get("error")
-    error = error if isinstance(error, dict) else {}
+    if not isinstance(error, dict):
+        errors = body.get("errors")
+        error = (
+            errors[0]
+            if isinstance(errors, list) and errors and isinstance(errors[0], dict)
+            else {}
+        )
     metadata = error.get("metadata")
     metadata = metadata if isinstance(metadata, dict) else {}
     upstream: dict[str, Any] = {}
