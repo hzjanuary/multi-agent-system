@@ -72,8 +72,8 @@ smoke compose run --rm --no-deps api python -m app.cli migrate
 smoke compose run --rm --no-deps api python -m app.cli admin bootstrap
 smoke compose up -d --wait api worker
 smoke compose run --rm --no-deps api python -m app.cli doctor
-smoke compose run --rm cli auth login
-smoke compose run --rm cli workflow list
+smoke compose --profile cli run --rm cli auth login
+smoke compose --profile cli run --rm cli workflow list
 ${EDITOR:-vi} .maos/openrouter-free-smoke/input.txt
 smoke run --approve
 smoke compose stop
@@ -84,6 +84,8 @@ characters), retain mode 0600, then save and close it. The separate `workflow
 list` container proves the dedicated CLI login persists. Do not run `provider
 check`: that would consume inference calls outside this two-call attempt.
 `doctor` checks storage/readiness and the worker; it does not run inference.
+The separate README provider-probe example remains outside this two-call budget
+and unverified; it needs a separate explicit budget if later required for release.
 If you change the private key before the attempt after services exist, recreate
 them with `smoke compose up -d --force-recreate api worker`.
 
@@ -92,6 +94,9 @@ approval. It validates the effective running API/worker images and environment,
 then reserves `attempt.json` using an exclusive create **before** invoking the
 existing `scripts/ops/live_text_review.py` once. The run has at most two provider
 calls, no provider retries, and at most 1024 output tokens per call (2048 total).
+This bounds client generation HTTP attempts, including uncertain outcomes.
+OpenRouter or an upstream provider may perform internal work the client cannot
+observe; the evidence must not claim to count that internal behavior.
 The approval still pauses execution, uses the content identity/revision, and
 requires an explicit resume, as checked by the existing entry point.
 

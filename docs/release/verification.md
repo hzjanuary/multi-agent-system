@@ -49,6 +49,63 @@ implementation or image identity. Existing acceptance evidence and counts are
 unchanged; no suite rerun, image rebuild, inference or retained-resource change
 was needed for this provenance check.
 
+### Isolated OpenRouter preparation (2026-10-27)
+
+This is additional non-live preparation, authorized after the earlier closeout.
+The prior source/image and their acceptance artifacts above remain historical.
+The new runtime image was built from clean source
+`f6317e25317c13c2da83c3e784b4d660f48fea45`, tag
+`multi-agent-os:openrouter-free-smoke`, digest
+`sha256:99078eeb57903c074973fdcbdb10d68e0b488e1e634f6e5999bc7c4401ad6527`.
+Its OCI revision label matches that source; all **92** shipped application,
+example, migration/configuration files match source hashes and the current tree.
+The previous `multi-agent-os:local` image was not replaced.
+
+Final helper/verification source is
+`6287f1a2f7d9ecaad12cd4a02e4873fb4a880ac2`. Its changes after the image source
+fix a test-only MyPy reference, host-side Compose `run` flag compatibility and
+input-length prevalidation, plus optional guide commands. No shipped runtime,
+example, migration, dependency, Docker, Compose or default configuration input
+changed after the image build. Tests are removed from the runtime stage; no
+image rebuild is needed for these host verifier/test/documentation fixes. The
+containing final handoff commit records evidence and is a separate identity.
+
+[Preparation evidence](openrouter-preparation.json) records **228 backend tests
+passed**, no failures/skips, lock/Ruff/Black/strict MyPy passed (121 Black files,
+119 MyPy files), **29 ops unit tests** (17 new helper tests), scripts lint/format,
+base/optional Compose gates and strict source secret scan. The initial gate's
+MyPy errors were solely in the new test; its references were corrected and all
+10 OpenRouter tests plus the affected static checks rerun successfully. Two
+existing dependency deprecation warnings remain. Actual image checks prove
+private/test/fake exclusion; actual Compose API and worker oneoffs prove the
+same model/routing/limits, with a blank key refusing generation. An unauthenticated
+public-metadata GET also succeeds from that image on the isolated network.
+
+The exact free model and provider are `google/gemma-4-31b-it:free` /
+`google-ai-studio`, canonical `google/gemma-4-31b-it-20260402`. Public metadata
+was retrieved at **2026-10-27T05:25:18.852007+00:00**. Prompt/completion are
+explicitly zero; request fee is omitted, not fabricated as a metadata zero.
+Official free-variant documentation and the enforced zero request-price cap
+bound the request. The exact endpoint advertises JSON-object mode, max_tokens
+and temperature; reasoning is optional and disabled by default. No search,
+media, paid plugin, server tool or cache operation is requested. Metadata is
+rechecked immediately before the single later attempt; route drift fails closed.
+
+The private profile is prepared under `.maos/openrouter-free-smoke/` with a new
+Compose/database/volume identity and separate CLI session, 0700 directory and
+0600 files. Key and operator text remain empty, no attempt is reserved, and a
+credential-requiring preflight stops before any inference. The permissive
+collection/training policy exists only in this operator-selected profile; unset
+OpenRouter preferences explicitly deny collection and require ZDR. Profile
+identity now includes routing policy, so existing runs cannot be silently
+rerouted. Account/organization ZDR restrictions remain authoritative.
+
+**No inference was executed. Acceptance remains 30 PASS / 2 BLOCKED:** AC-08
+and the real-model part of AC-29 still require the genuine journey below. No
+prior clean-clone/live-release claim is expanded by these offline checks. Only
+the fresh gate containers were stopped, retaining their data; profile services
+await the operator procedure and no old volumes/configuration were deleted.
+
 Environment: Linux `7.0.0-38-generic` x86_64, Docker Engine `29.9.2`, Compose
 `5.6.1`, local test Python `3.12.9`. The clean-image build used:
 

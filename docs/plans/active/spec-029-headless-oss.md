@@ -70,7 +70,7 @@ independent definitions/providers, runtime/persistence and packaging work.
   files and backend-only CI updated; links and secret/dependency checks passed.
 - [x] M6 all non-live checks and acceptance evidence matrix completed.
 - [ ] M6 live text_review and full README model journey: BLOCKED by explicit
-  maintainer choice; no configured installed local model or remote enablement.
+  maintainer boundary: OpenRouter preparation is complete, key/live execution pending.
 
 ## Verification and decisions
 
@@ -137,7 +137,7 @@ Engineering result: headless generic runtime/API/CLI and self-host packaging
 implemented and verified within the recorded non-live scope. Acceptance:
 30 PASS, 2 BLOCKED, 0 FAIL, 0 NOT_RUN. Fully verified release readiness remains
 unproven. The maintainer explicitly chose to keep AC-08 blocked; no model was
-downloaded and no paid/remote call was attempted.
+downloaded and no model-generation request was attempted.
 
 AC-08 and the model-dependent portion of AC-29 remain BLOCKED. The maintainer
 selected OpenRouter free inference rather than installing a local model, and
@@ -164,7 +164,16 @@ validation. No push, publication, merge, deployment or retained-resource deletio
   routing identity, explicit no transport retry, safe request/provider/cost evidence.
 - [x] Prepare helper/guide with private key slot, separate CLI/DB/Compose identities,
   immutable image pin, normal approval/resume and permanent once-only attempt lock.
-- [ ] Run required backend/Compose and focused offline checks; build/inspect new
+- [x] Run required backend/Compose and focused offline checks; build/inspect new
   source-labeled release image and prepare the blank-key private configuration.
-- [ ] Record final source/image identities and exact results in the release report.
+- [x] Record source/image identities and exact results in the release report.
+  Runtime source `f6317e25317c13c2da83c3e784b4d660f48fea45`; image
+  `sha256:99078eeb57903c074973fdcbdb10d68e0b488e1e634f6e5999bc7c4401ad6527`.
+  Final host helper/test source `6287f1a2f7d9ecaad12cd4a02e4873fb4a880ac2`;
+  92 shipped file hashes still match. Backend 228 PASS, ops 29 PASS,
+  lock/lint/format/strict types/Compose/image checks PASS. Metadata-only preflight
+  PASS; missing-key preflight BLOCKED before generation. No live attempt reserved.
+  The final containing handoff commit updates evidence only; no image rebuild.
+  [Scoped proof](../../release/openrouter-preparation.json) retains limits and
+  separates original evidence from this preparation. AC counts unchanged.
 - [ ] Genuine live model evidence and dependent first-run acceptance: BLOCKED.
