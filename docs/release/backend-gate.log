@@ -1,0 +1,52 @@
+All set!
+============================= test session starts ==============================
+platform linux -- Python 3.12.9, pytest-8.4.2, pluggy-1.6.0
+rootdir: /home/hzjanuary/Documents/multi-agent-system/backend
+configfile: pyproject.toml
+testpaths: app/tests
+plugins: anyio-4.15.1, langsmith-0.10.2, asyncio-0.26.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 218 items
+
+app/tests/test_alembic_headless.py ..........                            [  4%]
+app/tests/test_api_headless.py .....                                     [  6%]
+app/tests/test_app_import.py ..                                          [  7%]
+app/tests/test_auth_api.py ...............                               [ 14%]
+app/tests/test_backup_restore.py .                                       [ 15%]
+app/tests/test_cache_provider.py ....                                    [ 16%]
+app/tests/test_cli_operator.py ........                                  [ 20%]
+app/tests/test_composition_integration.py ....                           [ 22%]
+app/tests/test_db_base.py .....                                          [ 24%]
+app/tests/test_db_session.py ....                                        [ 26%]
+app/tests/test_definitions.py .............                              [ 32%]
+app/tests/test_health.py ..........                                      [ 37%]
+app/tests/test_jwt_tokens.py ..........                                  [ 41%]
+app/tests/test_llm_contracts.py ........                                 [ 45%]
+app/tests/test_llm_generic.py ............                               [ 50%]
+app/tests/test_llm_provider_clients.py ..........                        [ 55%]
+app/tests/test_llm_provider_error_mapping.py ................            [ 62%]
+app/tests/test_metrics.py ........                                       [ 66%]
+app/tests/test_middleware.py ....                                        [ 68%]
+app/tests/test_observability.py ......                                   [ 71%]
+app/tests/test_password_hashing.py .......                               [ 74%]
+app/tests/test_rbac.py ........                                          [ 77%]
+app/tests/test_readiness.py ....                                         [ 79%]
+app/tests/test_redis_cache.py .....                                      [ 82%]
+app/tests/test_runtime_durable.py ..................                     [ 90%]
+app/tests/test_settings.py .....................                         [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /home/hzjanuary/Documents/multi-agent-system/backend/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.12/site-packages/starlette/testclient.py:53
+  /home/hzjanuary/Documents/multi-agent-system/backend/.venv/lib/python3.12/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 218 passed, 2 warnings in 218.74s (0:03:38) ==================
+All checks passed!
+All done! ✨ 🍰 ✨
+119 files would be left unchanged.
+Success: no issues found in 117 source files

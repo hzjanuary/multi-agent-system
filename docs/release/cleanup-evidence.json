@@ -1,0 +1,20 @@
+{
+  "scope": "Only task-created maos-spec029 verification containers",
+  "stopped": [
+    "maos-spec029-release-final-20261027-v2-worker-1",
+    "maos-spec029-release-final-20261027-v2-api-1",
+    "maos-spec029-release-final-20261027-v2-postgres-1",
+    "maos-spec029-release-final-20261027-v2-redis-1",
+    "maos-spec029-release-final-20261027-api-1",
+    "maos-spec029-release-final-20261027-worker-1",
+    "maos-spec029-release-final-20261027-postgres-1",
+    "maos-spec029-release-final-20261027-redis-1",
+    "maos-spec029-release-postgres-1",
+    "maos-spec029-release-redis-1",
+    "maos-spec029-redis-20261026",
+    "maos-spec029-postgres-20261026"
+  ],
+  "volumes_deleted": false,
+  "databases_deleted": false,
+  "unrelated_containers_stopped": false
+}

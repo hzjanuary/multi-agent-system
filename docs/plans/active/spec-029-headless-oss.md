@@ -1,97 +1,134 @@
 # SPEC-029 headless OSS implementation
 
-Date: 2026-10-26
+Started: 2026-10-26. Updated: 2026-10-27.
 
 ## Status
 
-Active. Branch `feat/spec-029-headless-oss`; baseline HEAD
-`92e5f1cfb2b0144bdb39a48db99371974bd372a5`. Supplied untracked
-`GOAL-029.txt` and `docs/specs/SPEC-029-headless-oss-selfhost.md` preserved.
+Engineering complete. Release verification BLOCKED at the maintainer-selected
+live-model gate (AC-08 and the dependent real-model portion of AC-29). Keep this
+one plan active until that gate is resolved; do not archive as fully verified.
+
+Branch: `feat/spec-029-headless-oss`. Historical baseline:
+`92e5f1cfb2b0144bdb39a48db99371974bd372a5`. Checked implementation:
+`98854a807643566b720bff8ffd7feda85fa23746`. Later evidence/prose commits do not
+change the checked backend. No remote push, merge, deployment or publication.
 
 ## Outcome and authority
 
-Implement the full headless, self-hosted product in SPEC-029, which the supplied
-goal activates and authorizes, including MIT for maintainer-owned material.
-Security/data protection remain required. No remote publishing, paid inference,
-existing data deletion or history rewriting is authorized.
+The supplied attachment activates SPEC-029 and selects MIT for appropriately
+owned project material. It supersedes the old graduation frontend/procurement/
+RAG contract while preserving security, data protection, authorization and
+validation obligations. No mandatory historical Harness control-plane writes
+were used. Parallel agents used the selected inherited model/effort for
+independent definitions/providers, runtime/persistence and packaging work.
 
-## Approach and ownership
+## Inventory and extraction
 
-- Root: API/CLI/bootstrap, product extraction inventory/removals, documentation,
-  integration and acceptance audit.
-- definitions_llm: typed registry, real provider service, opt-in text_review.
-- runtime: generic persistence, jobs/leases/checkpoints/approvals/events, migrations.
-- packaging: settings, image/Compose, backend-only CI and dependency lock.
-
-## Inventory / removal map
-
-- Retain/generalize Python FastAPI/LangGraph, PostgreSQL, Redis, real model
-  transports, auth/roles/session rotation and sanitized errors.
-- Replace procurement workflows/runtime/approval models with generic definitions
-  and durable execution. Preserve relevant security tests by rewriting them for
-  the new contracts; remove tests only for explicitly retired features.
-- Remove frontend/datasets/demo/knowledge/vectorstore/storage/price_research/
-  outbound, Telegram/demo/evaluation scripts and their exclusive tests.
-- Inventory `.harness-*`, `.ai`, `.agents`, `.codex`, scripts/schema and old docs
-  before removing active-distribution scaffold; Git baseline preserves history.
-- License/third-party provenance inspection pending; no publication in scope.
-
-## Risks and recovery
-
-Use a new product schema and separately named Compose volumes. Refuse legacy,
-unknown or unmarked nonempty databases before migrations. Never delete operator
-data/volumes. Git branch and coherent local commits preserve source recovery.
-External model calls require an explicitly configured local endpoint or approved
-remote budget. Missing external capability is an explicit acceptance blocker.
+- Retained/generalized Python/FastAPI/LangGraph, real Ollama/OpenAI-compatible/
+  Groq/OpenRouter/Gemini transports, PostgreSQL, Redis notifications,
+  Argon2/JWT, generic roles, human approvals, events and audit boundaries.
+- Replaced fixed procurement stages/state with registered typed agents/tools/
+  workflows and immutable definition/artifact/provider identities.
+- Added durable jobs, DB-time claims/leases/fencing, call reservations, per-node
+  commits, explicit recovery/cancellation, approval content identities and
+  committed cursor replay. One LangGraph path executes agent/tool steps.
+- Removed frontend/datasets/demo/knowledge/vectorstore/object storage/pricing/
+  outbound/Telegram modules, services, prompts, configuration, dependencies and
+  exclusive tests. Removed placeholder/fake/fallback production paths.
+- Inventory found no retained runtime/CI dependency on `.harness-*`, obsolete
+  `.ai`/`.agents`/`.codex` handoffs/intake/template/semantic-changeset tooling,
+  old governance, defense or frontend security reports; removed them from the
+  active distribution. Git baseline remains the archive.
+- Rewrote retained auth, provider, state/approval/event/recovery tests for the
+  generic product; no global test exclusions or weakened runtime limits.
+- MIT/NOTICE review found no concrete conflicting retained-source ownership
+  notice. Dependency/base-image/model notices and terms remain separate.
 
 ## Progress
 
-- [x] Read goal, spec, AGENTS and WORKFLOW; baseline and clean tracked tree checked.
-- [x] Create local feature branch and establish policy authority.
-- [ ] M0 import/scaffold/license inventory and baseline executable observations.
-- [ ] M1 generic contracts and two unrelated workflow proof.
-- [ ] M2 durable execution, recovery, approvals and PostgreSQL proof.
-- [ ] M3 product extraction and removed-import proof.
-- [ ] M4 CLI/bootstrap/image/Compose and isolated install proof.
-- [ ] M5 English docs/license/backend CI.
-- [ ] M6 full acceptance matrix, live model, clean install and restore rehearsal.
+- [x] M0 baseline/instructions/import/scaffold/license inventory; feature branch.
+- [x] M1 typed registry, source fingerprints, opt-in packaged text_review and
+  unrelated workflow extension proof.
+- [x] M2 durable PostgreSQL runtime, recovery/concurrency/fencing/approval/event
+  and separate-database restore proof.
+- [x] M3 retired product/services/fakes/scaffolding extracted; imports/image clean.
+- [x] M4 API/CLI/admin/config/migration/Compose/image/bootstrap/private session
+  and worker availability validated in an isolated installation.
+- [x] M5 English README/operator/developer docs, MIT/NOTICE/security/contribution
+  files and backend-only CI updated; links and secret/dependency checks passed.
+- [x] M6 all non-live checks and acceptance evidence matrix completed.
+- [ ] M6 live text_review and full README model journey: BLOCKED by explicit
+  maintainer choice; no configured installed local model or remote enablement.
 
-## Validation
+## Verification and decisions
 
-Run unit/schema/provider fixtures first; then actual isolated PostgreSQL/Redis
-integration, release image inspection and documented CLI walkthrough. Ruff,
-formatting, strict MyPy, lock and Compose checks remain gates. Record exact
-commands/results and checked source revision in docs/release/verification.md.
-Each AC-01–AC-32 remains unproven until direct evidence is inspected.
+Authoritative matrix and artifacts: [release verification](../../release/verification.md).
+The checked actual image is
+`sha256:fa2e6d17b8a3a99c0abf4289cbcbe42f0740173d13d700c2a10de6c15153fb69`.
+Its revision label matches the checked source, and all 91 shipped code/example/
+migration file hashes match. The runtime excludes tests, fake providers and
+retired application/infrastructure packages.
 
-## Decisions
+- Final backend gate: 218 passed, zero skipped/failed; Ruff/Black/strict MyPy/
+  lockfile passed. Black checked 119 files, MyPy 117. Test-client dependencies
+  emit two deprecation warnings. Ops unittest 12 passed.
+- Actual clean local clone/image: generated private config, fresh zero records,
+  one explicit administrator, repeat bootstrap refusal and original-password
+  login; separate CLI containers share a 0600 session file in a 0700 directory.
+- Actual independent API restart/client disconnect preserves one accepted job;
+  worker executes deterministic tool result 42. A premature disconnect rejected
+  with 400 is not treated as accepted. Real Redis stop preserves result 14 and
+  all six events/five events after cursor1; doctor reports degradation and
+  aggregate health is degraded, then recovers after Redis restart.
+- Actual image CLI: create/start/show/list/nodes/events/follow, idempotency,
+  content-bound approve/reject, explicit resume, cancel, logout/denial/relogin.
+  Follow was deliberately stopped after observing an event (exit 137 recorded).
+- Real pg_dump/pg_restore into a separate disposable database preserves completed
+  results, pending approvals, ordered event identities, users/roles and refresh
+  state; restored resume does not mutate the paused source database.
+- Current 58-package locked main audit: zero known vulnerabilities. No OS/host/
+  model audit or live inference is claimed. Strict source secret scan passed.
+- Docker bridge DNS blocked package downloads on this host; verified Linux build
+  uses --network=host. Runtime Compose networking/loopback port policy remains.
+- Exact-image checks found and fixed empty Bearer header before CLI login and
+  the mounted verifier's Python import path. Aggregate /health was reconciled
+  with SPEC-029; /live remains process-only. No assertions were skipped to pass.
+- Cold package fingerprint validation takes about 4 seconds on this host.
+  Subprocess observation checks the real handle for up to 20 seconds; runtime
+  lease/call/token/output limits were not changed for tests.
 
-- 2026-10-26: Use code-first installed Python extensions and application-owned
-  node checkpoints; LangGraph executes the registered sequential graph.
-- 2026-10-26: No intake/trace control-plane writes: current workflow and explicit
-  goal authorize direct implementation.
+## Risks and recovery
 
-## Result
+Only uniquely named task-owned databases/schemas/Compose projects were used.
+Operator databases, volumes, secrets, Git history and unrelated services were
+not reset or deleted. All task-created maos-spec029 verification containers were
+stopped after proof; their volumes and private configs were retained. Verification configs/sessions remain private under ignored
+.maos directories in /tmp checkouts; no backup/credential is committed. Preserve
+these files if inspecting the test installation; do not use its records as a
+production seed. Normal installation uses a new project/database and explicitly
+provisions its own administrator.
 
-Implementation in progress; engineering completion and release readiness not claimed.
+The initial unrelated untracked GOAL-029.txt was later observed absent. No root
+or subagent deletion targeted it; no substitute content was guessed. The original
+attachment remains available as the task authority. This observation does not
+authorize changing unrelated files.
 
-## Resumed verification observations
+Recovery is explicit: restore matching definitions/provider profile for paused
+or interrupted runs; resume only permitted work. Uncertain non-idempotent work
+requires independent reconciliation and cannot be publicly marked completed.
+Back up before upgrades; restore into a separate compatible database. Never
+run down -v against an operator project or attach a legacy procurement DB.
 
-- The original goal turn made implementation progress: registry, real adapters,
-  generic leased runtime, schema guard, API/CLI/auth rotation, headless packaging
-  and English docs now exist; listed retired source/doc surfaces removed only
-  after import/CI inventory. Existing operator containers/volumes remain untouched.
-- 2026-10-26: Root focused auth/RBAC/health/bootstrap/config suite: 43 passed;
-  production provider-parser/graph/PostgreSQL composition plus worker-availability
-  and middleware checks: 10 passed; separate CLI suite: 8 passed. These are
-  deterministic fixtures and real DB tests, not live inference.
-- 2026-10-26: Dependency audit remediation upgraded LangGraph and its checkpoint/
-  SDK packages plus vulnerable compatible dependencies. Exported locked main
-  dependency audit reports zero known vulnerabilities. Final source gates pending.
-- 2026-10-26: Maintainer explicitly selected leaving AC-08 BLOCKED. No configured
-  installed local model exists; no live/remote calls or model downloads are run.
-- Added missing FR-19 worker availability: singleton database-time presence
-  heartbeat, private worker health marker and nonzero doctor status if unavailable.
-- Runtime agent runs real separate-database pg_dump/pg_restore proof; packaging
-  agent prepares final image/clean install/independent API restart/stopped-Redis
-  verification. Final-image identity and complete acceptance matrix still pending.
+## Remaining action and result
+
+Engineering result: headless generic runtime/API/CLI and self-host packaging
+implemented and verified within the recorded non-live scope. Acceptance:
+30 PASS, 2 BLOCKED, 0 FAIL, 0 NOT_RUN. Fully verified release readiness remains
+unproven. The maintainer explicitly chose to keep AC-08 blocked; no model was
+downloaded and no paid/remote call was attempted.
+
+To resume release verification, explicitly configure an already installed local
+model/reachable endpoint and authorize the documented bounded two-call smoke
+with operator-supplied text. Hosted providers additionally require explicit
+remote enablement. Then update AC-08/AC-29 with actual outputs/provider metadata,
+verify the model-dependent README commands and only then archive this plan.

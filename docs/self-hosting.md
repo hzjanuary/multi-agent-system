@@ -5,7 +5,10 @@ Use the README's ordered first-run procedure and consult
 The supported primary target is Docker Engine/Compose on Linux. Container images
 are built locally; publication and remote deployment are separate operator work.
 
-API/worker/migrations/CLI share the same image. Build it before Compose secret
+API/worker/migrations/CLI share the same image. The verified Linux image build
+uses `docker build --network=host --target runtime -t multi-agent-os:local
+./backend`: this host's Docker bridge could not resolve the package index.
+The build network flag does not publish runtime ports. Build before Compose secret
 interpolation. `config init` works without settings imports, creates generated
 secrets and UID/GID configuration, preserves existing values, and stores `.env`
 0600 and `cli/` 0700. Database migration/admin commands do not require inference.

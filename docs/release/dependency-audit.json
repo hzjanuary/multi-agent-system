@@ -1,10 +1,10 @@
 {
-  "checked_at_utc": "2026-10-26T12:40:47.321276+00:00",
-  "checked_head": "92e5f1cfb2b0144bdb39a48db99371974bd372a5",
-  "worktree": "SPEC-029 implementation changes; release dependency identity is the poetry.lock digest below",
+  "checked_at_utc": "2026-10-27T03:58:01.986912+00:00",
+  "checked_source_commit": "98854a807643566b720bff8ffd7feda85fa23746",
   "poetry_lock_sha256": "633a19ecf2ccf68d8c0a1c6db3541b8aaf6cae57265530ae9bc56803501ee676",
-  "command": "poetry export --only main --format requirements.txt --output /tmp/maos-spec029-requirements.txt && uv tool run pip-audit --requirement /tmp/maos-spec029-requirements.txt --no-deps --disable-pip --format json",
-  "scope": "All 58 fully pinned main Python dependencies. No OS image scan or live provider check is claimed.",
+  "requirements_sha256": "312263993e1773a2a3639b27be40199d08763e152687883c7e3f213af06ad8e6",
+  "command": "poetry export --only main --format requirements.txt --output /tmp/maos-spec029-requirements-final.txt; uv tool run pip-audit --requirement /tmp/maos-spec029-requirements-final.txt --no-deps --disable-pip --format json",
+  "scope": "Locked main Python dependencies; no host/container OS/model audit claimed",
   "result": "PASS",
   "advisories_found": 0,
   "dependencies": [
@@ -298,6 +298,5 @@
       "version": "0.25.0",
       "advisories": []
     }
-  ],
-  "initial_findings": "31 advisory entries in 7 locked baseline packages; compatible patches and tested LangGraph major upgrade applied. Current audit contains no findings."
+  ]
 }

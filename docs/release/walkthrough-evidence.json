@@ -1,0 +1,713 @@
+{
+  "scope": "actual release image; explicit disposable accounts, no model inference",
+  "commands": [
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "config",
+        "--quiet"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "up",
+        "-d",
+        "--wait",
+        "postgres",
+        "redis"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "run",
+        "--rm",
+        "--no-deps",
+        "-T",
+        "api",
+        "python",
+        "-m",
+        "app.cli",
+        "--json",
+        "doctor"
+      ],
+      "exit_code": 1
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "run",
+        "--rm",
+        "--no-deps",
+        "api",
+        "python",
+        "-m",
+        "app.cli",
+        "migrate"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "run",
+        "--rm",
+        "--no-deps",
+        "-T",
+        "api",
+        "python",
+        "-m",
+        "app.cli",
+        "--json",
+        "doctor"
+      ],
+      "exit_code": 1
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "maos",
+        "-d",
+        "maos",
+        "-Atc",
+        "SELECT (SELECT count(*) FROM users),(SELECT count(*) FROM runs),(SELECT count(*) FROM run_events),(SELECT count(*) FROM node_executions),(SELECT count(*) FROM approvals),(SELECT count(*) FROM jobs)"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "run",
+        "--rm",
+        "--no-deps",
+        "-T",
+        "api",
+        "python",
+        "-m",
+        "app.cli",
+        "--json",
+        "admin",
+        "bootstrap",
+        "--email",
+        "release-audit@example.test",
+        "--password-stdin"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "maos",
+        "-d",
+        "maos",
+        "-Atc",
+        "SELECT (SELECT count(*) FROM users),(SELECT count(*) FROM runs),(SELECT count(*) FROM run_events),(SELECT count(*) FROM node_executions),(SELECT count(*) FROM approvals),(SELECT count(*) FROM jobs)"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "run",
+        "--rm",
+        "--no-deps",
+        "-T",
+        "api",
+        "python",
+        "-m",
+        "app.cli",
+        "--json",
+        "admin",
+        "bootstrap",
+        "--email",
+        "release-audit@example.test",
+        "--password-stdin"
+      ],
+      "exit_code": 1
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "maos",
+        "-d",
+        "maos",
+        "-Atc",
+        "SELECT (SELECT count(*) FROM users),(SELECT count(*) FROM runs),(SELECT count(*) FROM run_events),(SELECT count(*) FROM node_executions),(SELECT count(*) FROM approvals),(SELECT count(*) FROM jobs)"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "up",
+        "-d",
+        "api",
+        "worker"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "exec",
+        "-T",
+        "api",
+        "python",
+        "-m",
+        "app.cli",
+        "--json",
+        "doctor"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "--profile",
+        "cli",
+        "run",
+        "--rm",
+        "-T",
+        "cli",
+        "--json",
+        "auth",
+        "login",
+        "--email",
+        "release-audit@example.test",
+        "--password-stdin"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "--profile",
+        "cli",
+        "run",
+        "--rm",
+        "-T",
+        "cli",
+        "--json",
+        "workflow",
+        "list"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "exec",
+        "-T",
+        "worker",
+        "python",
+        "-m",
+        "app.worker",
+        "--healthcheck"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "stop",
+        "worker"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "up",
+        "-d",
+        "--no-deps",
+        "api"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "maos",
+        "-d",
+        "maos",
+        "-Atc",
+        "SELECT count(*) FROM jobs"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "restart",
+        "api"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "maos",
+        "-d",
+        "maos",
+        "-Atc",
+        "SELECT count(*) FROM jobs WHERE status='QUEUED'"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "up",
+        "-d",
+        "--no-deps",
+        "worker"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "stop",
+        "redis"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "exec",
+        "-T",
+        "api",
+        "python",
+        "-m",
+        "app.cli",
+        "--json",
+        "doctor"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "up",
+        "-d",
+        "--wait",
+        "redis"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--project-directory",
+        "/tmp/maos-spec029-clean-clone-final",
+        "--env-file",
+        "/tmp/maos-spec029-clean-clone-final/.maos/.env",
+        "-f",
+        "/tmp/maos-spec029-clean-clone-final/docker-compose.yml",
+        "-f",
+        "/tmp/maos-spec029-release-final-20261027-v2/test-extension.yml",
+        "exec",
+        "-T",
+        "api",
+        "python",
+        "-m",
+        "app.cli",
+        "--json",
+        "doctor"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "checks": {
+    "doctor_before_migration": {
+      "checks": [
+        {
+          "name": "postgres_schema",
+          "status": "failed",
+          "required": true,
+          "latency_ms": 160.39,
+          "message": "dependency or configuration check failed"
+        },
+        {
+          "name": "configuration",
+          "status": "ok",
+          "required": true,
+          "latency_ms": 44.57,
+          "message": "ready"
+        },
+        {
+          "name": "redis_notifications",
+          "status": "ok",
+          "required": false,
+          "latency_ms": 3.24,
+          "message": "ready"
+        }
+      ],
+      "worker_available": false,
+      "status": "not_ready"
+    },
+    "doctor_migrated_without_worker": {
+      "checks": [
+        {
+          "name": "postgres_schema",
+          "status": "ok",
+          "required": true,
+          "latency_ms": 169.02,
+          "message": "ready"
+        },
+        {
+          "name": "configuration",
+          "status": "ok",
+          "required": true,
+          "latency_ms": 47.69,
+          "message": "ready"
+        },
+        {
+          "name": "redis_notifications",
+          "status": "ok",
+          "required": false,
+          "latency_ms": 3.32,
+          "message": "ready"
+        }
+      ],
+      "worker_available": false,
+      "status": "not_ready"
+    },
+    "fresh_counts": {
+      "users": 0,
+      "runs": 0,
+      "events": 0,
+      "nodes": 0,
+      "approvals": 0,
+      "jobs": 0
+    },
+    "after_explicit_bootstrap_counts": {
+      "users": 1,
+      "runs": 0,
+      "events": 0,
+      "nodes": 0,
+      "approvals": 0,
+      "jobs": 0
+    },
+    "repeat_bootstrap_refused": true,
+    "doctor": {
+      "checks": [
+        {
+          "name": "postgres_schema",
+          "status": "ok",
+          "required": true,
+          "latency_ms": 132.48,
+          "message": "ready"
+        },
+        {
+          "name": "configuration",
+          "status": "ok",
+          "required": true,
+          "latency_ms": 30.57,
+          "message": "ready"
+        },
+        {
+          "name": "redis_notifications",
+          "status": "ok",
+          "required": false,
+          "latency_ms": 2.55,
+          "message": "ready"
+        }
+      ],
+      "worker_available": true,
+      "status": "ready"
+    },
+    "persistent_cli_login": {
+      "separate_container_workflow_list": "text_review",
+      "auth_file_mode": "0600",
+      "cli_directory_mode": "0700",
+      "configuration_mode": "0600"
+    },
+    "worker_healthcheck": "PASS",
+    "early_incomplete_disconnect": {
+      "http_status": 400,
+      "state": "CREATED",
+      "job_count": 0,
+      "scope": "Client closed before the ASGI server accepted a valid request body; not an accepted submission."
+    },
+    "disconnect_api_restart_durable_execution": {
+      "status": "COMPLETED",
+      "client_read_acceptance_response": false,
+      "acceptance_observed_independently": true,
+      "output": {
+        "value": 42
+      },
+      "provider_calls": 0,
+      "event_count": 6,
+      "queued_job_count_before_worker": 1,
+      "extension_fixture_sha256": "10855b40820de60e5459395fb02204c7996d6fb54f7eadb7684f86f1672c650d"
+    },
+    "stopped_redis_execution_replay": {
+      "status": "COMPLETED",
+      "output": {
+        "value": 14
+      },
+      "event_count": 6,
+      "replay_count_after_sequence_1": 5,
+      "notification_readiness": {
+        "name": "redis_notifications",
+        "status": "failed",
+        "required": false,
+        "latency_ms": 4.0,
+        "message": "notification delivery degraded; durable database replay remains available"
+      },
+      "aggregate_health": {
+        "app_name": "Multi-Agent OS",
+        "environment": "production",
+        "version": "0.2.0",
+        "status": "degraded",
+        "timestamp": "2026-10-27T03:53:16.263781Z",
+        "checks": [
+          {
+            "name": "postgres_schema",
+            "status": "ok",
+            "required": true,
+            "latency_ms": 169.68,
+            "message": "ready"
+          },
+          {
+            "name": "configuration",
+            "status": "ok",
+            "required": true,
+            "latency_ms": 108.73,
+            "message": "ready"
+          },
+          {
+            "name": "redis_notifications",
+            "status": "failed",
+            "required": false,
+            "latency_ms": 3.4,
+            "message": "notification delivery degraded; durable database replay remains available"
+          }
+        ]
+      }
+    },
+    "live_provider": {
+      "status": "NOT_RUN",
+      "reason": "No configured local model. No provider request was made; arithmetic tool extensions do not call inference."
+    }
+  },
+  "source_commit": "98854a807643566b720bff8ffd7feda85fa23746",
+  "image_id": "sha256:fa2e6d17b8a3a99c0abf4289cbcbe42f0740173d13d700c2a10de6c15153fb69"
+}

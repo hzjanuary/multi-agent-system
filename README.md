@@ -39,15 +39,18 @@ The primary target is Linux with Docker Engine and Compose v2 or compatible
 newer Compose. No Node.js is required. An operator-selected model must already be
 installed/reachable; initialization does not download weights or call inference.
 Exact tested host/tool versions and verification status are in the evidence file.
-Commands below are the supported installation procedure; release-image walkthrough
-status is recorded separately in that file.
+Use a checkout containing the headless commits. The public clone command below
+is a manual distribution example until those commits are published; verification
+used an independent local clone of the exact revision in the evidence file.
+The verified Linux build uses host networking to reach package indexes on this
+host. Runtime services use the private Compose network.
 
 ```bash
 git clone https://github.com/hzjanuary/multi-agent-system.git
 cd multi-agent-system
 mkdir -p .maos
 chmod 700 .maos
-docker build --target runtime -t multi-agent-os:local ./backend
+docker build --network=host --target runtime -t multi-agent-os:local ./backend
 docker run --rm \
   --user "$(id -u):$(id -g)" \
   --mount "type=bind,source=$(pwd)/.maos,target=/config" \
