@@ -166,6 +166,16 @@ probe, model/route switch, budget reset, publication, push, merge, remote deploy
 or deletion of retained resources occurred. This closeout changes documentation
 and evidence only; existing backend gates are not rerun and the image is not rebuilt.
 
+### Non-inference 429 diagnosis (2026-10-27)
+
+[Sanitized Vietnamese diagnostic note](openrouter-429-diagnosis.md): exactly one
+GET `/api/v1/key` returned HTTP 200, with no additional generation. Current credit/
+usage fields do not identify the earlier limit; the original error body/headers
+are unavailable. Classification remains **unresolved HTTP 429**, not confirmed
+platform/account or upstream capacity. The note discloses fields not collected
+by the one-shot lookup and one metadata-only alternative; no pin was changed.
+Original attempt/evidence, stopped services and 30 PASS / 2 BLOCKED remain intact.
+
 Environment: Linux `7.0.0-38-generic` x86_64, Docker Engine `29.9.2`, Compose
 `5.6.1`, local test Python `3.12.9`. The clean-image build used:
 

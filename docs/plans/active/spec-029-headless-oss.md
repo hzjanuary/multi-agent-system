@@ -212,3 +212,15 @@ AC-08 and AC-29 remain BLOCKED by the live rate limit and uncompleted journey.
 The attempted workflow is FAILED; no claim of successful chaining, approval,
 resume or final assembly is made. No push/merge/publication/remote deployment
 or deletion of retained resources occurred. No new generation is authorized.
+
+## Bounded non-inference diagnosis (2026-10-27)
+
+Completed one authenticated key-information GET and read existing evidence/stopped
+logs only. No additional generation or service startup. Cause remains unresolved:
+original provider error body/headers were not retained; current monetary quota
+cannot identify the earlier limit. The one-shot capture's missing free-request/
+budget fields are disclosed, with no second lookup. One alternative's metadata
+was prepared without applying it. See the [Vietnamese note](../../release/openrouter-429-diagnosis.md).
+All 20 historical artifact hashes match; attempt/budget/pin/privacy remain intact.
+AC-08/AC-29 stay BLOCKED; any future attempt needs a separate explicit decision
+for up to two additional generation requests, preserving the one already consumed.
