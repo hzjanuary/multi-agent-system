@@ -1,5 +1,11 @@
 # SPEC-030 — Publication readiness
 
+> **Phase 3 — owner decision package:** [SECURITY-SIGNOFF](SPEC-030-SECURITY-SIGNOFF.md).
+> 40 HIGH rows reconciled: 0 supported-fix available, 6 confirmed affected/no-fix,
+> 31 unresolved binary attribution, 3 not affected by concrete component absence.
+> Six image-level CVEs still have affected components. Raw counts/gate unchanged;
+> no exception, risk approval or remote CI. **NO-GO; owner decisions pending.**
+
 > **Phase 2 mới nhất (2026-10-27): NO-GO.** Đã remediation và scan cùng DB:
 > **40 HIGH / 58 MEDIUM / 60 LOW / 1 UNKNOWN**, 159 rows tổng (158 OS + 1 Python).
 > 242 backend + 79 ops tests và packaging/install gates PASS; security gate FAIL.

@@ -180,3 +180,51 @@ requests, inference, remote write/publication or residual-risk approval.
   declare all engineering Definition-of-Done/release prerequisites complete.
   Next work requires vendor-fixed digest or explicit scoped risk decision; no
   new campaign, paid inference, architecture migration or publication implied.
+
+## Phase 3 — bounded security signoff package (2026-10-27)
+
+Authority: explicit owner request to reconcile residual risk and prepare decisions,
+not accept risk, change scanner/CI policy, rebuild/refactor or publish. Starting
+clean e3ec3f7. Keep raw Phase2 scan and all prior evidence byte-for-byte.
+
+- [x] Reconcile all 40 HIGH rows at binary/component level, distinguish source-
+  package duplication from image-level risk; separately review UNKNOWN and Mako.
+- [x] Produce SECURITY-SIGNOFF and a non-executable decision ledger, technical
+  proof/provenance, explicit owner/reviewer/expiry/reassessment requirements.
+- [x] Map local gates to CI; exact approved-SHA future commands, evidence and
+  disclosure enable/verify steps. No remote execution or settings changes.
+- [x] Verify new documents/index/source and historical hashes; stop at owner
+  boundary. Keep mandatory risk/disclosure/remote-CI/publication decisions open.
+
+
+### Phase 3 closeout — decision package prepared, owner boundary retained
+
+- SECURITY-SIGNOFF.md and non-executable spec-030-security-decisions.json cover
+  every remaining raw HIGH tuple exactly once (CVE/package/version/severity).
+  Counts: supported-fix0; confirmed affected/no supported fix6; unresolved
+  per-binary source-package attribution31; concrete component absence3.
+  Six image-level CVEs still have affected primary components. No claim that
+  libraries are safe merely because the application normally does not call them.
+- New network-disabled read-only exact-image inspection binds actual ownership/
+  hashes/exports for libmount1/libacl1/nsenter/infocmp. It calls no affected API,
+  mounts no operator volume, starts no application service and changes no image.
+- Nine official vendor advisory pages reviewed; supported trixie fixed version
+  not announced. Original Phase2 raw scan/hash/severity and all 40 records remain
+  unchanged. UNKNOWN Pod::Text absence reviewed separately; Mako MEDIUM retained.
+- Three HIGH decision groups require owner hzjanuary plus named security reviewer
+  (unassigned), exact scope, review/signature/expiry and reassessment no later
+  than2026-11-26 or earlier material change. No exception candidates, VEX, active
+  exceptions, risk approval, adjusted result or scanner/CI policy change created.
+- CI gate coverage reviewed step-by-step; copyable future exact-owner-approved-SHA
+  push/watch/failure/artifact procedure and mandatory run/source/image/DB proof
+  recorded. RemoteCI NOT_RUN. Private reporting last observed disabled; exact
+  owner Enable + form/GETtrue verification steps prepared, no settings operation.
+- Focused reconciliation/historical hashes/link checks PASS; tracked secret/path
+  scan247files PASS; 139 build inputs retain content hash86f6a9a6a47dfd34dc804c5ad8bd5558c7a40241e46dfaf2df7af726ae8a1e43.
+  Source archive gate verified after local documentation commit. Phase2 backend
+  242PASS/ops79PASS evidence retained, NOT rerun; no executable inputs changed,
+  no rebuild/rescan claimed. SPEC02932PASS/0BLOCKED preserved.
+- NO-GO: mandatory raw HIGH gate remains FAIL. Phase3 preparation is complete,
+  SPEC030 stays active/unarchived pending owner/security decisions, genuine remote
+  CI, verified private disclosure and separate publication authority. No inference,
+  push/merge/tag/publication/deployment/history rewrite or retained-data deletion.

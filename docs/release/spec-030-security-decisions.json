@@ -1,0 +1,2266 @@
+{
+  "active_exceptions": [],
+  "component_absence_review": {
+    "candidate_policy_change_generated": false,
+    "high_row_ids": [
+      "CVE-2026-16742/libsystemd0",
+      "CVE-2026-16742/libudev1",
+      "CVE-2026-9538/perl-base"
+    ],
+    "id": "SG-COMPONENT-ABSENCE",
+    "image_scope": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+    "owner_policy_approval": "NOT_GRANTED",
+    "reassessment": "Any added homed/Perl module, changed image/extension or by 2026-11-26",
+    "reviewer": "Named security reviewer UNASSIGNED",
+    "status": "TECHNICAL_EVIDENCE_FOR_REVIEW_ONLY"
+  },
+  "confirmed_image_level_cves": [
+    "CVE-2025-69720",
+    "CVE-2026-54369",
+    "CVE-2026-76642",
+    "CVE-2026-78408",
+    "CVE-2026-78409",
+    "CVE-2026-78410"
+  ],
+  "disclosure": "Prior GET200/enabled=false at 2026-10-27T16:08:12Z; owner enable/verify pending; no new settings operation",
+  "exception_candidates": [],
+  "gate_result": "FAIL_UNCHANGED",
+  "high_category_counts": {
+    "CONFIRMED_AFFECTED_NO_SUPPORTED_FIX": 6,
+    "CONFIRMED_AFFECTED_SUPPORTED_FIX_AVAILABLE": 0,
+    "NOT_AFFECTED_COMPONENT_ABSENT": 3,
+    "UNRESOLVED_BINARY_ATTRIBUTION": 31
+  },
+  "high_findings": [
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2025-69720",
+      "decision_record": "SG-NCURSES",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2025-69720/libncursesw6",
+      "installed_version": "6.5+20250216-2",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libncursesw6",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "ncurses-bin",
+        "affected_component": "/usr/bin/infocmp",
+        "component_hash": "934ce418360bd162a188f22310509640f3b0c14a858ec4ec04c25df64f97feb0",
+        "component_present_in_image": true,
+        "function_or_option": "infocmp analyze_string per vendor advisory",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "ncurses",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "6.5+20250216-2"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2025-69720",
+      "decision_record": "SG-NCURSES",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2025-69720/libtinfo6",
+      "installed_version": "6.5+20250216-2",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libtinfo6",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "ncurses-bin",
+        "affected_component": "/usr/bin/infocmp",
+        "component_hash": "934ce418360bd162a188f22310509640f3b0c14a858ec4ec04c25df64f97feb0",
+        "component_present_in_image": true,
+        "function_or_option": "infocmp analyze_string per vendor advisory",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "ncurses",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "6.5+20250216-2"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2025-69720",
+      "decision_record": "SG-NCURSES",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2025-69720/ncurses-base",
+      "installed_version": "6.5+20250216-2",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "ncurses-base",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "ncurses-bin",
+        "affected_component": "/usr/bin/infocmp",
+        "component_hash": "934ce418360bd162a188f22310509640f3b0c14a858ec4ec04c25df64f97feb0",
+        "component_present_in_image": true,
+        "function_or_option": "infocmp analyze_string per vendor advisory",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "ncurses",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "6.5+20250216-2"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "CONFIRMED_AFFECTED_NO_SUPPORTED_FIX",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2025-69720",
+      "decision_record": "SG-NCURSES",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2025-69720/ncurses-bin",
+      "installed_version": "6.5+20250216-2",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "ncurses-bin",
+      "rationale": "Installed vulnerable distribution version owns the affected binary/library and vendor identifies the affected component; exposure preconditions still apply, no exploitation asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "ncurses-bin",
+        "affected_component": "/usr/bin/infocmp",
+        "component_hash": "934ce418360bd162a188f22310509640f3b0c14a858ec4ec04c25df64f97feb0",
+        "component_present_in_image": true,
+        "function_or_option": "infocmp analyze_string per vendor advisory",
+        "reported_package_owns_primary_component": true
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "ncurses",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "6.5+20250216-2"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "NOT_AFFECTED_COMPONENT_ABSENT",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-16742",
+      "decision_record": "SG-COMPONENT-ABSENCE",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-16742/libsystemd0",
+      "installed_version": "257.13-1~deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libsystemd0",
+      "rationale": "The vendor-specific affected service/module is absent. This conclusion is scoped to the exact image and this CVE, never to the entire source package; no scan record is suppressed.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "affected_component": "systemd-homed",
+        "component_present_in_image": false,
+        "proof": "spec-030-phase2-runtime-probes.json candidate paths/packages/perl module search and failed module load"
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "systemd",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-16742",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "257.13-1~deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "NOT_AFFECTED_COMPONENT_ABSENT",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-16742",
+      "decision_record": "SG-COMPONENT-ABSENCE",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-16742/libudev1",
+      "installed_version": "257.13-1~deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libudev1",
+      "rationale": "The vendor-specific affected service/module is absent. This conclusion is scoped to the exact image and this CVE, never to the entire source package; no scan record is suppressed.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "affected_component": "systemd-homed",
+        "component_present_in_image": false,
+        "proof": "spec-030-phase2-runtime-probes.json candidate paths/packages/perl module search and failed module load"
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "systemd",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-16742",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "257.13-1~deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "CONFIRMED_AFFECTED_NO_SUPPORTED_FIX",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-54369",
+      "decision_record": "SG-ACL",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-54369/libacl1",
+      "installed_version": "2.3.2-2+b1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libacl1",
+      "rationale": "Installed vulnerable distribution version owns the affected binary/library and vendor identifies the affected component; exposure preconditions still apply, no exploitation asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libacl1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libacl.so.1",
+        "component_hash": "3c03774961231d8485a4dba36ec359a95939a84719799c58cd26173e44bbde90",
+        "component_present_in_image": true,
+        "function_or_option": "acl_get_file / acl_set_file / acl_extended_file / acl_delete_def_file",
+        "reported_package_owns_primary_component": true
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "acl",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-54369",
+      "vendor_release_evidence": {
+        "nodsa": "Will be fixed first in unstable, then point release update; not to be backported by individual patches",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.3.2-2"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-76642",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-76642/bsdutils",
+      "installed_version": "1:2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "bsdutils",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-76642",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-76642/libblkid1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libblkid1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-76642",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-76642/liblastlog2-2",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "liblastlog2-2",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "CONFIRMED_AFFECTED_NO_SUPPORTED_FIX",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-76642",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-76642/libmount1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libmount1",
+      "rationale": "Installed vulnerable distribution version owns the affected binary/library and vendor identifies the affected component; exposure preconditions still apply, no exploitation asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": true
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-76642",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-76642/libsmartcols1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libsmartcols1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-76642",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-76642/libuuid1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libuuid1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-76642",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-76642/login",
+      "installed_version": "1:4.16.0-2+really2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "login",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-76642",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-76642/util-linux",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "util-linux",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78408",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78408/bsdutils",
+      "installed_version": "1:2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "bsdutils",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "util-linux",
+        "affected_component": "/usr/bin/nsenter",
+        "component_hash": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1",
+        "component_present_in_image": true,
+        "function_or_option": "--join-cgroup",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78408",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78408/libblkid1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libblkid1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "util-linux",
+        "affected_component": "/usr/bin/nsenter",
+        "component_hash": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1",
+        "component_present_in_image": true,
+        "function_or_option": "--join-cgroup",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78408",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78408/liblastlog2-2",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "liblastlog2-2",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "util-linux",
+        "affected_component": "/usr/bin/nsenter",
+        "component_hash": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1",
+        "component_present_in_image": true,
+        "function_or_option": "--join-cgroup",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78408",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78408/libmount1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libmount1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "util-linux",
+        "affected_component": "/usr/bin/nsenter",
+        "component_hash": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1",
+        "component_present_in_image": true,
+        "function_or_option": "--join-cgroup",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78408",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78408/libsmartcols1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libsmartcols1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "util-linux",
+        "affected_component": "/usr/bin/nsenter",
+        "component_hash": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1",
+        "component_present_in_image": true,
+        "function_or_option": "--join-cgroup",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78408",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78408/libuuid1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libuuid1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "util-linux",
+        "affected_component": "/usr/bin/nsenter",
+        "component_hash": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1",
+        "component_present_in_image": true,
+        "function_or_option": "--join-cgroup",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78408",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78408/login",
+      "installed_version": "1:4.16.0-2+really2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "login",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "util-linux",
+        "affected_component": "/usr/bin/nsenter",
+        "component_hash": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1",
+        "component_present_in_image": true,
+        "function_or_option": "--join-cgroup",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "CONFIRMED_AFFECTED_NO_SUPPORTED_FIX",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78408",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78408/util-linux",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "util-linux",
+      "rationale": "Installed vulnerable distribution version owns the affected binary/library and vendor identifies the affected component; exposure preconditions still apply, no exploitation asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "util-linux",
+        "affected_component": "/usr/bin/nsenter",
+        "component_hash": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1",
+        "component_present_in_image": true,
+        "function_or_option": "--join-cgroup",
+        "reported_package_owns_primary_component": true
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78409",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78409/bsdutils",
+      "installed_version": "1:2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "bsdutils",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78409",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78409/libblkid1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libblkid1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78409",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78409/liblastlog2-2",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "liblastlog2-2",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "CONFIRMED_AFFECTED_NO_SUPPORTED_FIX",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78409",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78409/libmount1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libmount1",
+      "rationale": "Installed vulnerable distribution version owns the affected binary/library and vendor identifies the affected component; exposure preconditions still apply, no exploitation asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": true
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78409",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78409/libsmartcols1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libsmartcols1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78409",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78409/libuuid1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libuuid1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78409",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78409/login",
+      "installed_version": "1:4.16.0-2+really2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "login",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78409",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78409/util-linux",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "util-linux",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78410",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78410/bsdutils",
+      "installed_version": "1:2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "bsdutils",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78410",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78410/libblkid1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libblkid1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78410",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78410/liblastlog2-2",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "liblastlog2-2",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "CONFIRMED_AFFECTED_NO_SUPPORTED_FIX",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78410",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78410/libmount1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libmount1",
+      "rationale": "Installed vulnerable distribution version owns the affected binary/library and vendor identifies the affected component; exposure preconditions still apply, no exploitation asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": true
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78410",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78410/libsmartcols1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libsmartcols1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78410",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78410/libuuid1",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "libuuid1",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78410",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78410/login",
+      "installed_version": "1:4.16.0-2+really2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "login",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "UNRESOLVED_BINARY_ATTRIBUTION",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-78410",
+      "decision_record": "SG-UTIL-LINUX",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-78410/util-linux",
+      "installed_version": "2.41.5-0+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "util-linux",
+      "rationale": "Scanner inherits a source-package CVE. Affected component exists elsewhere in the same image, but this reported binary package has not been individually proven to contain the vulnerable code. Neither not-affected nor individually confirmed affected is asserted.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "actual_component_owner": "libmount1",
+        "affected_component": "/usr/lib/x86_64-linux-gnu/libmount.so.1",
+        "component_hash": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181",
+        "component_present_in_image": true,
+        "function_or_option": "mnt_context_mount",
+        "reported_package_owns_primary_component": false
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "util-linux",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue",
+        "nodsa_reason": "",
+        "repositories": {
+          "trixie": "2.41.5-0+deb13u1",
+          "trixie-security": "2.41.5-0+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    },
+    {
+      "category": "NOT_AFFECTED_COMPONENT_ABSENT",
+      "category_scope": "Individual scanner row; confirmed image-level risk remains for all six CVEs whose primary components are installed",
+      "cve": "CVE-2026-9538",
+      "decision_record": "SG-COMPONENT-ABSENCE",
+      "fix_observation_limit": "Current official tracker and retained Phase2 apt candidate inspection; not a guarantee about future repository updates",
+      "id": "CVE-2026-9538/perl-base",
+      "installed_version": "5.40.1-6+deb13u1",
+      "mitigation_limit": "Controls reduce normal deployment exposure; not a vendor patch or proof that an installed vulnerable component is unaffected",
+      "mitigations": [
+        "Non-root app",
+        "Canonical Compose cap_drop ALL and no-new-privileges verified",
+        "No host Docker socket/privileged mount workflow in supported setup",
+        "Trusted versioned extensions only; no automatic arbitrary code execution"
+      ],
+      "observed_scanner_record_preserved": true,
+      "owner_approval": "NOT_GRANTED",
+      "package": "perl-base",
+      "rationale": "The vendor-specific affected service/module is absent. This conclusion is scoped to the exact image and this CVE, never to the entire source package; no scan record is suppressed.",
+      "reassessment": "Before release, no later than 2026-11-26, or immediately on base/package/image/kernel/extension/security-option change",
+      "review_date": "2026-10-27",
+      "runtime": {
+        "affected_component": "Perl Archive::Tar",
+        "component_present_in_image": false,
+        "proof": "spec-030-phase2-runtime-probes.json candidate paths/packages/perl module search and failed module load"
+      },
+      "scanner_severity": "HIGH",
+      "source_package": "perl",
+      "supported_fixed_version": null,
+      "supported_trixie_fix_announced_at_review": false,
+      "vendor_advisory": "https://security-tracker.debian.org/tracker/CVE-2026-9538",
+      "vendor_release_evidence": {
+        "nodsa": "Minor issue; wait for regressions upstream sorted out",
+        "nodsa_reason": "postponed",
+        "repositories": {
+          "trixie": "5.40.1-6+deb13u1"
+        },
+        "status": "open",
+        "urgency": "not yet assigned"
+      }
+    }
+  ],
+  "image": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+  "kind": "Owner decision ledger; not a Trivy ignore/VEX/policy input",
+  "mako": {
+    "advisory": "https://avd.aquasec.com/nvd/cve-2026-102991",
+    "cve": "CVE-2026-102991",
+    "owner": "Maintainer/security reviewer",
+    "package": "Mako",
+    "policy_effect": "None",
+    "reported_fixed_version": "1.4.2",
+    "scanner_severity": "MEDIUM",
+    "scope": "Windows-specific TemplateLookup issue reported by Trivy; Linux runtime alone is not an approved exemption; keep original lock and reconcile platform/source evidence before any decision",
+    "status": "SEPARATE_DEPENDENCY_RISK_PENDING_REVIEW",
+    "version": "1.3.12"
+  },
+  "medium_low": {
+    "accepted": false,
+    "low_rows": 60,
+    "maintenance_groups": "spec-030-phase2-triage.json remediation_groups",
+    "medium_os_rows": 57,
+    "medium_rows": 58,
+    "owner": "Maintainer/security reviewer; decision PENDING",
+    "review_by": "Before release or 2026-11-26, whichever earlier"
+  },
+  "phase3_actions": [
+    "Read-only network-disabled exact-image component ownership/hash/export probe",
+    "Official vendor advisory review",
+    "Decision documentation and focused integrity/reconciliation gates only; no inference, rebuild, service startup, remote workflow, settings change or risk approval"
+  ],
+  "policy_adjusted_result": "NOT_PRODUCED",
+  "preserved_evidence_hashes": {
+    ".github/workflows/ci.yml": "744849ffebaba4b65986c8309f3e69020ea40a134dc4df6f05c957c4dab9bec1",
+    ".maos/spec-030/phase2/candidate-scan/image-vulnerabilities.private.json": "22f93fdbcfca00b19647cbf4012420e713ffb0880df39a17101320626deee0cb",
+    "backend/Dockerfile": "9a18c3ffefd2297687961a13c7e7c4cac13a87f3b1dd1f7eab6aec57c69ae9fa",
+    "docker-compose.yml": "f9704b17c596cd55e7f8d6ed87af0dd0f3fea1d611accbbd61a1fa8779797235",
+    "docs/release/spec-030-phase2-evidence.json": "e1bbf6d0ac335da72523522c8ff68521a0feefae628e6e38c4d9d9212b9db7f3",
+    "docs/release/spec-030-phase2-triage.json": "be3ac4e96722d56b363f93ba19416633bcb8c1e91bb0ff8c1aefa2cbcc1f6866",
+    "release/images.lock.json": "8d6bb1d78deaa63b535327da02054fcff5c7fe52db45a90bf9ccff13a40462ac",
+    "release/tools.lock.json": "c617b24af6da7d953f63a2e35e2ae24565a4e7697e2776b593685d1011770e79",
+    "scripts/ci/secret-fixtures.json": "376960f1457259912467ddac70041a64e4bba1919463bdfdb3bab35c98199091",
+    "scripts/ops/release_security.py": "7f85ee8bbfa0744265d7a26aa559b04768deed2691564ae744ca0faa9a1455cf"
+  },
+  "publication": "NO-GO",
+  "raw_counts": {
+    "CRITICAL": 0,
+    "HIGH": 40,
+    "LOW": 60,
+    "MEDIUM": 58,
+    "UNKNOWN": 1
+  },
+  "raw_scan_sha256": "22f93fdbcfca00b19647cbf4012420e713ffb0880df39a17101320626deee0cb",
+  "remote_ci": "NOT_RUN",
+  "required_owner_decisions": [
+    "Three residual HIGH remediation groups and 31 binary-attribution rows",
+    "Validate exact-scope component-absence evidence, without silent suppression",
+    "MEDIUM/Mako maintenance and LOW tracking",
+    "Authorize reviewed push/remote CI, enable disclosure, separately approve publication"
+  ],
+  "reviewed_handoff": "e3ec3f7cfdb994365cae743e14490b9457352133",
+  "risk_approvals": [],
+  "risk_decisions": [
+    {
+      "acceptance_preconditions_if_owner_considers_risk": [
+        "Exact CVE/package/version/image scope for every row",
+        "Document threat model, exposure, impact and why containment is adequate",
+        "Assign named owner and security reviewer, signed decision/date and expiry",
+        "Separately authorize and review any narrowly scoped policy implementation; preserve raw and adjusted results separately",
+        "Run genuine remote CI on approved SHA and bind its image/proof; complete disclosure and publication approvals"
+      ],
+      "active": false,
+      "approved": false,
+      "cves": [
+        "CVE-2026-76642",
+        "CVE-2026-78408",
+        "CVE-2026-78409",
+        "CVE-2026-78410"
+      ],
+      "existing_mitigations": [
+        "Non-root, cap-drop ALL, NNP; exact image/profile; trusted extensions; restricted host/network exposure"
+      ],
+      "id": "SG-UTIL-LINUX",
+      "owner_required": "Repository owner hzjanuary (approval not recorded)",
+      "packages": [
+        {
+          "installed_version": "1:2.41.5-0+deb13u1",
+          "name": "bsdutils"
+        },
+        {
+          "installed_version": "2.41.5-0+deb13u1",
+          "name": "libblkid1"
+        },
+        {
+          "installed_version": "2.41.5-0+deb13u1",
+          "name": "liblastlog2-2"
+        },
+        {
+          "installed_version": "2.41.5-0+deb13u1",
+          "name": "libmount1"
+        },
+        {
+          "installed_version": "2.41.5-0+deb13u1",
+          "name": "libsmartcols1"
+        },
+        {
+          "installed_version": "2.41.5-0+deb13u1",
+          "name": "libuuid1"
+        },
+        {
+          "installed_version": "1:4.16.0-2+really2.41.5-0+deb13u1",
+          "name": "login"
+        },
+        {
+          "installed_version": "2.41.5-0+deb13u1",
+          "name": "util-linux"
+        }
+      ],
+      "potential_impact": "Local privilege/ownership or namespace/cgroup manipulation and denial of service after privileged mount/nsenter interaction.",
+      "proposed_disposition": "DEFER_PUBLICATION_PENDING_SUPPORTED_FIX_OR_EXPLICIT_SCOPED_OWNER_SECURITY_DECISION",
+      "proposed_expiration_no_later_than": "2026-11-26 or before release; any material image/exposure change invalidates proposal",
+      "reassessment_trigger": [
+        "Supported security update",
+        "Different image digest or OS/package version",
+        "Kernel/capabilities/privilege/host-mount changes",
+        "New extension/tool/module or processing of untrusted local files",
+        "New exploit/advisory or changed CVSS/vendor status"
+      ],
+      "remaining_exposure": "mount executable removed and fstab empty; libmount and nsenter retained. A privileged operator/custom extension or altered container configuration changes exposure.",
+      "review_date": "2026-10-27",
+      "row_ids": [
+        "CVE-2026-76642/bsdutils",
+        "CVE-2026-76642/libblkid1",
+        "CVE-2026-76642/liblastlog2-2",
+        "CVE-2026-76642/libmount1",
+        "CVE-2026-76642/libsmartcols1",
+        "CVE-2026-76642/libuuid1",
+        "CVE-2026-76642/login",
+        "CVE-2026-76642/util-linux",
+        "CVE-2026-78408/bsdutils",
+        "CVE-2026-78408/libblkid1",
+        "CVE-2026-78408/liblastlog2-2",
+        "CVE-2026-78408/libmount1",
+        "CVE-2026-78408/libsmartcols1",
+        "CVE-2026-78408/libuuid1",
+        "CVE-2026-78408/login",
+        "CVE-2026-78408/util-linux",
+        "CVE-2026-78409/bsdutils",
+        "CVE-2026-78409/libblkid1",
+        "CVE-2026-78409/liblastlog2-2",
+        "CVE-2026-78409/libmount1",
+        "CVE-2026-78409/libsmartcols1",
+        "CVE-2026-78409/libuuid1",
+        "CVE-2026-78409/login",
+        "CVE-2026-78409/util-linux",
+        "CVE-2026-78410/bsdutils",
+        "CVE-2026-78410/libblkid1",
+        "CVE-2026-78410/liblastlog2-2",
+        "CVE-2026-78410/libmount1",
+        "CVE-2026-78410/libsmartcols1",
+        "CVE-2026-78410/libuuid1",
+        "CVE-2026-78410/login",
+        "CVE-2026-78410/util-linux"
+      ],
+      "runtime_applicability": "Affected component confirmed in exact image; package attribution remains unresolved for propagated rows",
+      "security_reviewer_required": "Named security reviewer required, currently UNASSIGNED",
+      "status": "OWNER_DECISION_PENDING",
+      "supported_fix": "No supported trixie fix announced in reviewed vendor evidence; unstable/upstream versions are not equivalent to a supported distro backport"
+    },
+    {
+      "acceptance_preconditions_if_owner_considers_risk": [
+        "Exact CVE/package/version/image scope for every row",
+        "Document threat model, exposure, impact and why containment is adequate",
+        "Assign named owner and security reviewer, signed decision/date and expiry",
+        "Separately authorize and review any narrowly scoped policy implementation; preserve raw and adjusted results separately",
+        "Run genuine remote CI on approved SHA and bind its image/proof; complete disclosure and publication approvals"
+      ],
+      "active": false,
+      "approved": false,
+      "cves": [
+        "CVE-2026-54369"
+      ],
+      "existing_mitigations": [
+        "Non-root, cap-drop ALL, NNP; exact image/profile; trusted extensions; restricted host/network exposure"
+      ],
+      "id": "SG-ACL",
+      "owner_required": "Repository owner hzjanuary (approval not recorded)",
+      "packages": [
+        {
+          "installed_version": "2.3.2-2+b1",
+          "name": "libacl1"
+        }
+      ],
+      "potential_impact": "Privileged ACL pathname operations may follow attacker-controlled symlinks, enabling unauthorized ACL changes.",
+      "proposed_disposition": "DEFER_PUBLICATION_PENDING_SUPPORTED_FIX_OR_EXPLICIT_SCOPED_OWNER_SECURITY_DECISION",
+      "proposed_expiration_no_later_than": "2026-11-26 or before release; any material image/exposure change invalidates proposal",
+      "reassessment_trigger": [
+        "Supported security update",
+        "Different image digest or OS/package version",
+        "Kernel/capabilities/privilege/host-mount changes",
+        "New extension/tool/module or processing of untrusted local files",
+        "New exploit/advisory or changed CVSS/vendor status"
+      ],
+      "remaining_exposure": "No application ACL call path identified, but libacl functions remain callable by custom code or utilities. Non-use is not non-applicability.",
+      "review_date": "2026-10-27",
+      "row_ids": [
+        "CVE-2026-54369/libacl1"
+      ],
+      "runtime_applicability": "Affected component confirmed in exact image; package attribution remains unresolved for propagated rows",
+      "security_reviewer_required": "Named security reviewer required, currently UNASSIGNED",
+      "status": "OWNER_DECISION_PENDING",
+      "supported_fix": "No supported trixie fix announced in reviewed vendor evidence; unstable/upstream versions are not equivalent to a supported distro backport"
+    },
+    {
+      "acceptance_preconditions_if_owner_considers_risk": [
+        "Exact CVE/package/version/image scope for every row",
+        "Document threat model, exposure, impact and why containment is adequate",
+        "Assign named owner and security reviewer, signed decision/date and expiry",
+        "Separately authorize and review any narrowly scoped policy implementation; preserve raw and adjusted results separately",
+        "Run genuine remote CI on approved SHA and bind its image/proof; complete disclosure and publication approvals"
+      ],
+      "active": false,
+      "approved": false,
+      "cves": [
+        "CVE-2025-69720"
+      ],
+      "existing_mitigations": [
+        "Non-root, cap-drop ALL, NNP; exact image/profile; trusted extensions; restricted host/network exposure"
+      ],
+      "id": "SG-NCURSES",
+      "owner_required": "Repository owner hzjanuary (approval not recorded)",
+      "packages": [
+        {
+          "installed_version": "6.5+20250216-2",
+          "name": "libncursesw6"
+        },
+        {
+          "installed_version": "6.5+20250216-2",
+          "name": "libtinfo6"
+        },
+        {
+          "installed_version": "6.5+20250216-2",
+          "name": "ncurses-base"
+        },
+        {
+          "installed_version": "6.5+20250216-2",
+          "name": "ncurses-bin"
+        }
+      ],
+      "potential_impact": "Malformed input to infocmp can corrupt memory/crash the tool; scope depends on process privileges and supplied data.",
+      "proposed_disposition": "DEFER_PUBLICATION_PENDING_SUPPORTED_FIX_OR_EXPLICIT_SCOPED_OWNER_SECURITY_DECISION",
+      "proposed_expiration_no_later_than": "2026-11-26 or before release; any material image/exposure change invalidates proposal",
+      "reassessment_trigger": [
+        "Supported security update",
+        "Different image digest or OS/package version",
+        "Kernel/capabilities/privilege/host-mount changes",
+        "New extension/tool/module or processing of untrusted local files",
+        "New exploit/advisory or changed CVSS/vendor status"
+      ],
+      "remaining_exposure": "infocmp retained in Essential ncurses-bin; app does not invoke it, but operators/extensions may. Do not remove Essential metadata/tools simply to change scanner counts.",
+      "review_date": "2026-10-27",
+      "row_ids": [
+        "CVE-2025-69720/libncursesw6",
+        "CVE-2025-69720/libtinfo6",
+        "CVE-2025-69720/ncurses-base",
+        "CVE-2025-69720/ncurses-bin"
+      ],
+      "runtime_applicability": "Affected component confirmed in exact image; package attribution remains unresolved for propagated rows",
+      "security_reviewer_required": "Named security reviewer required, currently UNASSIGNED",
+      "status": "OWNER_DECISION_PENDING",
+      "supported_fix": "No supported trixie fix announced in reviewed vendor evidence; unstable/upstream versions are not equivalent to a supported distro backport"
+    }
+  ],
+  "runtime_source": "281537a24220f6a2fe2df2aaa438e1f9cb60a6a6",
+  "scan_provenance": {
+    "binary_sha256": "d1dfca6ae10a1ad4540bb94e64f0510077c47008920a9b554986b39dca573d83",
+    "database": {
+      "DownloadedAt": "2026-10-27T15:14:44.805351599Z",
+      "NextUpdate": "2026-10-28T13:12:49.474279763Z",
+      "UpdatedAt": "2026-10-27T13:12:49.474279883Z",
+      "Version": 2
+    },
+    "database_sha256": "9d08581c36e14a521489a0f659093fd0bf435151361e6b01c13d2d6ec6672047",
+    "database_updates_disabled": true,
+    "ignore_unfixed": false,
+    "ignorefile": "/dev/null",
+    "image": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+    "observed_at": "2026-10-27T16:16:21.003445+00:00",
+    "scan_created_at": "2026-10-27T23:16:17.687636862+07:00",
+    "scanner": "Trivy",
+    "version": "v0.76.1"
+  },
+  "schema_version": 1,
+  "unknown": {
+    "cve": "CVE-2026-82560",
+    "evidence": "No Pod/Text.pm in search and Perl module load fails in exact candidate (Phase2 probe); vendor issue targets Pod::Text, not all perl-base",
+    "installed_version": "5.40.1-6+deb13u1",
+    "owner_review": "PENDING",
+    "package": "perl-base",
+    "policy_effect": "None; original UNKNOWN remains visible",
+    "reassessment": "Any Perl module/image/extension change or by 2026-11-26",
+    "scanner_severity": "UNKNOWN",
+    "technical_disposition": "NOT_AFFECTED_COMPONENT_ABSENT"
+  },
+  "vendor_review": [
+    {
+      "cve": "CVE-2025-69720",
+      "document_sha256": "3542be519daaef8f60a0fd662f4a6129a238f59ef9b86155869d49cfd2b3af78",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:39:59.823515+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie",
+          "6.5+20250216-2",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2025-69720"
+    },
+    {
+      "cve": "CVE-2026-16742",
+      "document_sha256": "9def8c0e8dc245c97190f018412a2f08fe7e72ec90ccf943c132ff756b7ef7b0",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:39:59.828195+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie",
+          "257.13-1~deb13u1",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-16742"
+    },
+    {
+      "cve": "CVE-2026-54369",
+      "document_sha256": "4677cdb2b848eca7bc76f57dd54e5d01e309f438bba58d892550db432fbde5ca",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:39:59.823047+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie",
+          "2.3.2-2",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-54369"
+    },
+    {
+      "cve": "CVE-2026-76642",
+      "document_sha256": "243d0dcce2b7e8a9446611151a404ced874c0c45f912bca021c03061334d197b",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:39:59.962817+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie (security), trixie",
+          "2.41.5-0+deb13u1",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-76642"
+    },
+    {
+      "cve": "CVE-2026-78408",
+      "document_sha256": "176ee66ad84e9fdad225f5e0a60fe5cd7bf8a5aa54bd0fd63d07beb795aba5d3",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:39:59.980578+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie (security), trixie",
+          "2.41.5-0+deb13u1",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-78408"
+    },
+    {
+      "cve": "CVE-2026-78409",
+      "document_sha256": "55bb3527e79127500681d1309f174a4e010dd14b8de0e8c20dac634deb59f67b",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:39:59.966527+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie (security), trixie",
+          "2.41.5-0+deb13u1",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-78409"
+    },
+    {
+      "cve": "CVE-2026-78410",
+      "document_sha256": "370b52136365d440004d915421bd2b2529393511c802bdc04f3e3a873241621b",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:40:00.085415+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie (security), trixie",
+          "2.41.5-0+deb13u1",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-78410"
+    },
+    {
+      "cve": "CVE-2026-9538",
+      "document_sha256": "7ef5d867262210dcfd0f600ea409fd1aa470b38d8d2464d6ba885ab275a7fd57",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:40:00.089557+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie",
+          "5.40.1-6+deb13u1",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-9538"
+    },
+    {
+      "cve": "CVE-2026-82560",
+      "document_sha256": "b143fb7f152ce34bbaa86ef1d0424b51f41422ec9664e1af3829c8bfb7daf953",
+      "http_status": 200,
+      "observed_at": "2026-10-27T16:40:01.036278+00:00",
+      "supported_trixie_fix_announced": false,
+      "trixie_rows": [
+        [
+          "",
+          "trixie",
+          "5.40.1-6+deb13u1",
+          "vulnerable"
+        ]
+      ],
+      "url": "https://security-tracker.debian.org/tracker/CVE-2026-82560"
+    }
+  ]
+}

@@ -142,3 +142,16 @@ Private Vulnerability Reporting under repository Settings → Security and quali
 → Advanced Security, then verify the private reporting form and update evidence.
 Remote CI NOT_RUN, private reporting disabled/pending owner action, residual-risk
 review and final explicit publication approval remain prerequisites.
+
+
+## Owner signoff package (Phase 3)
+
+Use [SECURITY-SIGNOFF](SPEC-030-SECURITY-SIGNOFF.md) and
+[per-row decision ledger](spec-030-security-decisions.json) before any publication
+decision. The 6/31/3 categories are component-level reconciliation of 40 raw HIGH
+rows, not an adjusted scan. No active exception or approved residual risk exists.
+All named owner/reviewer decisions, genuine CI and private reporting proof remain
+pending. For a future authorized push, enforce the exact clean owner-approved SHA
+checks in the signoff procedure; record push event/headSha/image/DB/artifact and
+every required step outcome. A skipped check is NOT_RUN. This task did not push
+or invoke a workflow, change settings/policy, rebuild or archive the plan.
