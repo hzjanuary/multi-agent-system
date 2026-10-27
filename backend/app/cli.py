@@ -286,7 +286,8 @@ async def remote(args: argparse.Namespace) -> Any:
         if args.auth_file.stat().st_mode & 0o077:
             raise ValueError("unsafe_auth_file_permissions: expected 0600")
         credentials = json.loads(args.auth_file.read_text())
-    headers = {"Authorization": f"Bearer {credentials.get('access_token','')}"}
+    access_token = credentials.get("access_token")
+    headers = {"Authorization": f"Bearer {access_token}"} if access_token else {}
     async with httpx.AsyncClient(base_url=args.api_url, timeout=30) as client:
 
         async def request(
