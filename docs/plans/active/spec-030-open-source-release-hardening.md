@@ -243,7 +243,7 @@ or branch protection; no force push/bypass. Keep this SPEC030 plan active.
 - [x] Visitor-focused README with visible security notice; source-only owner
   decision, current disclosure evidence and honest historical image provenance.
 - [x] Local secrets/private-path/source/license/link/meaningful test checks.
-- [ ] Push reviewed branch, create/review PR; record actual Actions outcomes.
+- [x] Push reviewed branch, create/review PR; record actual Actions outcomes.
 - [ ] Normal merge only if protections permit and no unexpected blocker; verify
   resulting tree contains headless code and excludes retired active demo stack.
 - [ ] Create v0.1.0 pre-release, source archives only; verify tag/main/release/
@@ -272,3 +272,39 @@ or branch protection; no force push/bypass. Keep this SPEC030 plan active.
 - Known raw image findings remain0C/40H/58M/60L/1U and gateFAIL. No model calls,
   image publication, changed policy or security reviewer signature. Remaining
   remote outcomes will be recorded as observed, not assumed.
+
+
+### Source preview stopped — new remote CI blocker (not the known OS gate)
+
+- Source branch7f970293f56461a0909e244e64db1f11a42404b1 pushed normally; PR1
+  https://github.com/hzjanuary/multi-agent-system/pull/1 OPEN, not merged. Reviewed
+  GitHub tree matches all248 local blob hashes/modes;666 changed files include
+  466 intended legacy removals. Actual GitHub branch source tar248files matches
+  exact committed tree, secret/private-path/license checks PASS.
+- Genuine push run40550114746/job122351242561 and PR run40550164202/
+  job122351418089 FAIL at Isolated clean-clone installation without inference.
+  Remote backend242PASS+2warnings, ops79PASS, lock/lint/type/secret/source/archive/
+  image/license/Compose steps PASS. Python audit/Trivy/diff-hygiene SKIPPED due
+  earlier install failure, not PASS and not a Trivy-known-HIGH failure.
+- Read-only non-inference docker compose config reproduction confirms workflow
+  global DATABASE_URL/JWT override helper's --env-file: API/worker database host
+  localhost instead of isolated postgres. Helper inherits environment without
+  sanitation. Remote logs retain only statusFAIL; inner command/stderr evidence
+  was not uploaded, so do not assert this is the only cause. No code fix/retry
+  or new image rebuild was initiated after the user-defined stop boundary.
+- Full attempt details: docs/release/v0.1.0-publication-attempt.json. CI artifact
+  contains image-verification JSON only; the image was built for checks, never
+  published. Prior local raw40HIGH findings and security gate remain unchanged.
+- Latest main still92e5f1cfb2b0144bdb39a48db99371974bd372a5 (old product).
+  No v0.1.0 tag/release created. PVR live true. A later read finds active main
+  ruleset25977726, PR-required/no-force/no-delete, no required status checks.
+  No setting/bypass change by agent; stop is unexpected install FAIL, not an
+  invented branch-protection rejection.
+- Stop per explicit owner condition for new unexpected blocking issues. Next
+  bounded remediation: isolate verify_release_install subprocess Compose env,
+  retain sanitized failure operation/evidence, regression-test CI-like inherited
+  env, then rerun actual checks before merge/release. No disable/relabel security.
+- This outcome-record commit is local only, not a new remote candidate. Keep
+  original pushed PR SHA/run evidence distinct. SPEC030 stays active; SPEC029
+  remains32PASS/0BLOCKED. No inference, tag/merge/release/image publication/
+  deployment/history rewrite or retained-resource deletion.

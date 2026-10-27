@@ -1,5 +1,11 @@
 # SPEC-030 — Publication readiness
 
+> **Source publication attempt stopped at a new CI blocker:** branch and
+> [PR #1](https://github.com/hzjanuary/multi-agent-system/pull/1) exist; main is
+> unchanged and v0.1.0 is not released. Real Actions clean-install FAIL occurred
+> before dependency/OS scanning. See [actual outcomes](v0.1.0-publication-attempt.json).
+> This is distinct from the owner-accepted disclosure of known OS findings.
+
 > **2026-10-28 source-only owner decision:** early public source preview is
 > authorized with disclosed residual OS risks. See [v0.1.0 decision](v0.1.0-source-preview.md).
 > This does not clear the Docker image or change the existing security gate.

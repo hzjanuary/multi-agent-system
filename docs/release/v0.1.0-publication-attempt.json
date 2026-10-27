@@ -1,0 +1,430 @@
+{
+  "candidate_sha": "7f970293f56461a0909e244e64db1f11a42404b1",
+  "ci_image_published": false,
+  "ci_image_verification": {
+    "gate": "release_image",
+    "image": "sha256:00777c85b0feefce966472ba97997c4fe12fa4b0e78bf1b15b6a13e2e2b347db",
+    "os_packages": 86,
+    "python_distributions": 58,
+    "shipped_files": 170,
+    "source": "7f970293f56461a0909e244e64db1f11a42404b1",
+    "status": "PASS"
+  },
+  "confirmed_config_defect": {
+    "actual_ci_job_database_host": "localhost",
+    "automatic_fix_or_retry": false,
+    "cause": "Workflow global environment overrides --env-file interpolation; verify_release_install.execute inherits the process environment without an env override",
+    "evidence_limit": "Remote helper only logged status FAIL; private install-evidence.json was not uploaded. Its exact failing inner command/stderr are unavailable; no assertion that this is the only cause.",
+    "generation_requests": 0,
+    "intended_private_profile_database_host": "postgres",
+    "observed": {
+      "api": {
+        "database_host": "localhost",
+        "private_env_file_database_used": false,
+        "private_env_file_jwt_used": false
+      },
+      "worker": {
+        "database_host": "localhost",
+        "private_env_file_database_used": false,
+        "private_env_file_jwt_used": false
+      }
+    },
+    "operation": "docker compose config only; no containers/services/migration/generation",
+    "status": "CONFIGURATION_ISOLATION_DEFECT_REPRODUCED"
+  },
+  "default_branch": "main",
+  "deployment": false,
+  "diagnostic_retention_limit": "Remote helper private install-evidence was not uploaded; available artifact only contains image verification. Exact inner failing command/stderr unavailable. No exclusive-cause claim.",
+  "disclosure": {
+    "enabled": true,
+    "endpoint": "https://api.github.com/repos/hzjanuary/multi-agent-system/private-vulnerability-reporting",
+    "method": "GET",
+    "observed_at": "2026-10-27T17:14:56.290421+00:00",
+    "settings_changed_by_agent": false
+  },
+  "docker_publication": false,
+  "github_source_archive": {
+    "files": 248,
+    "manifest_matches_committed_source": true,
+    "private_paths_and_credentials_gate": "PASS",
+    "scope": "Actual GitHub-generated source archive for pushed branch commit; no release/tag exists",
+    "sha256": "d29d82bd6f81f7ece1ad8d7c2ba346fd62725a2e212350ab20e30d68927e387d",
+    "source": "7f970293f56461a0909e244e64db1f11a42404b1",
+    "status": "PASS",
+    "url": "https://api.github.com/repos/hzjanuary/multi-agent-system/tarball/7f970293f56461a0909e244e64db1f11a42404b1"
+  },
+  "history_review_summary": {
+    "blobs": 332,
+    "confirmed_real_credentials": 0,
+    "current_scanner_allowances_changed": false,
+    "flags": 7,
+    "history_rewritten": false,
+    "new_commits_before_publication_docs": 27,
+    "reviewed_synthetic_scanner_negative_test_literals": 7
+  },
+  "known_local_scan": {
+    "critical": 0,
+    "gate": "FAIL unchanged",
+    "high": 40,
+    "image": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+    "low": 60,
+    "medium": 58,
+    "runtime_source": "281537a24220f6a2fe2df2aaa438e1f9cb60a6a6",
+    "unknown": 1
+  },
+  "main_ruleset_at_stop": {
+    "conditions": {
+      "ref_name": {
+        "exclude": [],
+        "include": [
+          "refs/heads/main"
+        ]
+      }
+    },
+    "enforcement": "active",
+    "id": 25977726,
+    "name": "Protect main - PR required (solo maintainer)",
+    "rules": [
+      {
+        "type": "deletion"
+      },
+      {
+        "type": "non_fast_forward"
+      },
+      {
+        "parameters": {
+          "allowed_merge_methods": [
+            "merge",
+            "squash",
+            "rebase"
+          ],
+          "dismiss_stale_reviews_on_push": false,
+          "require_code_owner_review": false,
+          "require_extra_approval_for_unattributed_changes": true,
+          "require_last_push_approval": false,
+          "required_approving_review_count": 0,
+          "required_review_thread_resolution": true,
+          "required_reviewers": []
+        },
+        "type": "pull_request"
+      }
+    ]
+  },
+  "main_sha_at_stop": "92e5f1cfb2b0144bdb39a48db99371974bd372a5",
+  "new_generation_requests": 0,
+  "next_action": "Bounded fix to clean-install environment isolation plus sanitized failure-evidence retention/regression tests; genuine CI rerun before any merge/release. Do not disable Trivy or bypass protection.",
+  "owner_scope": "Early source preview authorized with known OS disclosure; no Docker-image or production-security approval",
+  "pr": {
+    "merged": false,
+    "number": 1,
+    "state": "open",
+    "url": "https://github.com/hzjanuary/multi-agent-system/pull/1"
+  },
+  "private_reporting_at_final_read": true,
+  "published_source_branch": "feat/spec-030-open-source-release-hardening",
+  "recorded_at": "2026-10-27T17:34:07.531228+00:00",
+  "release": {
+    "commit": null,
+    "created": false,
+    "tag": "v0.1.0",
+    "tag_created": false,
+    "url": null
+  },
+  "remote_backend": {
+    "black": "PASS",
+    "lock": "PASS",
+    "passed": 242,
+    "ruff": "PASS",
+    "strict_mypy": "PASS;122 files",
+    "warnings": 2
+  },
+  "remote_ci": [
+    {
+      "conclusion": "failure",
+      "event": "push",
+      "head_sha": "7f970293f56461a0909e244e64db1f11a42404b1",
+      "html_url": "https://github.com/hzjanuary/multi-agent-system/actions/runs/40550114746",
+      "id": 40550114746,
+      "jobs": [
+        {
+          "conclusion": "failure",
+          "id": 122351242561,
+          "name": "backend",
+          "steps": [
+            {
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Initialize containers",
+              "number": 2,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 3,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+              "number": 4,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Install locked tooling and dependencies",
+              "number": 5,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Generate isolated secrets",
+              "number": 6,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Offline and database gates",
+              "number": 7,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Operations and release-security tests",
+              "number": 8,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Full tracked-file secret and private-path scan",
+              "number": 9,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Source archive, release build, revision, licenses and image manifest",
+              "number": 10,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Validate CLI and Compose without provider credentials",
+              "number": 11,
+              "status": "completed"
+            },
+            {
+              "conclusion": "failure",
+              "name": "Isolated clean-clone installation without inference",
+              "number": 12,
+              "status": "completed"
+            },
+            {
+              "conclusion": "skipped",
+              "name": "Python dependency vulnerability audit (no exceptions)",
+              "number": 13,
+              "status": "completed"
+            },
+            {
+              "conclusion": "skipped",
+              "name": "OS and language vulnerability scan, SBOM (HIGH/CRITICAL block release)",
+              "number": 14,
+              "status": "completed"
+            },
+            {
+              "conclusion": "skipped",
+              "name": "Diff hygiene",
+              "number": 15,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Retain sanitized release proof even when vulnerability gate fails",
+              "number": 16,
+              "status": "completed"
+            },
+            {
+              "conclusion": "skipped",
+              "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+              "number": 30,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 31,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Stop containers",
+              "number": 32,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 33,
+              "status": "completed"
+            }
+          ]
+        }
+      ],
+      "name": "Release candidate CI",
+      "run_attempt": 1,
+      "status": "completed"
+    },
+    {
+      "conclusion": "failure",
+      "event": "pull_request",
+      "head_sha": "7f970293f56461a0909e244e64db1f11a42404b1",
+      "html_url": "https://github.com/hzjanuary/multi-agent-system/actions/runs/40550164202",
+      "id": 40550164202,
+      "jobs": [
+        {
+          "conclusion": "failure",
+          "id": 122351418089,
+          "name": "backend",
+          "steps": [
+            {
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Initialize containers",
+              "number": 2,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 3,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+              "number": 4,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Install locked tooling and dependencies",
+              "number": 5,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Generate isolated secrets",
+              "number": 6,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Offline and database gates",
+              "number": 7,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Operations and release-security tests",
+              "number": 8,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Full tracked-file secret and private-path scan",
+              "number": 9,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Source archive, release build, revision, licenses and image manifest",
+              "number": 10,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Validate CLI and Compose without provider credentials",
+              "number": 11,
+              "status": "completed"
+            },
+            {
+              "conclusion": "failure",
+              "name": "Isolated clean-clone installation without inference",
+              "number": 12,
+              "status": "completed"
+            },
+            {
+              "conclusion": "skipped",
+              "name": "Python dependency vulnerability audit (no exceptions)",
+              "number": 13,
+              "status": "completed"
+            },
+            {
+              "conclusion": "skipped",
+              "name": "OS and language vulnerability scan, SBOM (HIGH/CRITICAL block release)",
+              "number": 14,
+              "status": "completed"
+            },
+            {
+              "conclusion": "skipped",
+              "name": "Diff hygiene",
+              "number": 15,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Retain sanitized release proof even when vulnerability gate fails",
+              "number": 16,
+              "status": "completed"
+            },
+            {
+              "conclusion": "skipped",
+              "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+              "number": 30,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 31,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Stop containers",
+              "number": 32,
+              "status": "completed"
+            },
+            {
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 33,
+              "status": "completed"
+            }
+          ]
+        }
+      ],
+      "name": "Release candidate CI",
+      "run_attempt": 1,
+      "status": "completed"
+    }
+  ],
+  "remote_clean_install": "FAIL; newly discovered blocker",
+  "remote_diff_hygiene": "SKIPPED/NOT_RUN",
+  "remote_ops_tests": 79,
+  "remote_python_dependency_audit": "SKIPPED/NOT_RUN",
+  "remote_source_secret_license_image_checks": "PASS",
+  "remote_trivy": "SKIPPED/NOT_RUN; do not confuse with known local OS FAIL",
+  "retained_data_deleted": false,
+  "ruleset_observation_note": "Initial read-only ruleset list empty; later read finds active PR-required ruleset. Classic protection GET404 does not negate ruleset. This ruleset does not require CI status checks; stop reason is the new unexpected clean-install failure, not a claimed protection rejection. No settings changed or bypass attempted.",
+  "status": "STOPPED_AT_NEW_UNEXPECTED_CI_BLOCKER"
+}
