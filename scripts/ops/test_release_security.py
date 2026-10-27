@@ -27,10 +27,17 @@ class SecurityTests(unittest.TestCase):
         self.assertIsNone(result["findings"][0]["fixed"])
 
     def test_unavailable_os_scan_does_not_pass(self):
-        for report in ({}, {"Results": []}):
+        for report in (
+            {},
+            {"Results": []},
+            {"Metadata": {"OS": {"Family": "debian"}}, "Results": []},
+        ):
             with self.assertRaises(ValueError):
                 summarize(report)
 
     def test_clean_executed_scan_has_limited_claim(self):
-        report = {"Metadata": {"OS": {"Family": "debian", "Name": "13"}}, "Results": []}
+        report = {
+            "Metadata": {"OS": {"Family": "debian", "Name": "13"}},
+            "Results": [{"Class": "os-pkgs"}],
+        }
         self.assertEqual(summarize(report)["status"], "PASS")

@@ -35,6 +35,8 @@ def main() -> None:
         "minio",
         "pytest",
         "poetry",
+        "pip",
+        "ensurepip",
     ):
         assert importlib.util.find_spec(package) is None, package
     for name in (
@@ -46,6 +48,15 @@ def main() -> None:
         "private.env",
     ):
         assert not (root / name).exists(), name
+    for path in (
+        "/bin/mount",
+        "/usr/bin/mount",
+        "/bin/umount",
+        "/usr/bin/umount",
+        "/usr/local/bin/pip",
+        "/usr/local/bin/pip3",
+    ):
+        assert not Path(path).exists(), path
     print("release-content: PASS")
 
 

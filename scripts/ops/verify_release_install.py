@@ -174,6 +174,25 @@ def main():
         )
         proof["after_explicit_bootstrap"] = counts()
         compose("up", "-d", "--wait", "api", "worker")
+        proof["runtime_security_controls"] = {}
+        for service in ("api", "worker"):
+            container = compose("ps", "--quiet", service).strip()
+            inspect = json.loads(execute(["docker", "inspect", container]))[0]
+            controls = {
+                "cap_drop": inspect["HostConfig"].get("CapDrop"),
+                "security_opt": inspect["HostConfig"].get("SecurityOpt"),
+                "user": inspect["Config"].get("User"),
+            }
+            if (
+                not any(v.lower() == "all" for v in (controls["cap_drop"] or []))
+                or not any(
+                    v.startswith("no-new-privileges")
+                    for v in (controls["security_opt"] or [])
+                )
+                or controls["user"] in ("", "root", "0")
+            ):
+                raise RuntimeError("runtime containment not delivered")
+            proof["runtime_security_controls"][service] = controls
         proof["doctor"] = json.loads(
             compose("exec", "-T", "api", "python", "-m", "app.cli", "--json", "doctor")
         )

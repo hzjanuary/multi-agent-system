@@ -115,3 +115,21 @@ use a new named verification namespace and stop it without deleting data.
   archive/declare local release readiness while the HIGH gate is unsatisfied.
   No additional implementation/inference is implied by a future continuation;
   resume from the recorded candidate and actual security decision.
+
+## Phase 2 — authorized OS remediation (2026-10-27)
+
+Resume from clean f185c02 on the same branch. Maintainer authorizes supported OS
+updates, concrete package removal/build isolation, complete triage and a new
+actual runtime image. Preserve Python dependency lock, non-root runtime, licenses,
+all release-security gates, SPEC-029 and operator/historical state. No provider
+requests, inference, remote write/publication or residual-risk approval.
+
+- [ ] P2.1 bind old artifact/scanner/database identity; compare current same-suite
+  base and supported updates; vendor data and actual runtime package/function proof.
+- [ ] P2.2 full HIGH/UNKNOWN and grouped MEDIUM/LOW machine-readable triage;
+  distinguish OS/language rows, CVEs, packages, vendor severity/fixes/exposure.
+- [ ] P2.3 implement supported pinned minimal remediation and offline regressions.
+- [ ] P2.4 commit/build final candidate, comparable same-DB old/new scans, SBOM,
+  license/manifest; full backend/ops/lint/type/lock/security/audit/Compose/install.
+- [ ] P2.5 update release decision/evidence; read-only disclosure check, precise
+  future authorized remote CI steps, risk ownership and remaining decisions.

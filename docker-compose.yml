@@ -50,6 +50,8 @@ x-application: &application
     METRICS_MAX_PATH_LABEL_LENGTH: ${METRICS_MAX_PATH_LABEL_LENGTH:-120}
   extra_hosts:
     - host.docker.internal:host-gateway
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
   restart: unless-stopped
 
 services:
