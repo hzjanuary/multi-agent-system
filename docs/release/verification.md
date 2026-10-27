@@ -1,11 +1,13 @@
 # SPEC-029 acceptance evidence
 
 The original implementation and its recorded non-live acceptance checks are complete.
-Fully verified release readiness is **BLOCKED** by AC-08 and the model-dependent
-portion of AC-29. The maintainer now authorizes preparation of an isolated
-OpenRouter free smoke, with local key entry and live execution deferred. No model
-weights were downloaded and no live/remote inference was run.
-Fixture responses are never counted as real model evidence.
+Fully verified release readiness remains **BLOCKED** by AC-08 and the real-model
+portion of AC-29. The maintainer authorized one bounded OpenRouter live attempt
+following preparation. It **failed on the analyst's first request** with durable
+`provider_rate_limit`, before any reviewer or approval. No retry or new run was
+made. [Live attempt evidence](openrouter-live-attempt.json) records the result;
+fixture responses are never counted as real model evidence. No model weights
+were downloaded.
 
 ## Checked source and artifacts
 
@@ -93,18 +95,76 @@ rechecked immediately before the single later attempt; route drift fails closed.
 
 The private profile is prepared under `.maos/openrouter-free-smoke/` with a new
 Compose/database/volume identity and separate CLI session, 0700 directory and
-0600 files. Key and operator text remain empty, no attempt is reserved, and a
-credential-requiring preflight stops before any inference. The permissive
+0600 files. At preparation closeout the key and operator text were empty, no attempt was
+reserved, and a credential-requiring preflight stopped before any inference. The permissive
 collection/training policy exists only in this operator-selected profile; unset
 OpenRouter preferences explicitly deny collection and require ZDR. Profile
 identity now includes routing policy, so existing runs cannot be silently
 rerouted. Account/organization ZDR restrictions remain authoritative.
 
-**No inference was executed. Acceptance remains 30 PASS / 2 BLOCKED:** AC-08
+**No inference was executed during preparation. Its acceptance result was
+30 PASS / 2 BLOCKED:** AC-08
 and the real-model part of AC-29 still require the genuine journey below. No
 prior clean-clone/live-release claim is expanded by these offline checks. Only
 the fresh gate containers were stopped, retaining their data; profile services
 await the operator procedure and no old volumes/configuration were deleted.
+
+### Authorized bounded live attempt (2026-10-27)
+
+Starting clean handoff: `feat/spec-029-headless-oss` at
+`fad43831a92dfe9831cd77216b04ee379b2d65ba`. The actual API/worker used the existing
+image digest `sha256:99078eeb57903c074973fdcbdb10d68e0b488e1e634f6e5999bc7c4401ad6527`,
+source label `f6317e25317c13c2da83c3e784b4d660f48fea45`. No image was rebuilt;
+prior implementation/image evidence and preparation artifacts remain unchanged.
+
+The maintainer entered the key/text locally. Configuration and fresh metadata
+preflight passed for the exact free model/route. Both running services had the
+same pinned image/profile, `MAX_PROVIDER_CALLS=2`, retries 0, output cap 1024,
+60-second timeout, zero price ceilings and the isolated allow/non-ZDR policy.
+No default privacy/account setting was changed. The dedicated database had zero
+public tables before migration and zero users/runs after migration. The operator
+explicitly bootstrapped one administrator and logged in locally. Doctor reported
+ready with an available worker; a separate CLI container reused the private 0600
+session and discovered `text_review`.
+
+Executed exactly once:
+`python3 scripts/ops/openrouter_free_smoke.py run --approve`.
+The helper's final preflight passed, reserved its permanent attempt marker and
+created workflow `text_review@1.0.0`, run
+`75039b34-2bf1-4e89-a1c1-704dd2f0be28`. The run finished **FAILED**, error
+`provider_rate_limit`, durable call count **1**. Its only node was `analyze`,
+execution `592a0849-2b61-44bf-87b2-6d2e31d0d485`, attempt 1, FAILED with one
+pre-dispatch reservation and no output. The production OpenRouter adapter maps
+only HTTP 429 to this error category; the durable record retains the category,
+not the raw HTTP response/status/body.
+
+The request was configured for OpenRouter, `google/gemma-4-31b-it:free`, pinned
+`google-ai-studio`. There was no successful generation response confirming an
+actual upstream model/provider. Provider request IDs, usage and reported cost
+are **unknown**, not zero. Client evidence supports one attempted generation
+request, zero successful generations, zero reviewer requests and no retries.
+Upstream internal work is not observable. Reviewer chaining, validated outputs,
+WAITING_APPROVAL, approval, explicit resume and final assembly were **not reached**;
+none are claimed verified by this attempt.
+
+All six ordered events (created, queued, started, node started, node failed, run
+failed) and the failure persist. After stopping the worker, independent CLI
+containers read show/nodes/events/approvals, and a new PostgreSQL session confirmed
+FAILED / call count 1 / six events / one node / zero approvals. Raw evidence stays
+private under `.maos/openrouter-free-smoke/`: `attempt.json`, `outcome.json`,
+`live.stdout.json`, `live.stderr.json`, `api-evidence.json` and
+`live-session-20261027/`. The linked public JSON contains only safe identifiers,
+settings, status and integrity hashes, without the key, session tokens, account
+credentials, test text, prompts or raw provider body.
+
+The **live attempt FAIL** is distinct from acceptance status: **30 PASS,
+2 BLOCKED, 0 FAIL, 0 NOT_RUN** at the acceptance-item level. AC-08 and AC-29
+remain blocked by the provider rate limit and the uncompleted genuine journey.
+All four isolated services were stopped; database volume, configuration, CLI
+session, input and evidence remain retained. No retry, warm-up, repair, provider
+probe, model/route switch, budget reset, publication, push, merge, remote deployment
+or deletion of retained resources occurred. This closeout changes documentation
+and evidence only; existing backend gates are not rerun and the image is not rebuilt.
 
 Environment: Linux `7.0.0-38-generic` x86_64, Docker Engine `29.9.2`, Compose
 `5.6.1`, local test Python `3.12.9`. The clean-image build used:
@@ -232,7 +292,7 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-05 | PASS | S bounded retained-import/dependency inventory; B import tests; I release package inspection. |
 | AC-06 | PASS | B `test_two_unrelated_workflows_one_graph`: distinct typed text/arithmetic definitions without core modifications; I external test extension uses the same image. |
 | AC-07 | PASS | B production parser→LangGraph→PostgreSQL composition covers agent/tool steps through one orchestration path; I/C exercise actual deterministic tools. Live inference is AC-08. |
-| AC-08 | BLOCKED | Isolated OpenRouter free-smoke preparation authorized; key will be entered locally later. No genuine generation executed. Metadata/offline tests do not satisfy this criterion. |
+| AC-08 | BLOCKED | Authorized genuine OpenRouter attempt failed on analyst request with `provider_rate_limit`; run `75039b34-2bf1-4e89-a1c1-704dd2f0be28`, call count 1. No reviewer or successful chained outputs. See live-attempt evidence. |
 | AC-09 | PASS | B missing model/key/endpoint, auth rejection, timeout, exhausted transient retries, invalid output and budget refusal fail without fake success. Provider-specific tests use fixtures. |
 | AC-10 | PASS | B `test_parser_failure_is_durable_and_stops_downstream`: production parser failure persists through worker transaction end, read from a new DB session; later nodes absent. |
 | AC-11 | PASS | N accepted client disconnect without consuming response, API restart, one durable job and independent worker completion; B independent process/recovery tests. Rejected/unreceived requests are not accepted submissions. |
@@ -259,7 +319,7 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-32 | PASS | S current English README/docs/AGENTS/WORKFLOW, reconciled authority/links, MIT/NOTICE review and verified existing issue channel. Manual/unverified model/publication commands explicitly labeled. |
 
 Result: **30 PASS, 2 BLOCKED, 0 FAIL, 0 NOT_RUN** at the acceptance-item level.
-The live smoke itself is intentionally NOT_RUN inside the model blocker. This
+The authorized live smoke ran and failed at the first request; the two acceptance items remain externally BLOCKED. This
 supports engineering completion; it does not support fully verified release
 readiness or a production-ready claim.
 
@@ -282,24 +342,22 @@ skipped or replaced with production fakes.
 
 ## Remaining release action
 
-Keep AC-08 and the model-dependent portion of AC-29 BLOCKED. Follow the exact
-optional [OpenRouter free-smoke procedure](../openrouter-free-smoke.md) only when
-the maintainer supplies a dedicated key locally and initiates the live command.
-The chosen model is `google/gemma-4-31b-it:free`, provider tag
-`google-ai-studio`; the private opt-in configuration is
-`.maos/openrouter-free-smoke/private.env`, with `OPENROUTER_API_KEY` left empty.
-The request explicitly allows collection/training and disables request-level ZDR
-only for this test. Shared account/organization restrictions must not be bypassed.
+Keep AC-08 and the real-model portion of AC-29 BLOCKED. The authorized attempt
+has ended after `provider_rate_limit`; do not invoke the helper again, remove
+`attempt.json`, resume the failed run or use the unused call allowance for a retry.
+Investigate free-route quota/availability through non-inference account/support
+information without weakening global policy. A later live attempt needs a new
+explicit maintainer budget decision; no model/route switch is authorized.
 
-The permanent once-only wrapper invokes the existing production smoke with
-`--enable-remote --approve --max-calls 2 --max-output-tokens 1024`. It must prove
-two chained real agent calls, persisted outputs/metadata/events, WAITING_APPROVAL,
-content-bound authenticated approval, explicit resume and pure final assembly
-without a third call. Preserve actual run/node/request IDs, usage and reported
-cost (unknown stays unknown), including partial failure evidence. Verify the
-remaining model-dependent README journey before changing AC-08/AC-29 or archiving
-the plan. Do not reset the attempt marker after failure or silently change routes.
+The original release obligations remain: successful real analyst then reviewer,
+persisted validated outputs/metadata/events, WAITING_APPROVAL, normal content-bound
+approval and explicit resume, pure assembly without a third generation, and the
+documented real-model image/CLI journey. The isolated [guide](../openrouter-free-smoke.md)
+describes the flow but does not authorize replay of this failed attempt. Separate
+README provider probing remains outside this attempt's budget. Do not archive the
+active plan or promote AC-08/AC-29 without the actual missing evidence.
 
-No publication, remote deployment, push or merge was performed. Prior
-[cleanup evidence](cleanup-evidence.json) remains historical; retained operator
-and verification resources are preserved.
+Prior [cleanup evidence](cleanup-evidence.json) and source/image provenance remain
+historical. The new isolated services are stopped with volumes/configuration and
+all private evidence retained. No publication, remote deployment, push or merge
+was performed.

@@ -4,9 +4,10 @@ Started: 2026-10-26. Updated: 2026-10-27.
 
 ## Status
 
-Original engineering complete. Isolated OpenRouter preparation is authorized;
-live execution is deferred until local key entry. Release verification BLOCKED at the
-live-model gate (AC-08 and the dependent real-model portion of AC-29). Keep this
+Original engineering and isolated OpenRouter preparation are complete. The
+authorized live attempt failed on its first request with `provider_rate_limit`;
+no retry or fresh run followed. Release verification remains BLOCKED at AC-08
+and the real-model portion of AC-29. Keep this
 one plan active until that gate is resolved; do not archive as fully verified.
 
 Branch: `feat/spec-029-headless-oss`. Historical baseline:
@@ -70,7 +71,8 @@ independent definitions/providers, runtime/persistence and packaging work.
   files and backend-only CI updated; links and secret/dependency checks passed.
 - [x] M6 all non-live checks and acceptance evidence matrix completed.
 - [ ] M6 live text_review and full README model journey: BLOCKED by explicit
-  maintainer boundary: OpenRouter preparation is complete, key/live execution pending.
+  provider rate limit: the authorized analyst request failed; reviewer/approval
+  and final real-model journey were not reached.
 
 ## Verification and decisions
 
@@ -133,26 +135,26 @@ run down -v against an operator project or attach a legacy procurement DB.
 
 ## Remaining action and result
 
-Engineering result: headless generic runtime/API/CLI and self-host packaging
-implemented and verified within the recorded non-live scope. Acceptance:
-30 PASS, 2 BLOCKED, 0 FAIL, 0 NOT_RUN. Fully verified release readiness remains
-unproven. The maintainer explicitly chose to keep AC-08 blocked; no model was
-downloaded and no model-generation request was attempted.
+Engineering result: headless runtime/API/CLI and self-host packaging implemented,
+with the recorded non-live evidence preserved. Acceptance remains **30 PASS,
+2 BLOCKED, 0 FAIL, 0 NOT_RUN**. The bounded live attempt itself **FAIL**: run
+`75039b34-2bf1-4e89-a1c1-704dd2f0be28`, analyst failed with `provider_rate_limit`,
+call count 1. No reviewer generation or validated model output was obtained.
 
-AC-08 and the model-dependent portion of AC-29 remain BLOCKED. The maintainer
-selected OpenRouter free inference rather than installing a local model, and
-explicitly permits collection/training and non-ZDR routing only for the isolated
-`openrouter-free-smoke` configuration. This turn prepares only; the dedicated key
-will be entered locally later. No inference is authorized during preparation.
+The maintainer supplied a dedicated key and non-sensitive text locally and
+explicitly authorized at most two generation requests. The isolated collection/
+training and non-ZDR exception did not change project defaults or account policy.
+The helper ran once with `--approve`; no retry, repair, probe, model/route switch
+or fresh-run budget reset occurred. Provider request IDs, usage, cost and actual
+upstream model/provider stay unknown after the failed response.
 
-Follow [the optional guide](../../openrouter-free-smoke.md) for the remaining
-bounded live attempt through the release image, API/worker and fresh CLI session:
-real analyst then reviewer, persisted outputs/events, WAITING_APPROVAL, normal
-explicit approval and resume, pure assembly, at most two generation HTTP attempts,
-no retries. Preserve partial evidence and never reset the budget automatically.
-Metadata and fixture tests cannot convert AC-08/AC-29 to PASS. The original
-release-verification requirements remain unresolved; archive only after genuine
-validation. No push, publication, merge, deployment or retained-resource deletion.
+Do not delete the permanent attempt marker or retry this failed run. Investigate
+free-route quota/availability without inference or weakening account policy; any
+later generation requires a new explicit maintainer budget decision. AC-08 still
+needs successful genuine chained calls. AC-29 still needs the completed real-model
+image/CLI journey; original clean-clone evidence keeps its historical image
+provenance. Approval/resume/pure assembly were not reached in this attempt.
+Preserve those original release obligations and keep the plan active.
 
 ## OpenRouter preparation closeout (2026-10-27)
 
@@ -172,8 +174,41 @@ validation. No push, publication, merge, deployment or retained-resource deletio
   Final host helper/test source `6287f1a2f7d9ecaad12cd4a02e4873fb4a880ac2`;
   92 shipped file hashes still match. Backend 228 PASS, ops 29 PASS,
   lock/lint/format/strict types/Compose/image checks PASS. Metadata-only preflight
-  PASS; missing-key preflight BLOCKED before generation. No live attempt reserved.
+  PASS; missing-key preflight BLOCKED before generation. No live attempt was
+  reserved during preparation.
   The final containing handoff commit updates evidence only; no image rebuild.
   [Scoped proof](../../release/openrouter-preparation.json) retains limits and
   separates original evidence from this preparation. AC counts unchanged.
 - [ ] Genuine live model evidence and dependent first-run acceptance: BLOCKED.
+
+## Authorized bounded live attempt (2026-10-27)
+
+The maintainer supplied the isolated OpenRouter key and non-sensitive text locally
+and explicitly authorized at most two generation HTTP requests using the existing
+helper with `--approve`. No extra provider probe, warm-up, retry, repair, model
+switch or fresh-run budget reset is permitted. Starting handoff HEAD is
+`fad43831a92dfe9831cd77216b04ee379b2d65ba`; runtime image/source remain the pinned
+preparation identities above. Private values/text are not copied into this plan.
+
+- [x] Inspect clean branch/HEAD and existing profile before initialization:
+  no profile containers, CLI auth session or attempt marker. Key/text present.
+- [x] Metadata/config preflight PASS for the exact free model/route; no generation.
+  Preserve a private snapshot under `.maos/openrouter-free-smoke/live-session-20261027/`.
+- [x] Start only the dedicated PostgreSQL/Redis; pre-migration public tables = 0.
+- [x] Migrate an empty dedicated database; maintainer explicitly bootstrapped one
+  administrator and logged in locally. Doctor ready; separate CLI discovery PASS.
+- [x] Invoke the helper exactly once with `--approve`. First analyst request
+  failed with `provider_rate_limit`; one reservation/request attempt, no retries,
+  no reviewer or later nodes. Permanent attempt and partial evidence retained.
+- [x] Review durable failure via separate CLI containers after worker stop and
+  a new PostgreSQL session: FAILED, call count 1, six ordered events, one node,
+  zero approvals. Unknown provider response IDs/usage/cost remain unknown.
+  [Safe live evidence](../../release/openrouter-live-attempt.json) records exact
+  source/image, profile and IDs; raw private evidence remains under
+  `.maos/openrouter-free-smoke/`. All four services stopped; volume/config/auth/
+  input/evidence retained. No implementation or default privacy change.
+
+AC-08 and AC-29 remain BLOCKED by the live rate limit and uncompleted journey.
+The attempted workflow is FAILED; no claim of successful chaining, approval,
+resume or final assembly is made. No push/merge/publication/remote deployment
+or deletion of retained resources occurred. No new generation is authorized.
