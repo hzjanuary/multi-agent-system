@@ -72,6 +72,13 @@ and file 0600 permissions, outside the backend Docker context:
 | `cloudflare-smoke/private.env`: `OPENAI_COMPATIBLE_BASE_URL` | Constructed from the entered Account ID, ending `/ai/v1` |
 | `<profile>/plan.json` | Local free-plan confirmation bound to that key/account; identifiers are not published |
 
+Prepared source is `44a8c42373af1320986ad78d922aa79595775dbe`; immutable image
+`sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`
+is pinned in the private overlay. The handoff HEAD can differ for documentation
+only. See [preparation proof](release/direct-smoke-preparation.json). Credentials,
+Account ID and free-plan confirmation remain pending; preparation did not invoke
+either provider. Existing input stays at `.maos/openrouter-free-smoke/input.txt`.
+
 Create a scoped Cloudflare token for **only the intended account**, with
 **Workers AI Read + Edit** (the Workers AI REST token template), without Worker
 script/deployment or billing permissions. See the official

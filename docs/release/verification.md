@@ -2,11 +2,12 @@
 
 The original implementation and recorded non-live checks remain preserved.
 Release readiness is **BLOCKED** by AC-08 and the real-model portion of AC-29.
-Two separately authorized live attempts both failed on their first analyst
-request with `provider_rate_limit`: one original plus one additional client
-request, **two consumed cumulatively out of a ceiling of three**. No reviewer,
-approval/resume or assembly was reached. The unused allowance does not authorize
-a third attempt. See [original evidence](openrouter-live-attempt.json) and
+Two separately authorized OpenRouter attempts both failed on their first analyst
+request with `provider_rate_limit`: **two historical requests consumed**. No reviewer,
+approval/resume or assembly was reached. Their unused allowance does not authorize
+another OpenRouter attempt. A later authorization prepares an isolated direct
+Groq → Cloudflare campaign, with generation deferred until explicit initiation;
+see the preparation supplement below. See [original evidence](openrouter-live-attempt.json) and
 [additional-attempt evidence](openrouter-additional-attempt.json). Fixture success
 is never counted as genuine chained execution.
 
@@ -436,20 +437,87 @@ skipped or replaced with production fakes.
 ## Remaining release action
 
 Keep AC-08 and the real-model portion of AC-29 BLOCKED. Both authorized attempts
-have ended with provider_rate_limit. Total consumed is **two**, one per attempt;
-the cumulative ceiling was three, but the unused allowance is **not** permission
-for another attempt. Do not delete either marker, rerun/resume failed work, probe,
-switch route or reset a budget. No third attempt is authorized.
+have ended with provider_rate_limit. Total consumed remains **two**, one per
+OpenRouter attempt. Do not delete either marker, rerun/resume failed work, probe,
+or reset a budget. The separately authorized direct-provider campaign below does
+not reuse or extend either historical run's allowance.
 
 The missing release proof remains genuine successful analyst/reviewer chaining,
 validated persisted outputs/events, WAITING_APPROVAL, content-bound approval and
 explicit resume, pure assembly without a third call, and the documented real-model
 image/CLI journey. Existing metadata/quota and fixture checks do not satisfy it.
 The original 429 remains unresolved; the new model's failure does not diagnose it.
-Keep the plan active and preserve all previous source/image evidence. Any future
-live work requires another separate explicit decision, without erasing consumed
-requests or changing shared privacy/account policy automatically.
+Keep the plan active and preserve all previous source/image evidence. Future live
+work must stay within the direct-campaign authorization below, without erasing
+consumed requests or changing shared privacy/account policy automatically.
 
 Both attempt records, credentials/CLI state, input, database volume and private
 raw API evidence remain retained; only the isolated verification services were
 stopped. No push, merge, publication or remote deployment was performed.
+
+## Direct Groq → Cloudflare preparation (2026-10-27)
+
+Preparation is complete; **zero new generation requests** were made. The
+maintainer will enter new credentials locally. The optional
+[operator guide](../direct-smoke-campaign.md) implements one future command,
+`python3 scripts/ops/direct_smoke_campaign.py run --approve`, after its documented
+credential/plan checks, GET-only preflight, service start, doctor and existing
+CLI session/login prerequisites. No bootstrap or new database is needed.
+
+- Tested source: `44a8c42373af1320986ad78d922aa79595775dbe`.
+- Prepared release image: `sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`;
+  OCI revision matches that source. All **93** shipped file hashes match, and
+  image inspection confirms non-root execution, packaged workflow/CLI/migrations
+  and exclusion of tests, fake providers and private configuration.
+- The bounded shipped changes map Groq GPT-OSS completion/reasoning parameters
+  and reuse sanitized error diagnostics for direct compatible providers. An
+  overlarge response is invalid output, not an availability fallback trigger.
+  Fallback is confined to the opt-in operator helper; normal runtime policy is
+  unchanged, with no implicit consent or cross-provider fallback.
+- Backend gate: **242 PASS, zero skips/failures**, lock/Ruff/Black/strict MyPy
+  PASS; 2 existing dependency deprecation warnings. An earlier gate hit one
+  configuration-fingerprint fixture error while source was being edited; the
+  frozen full rerun passed without changing that guard. Focused wire/identity/
+  Cloudflare diagnostic tests: 5 PASS. Ops: **50 PASS**, including 13 direct
+  campaign test methods. Canonical + example-override Compose checks PASS.
+- Both real Compose configurations were resolved privately. Four actual-image
+  one-off checks (API and worker for each profile, no dependencies started)
+  verify the effective model, blank isolated credentials, retry/output/call
+  limits, reasoning and preserved restrictive default privacy. No generation
+  path was called. Missing-credential preflight correctly blocks before HTTP.
+- Private profiles are `.maos/direct-smoke/groq-smoke/private.env` and
+  `.maos/direct-smoke/cloudflare-smoke/private.env`, with 0700 directories and
+  0600 files. All provider credentials and Cloudflare Account ID remain blank;
+  free-plan attestations and authenticated metadata/access checks are pending.
+  Git ignores these files; they are outside the backend build context.
+- Exact models: direct Groq `openai/gpt-oss-20b` (low reasoning, completion cap
+  includes reasoning) and direct Cloudflare
+  `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (JSON object mode). Both are priced
+  models with free-plan allowances, not zero-priced models. An eligible Groq
+  **Free organization** and Cloudflare **Workers Free account** must be checked
+  locally; Paid plans/credits are excluded. No portable max-price guarantee is
+  asserted. GET-only preflight rechecks exact model availability and required
+  Cloudflare schema capabilities before the later run.
+
+The future campaign reserves at most **2 Groq + 2 Cloudflare = 4 new / 6
+cumulative requests**, including the 2 historical OpenRouter requests. Retries
+are zero at application and HTTP transport, output cap 1024. Successful Groq
+approval/resume/assembly stops the campaign without Cloudflare generation.
+Only an eligible terminal Groq availability failure permits one separate
+Cloudflare run from the original input, after stopping API/worker and confirming
+no work can continue. Fatal auth/config/billing/schema/state failures stop.
+Campaign/provider markers are exclusive and persistent; reinvocation cannot
+reset the budget. No campaign or provider-attempt marker has been created yet.
+
+All **43 recorded historical artifact hashes** remain intact. The existing
+database/admin/application secrets/volume/CLI/input are reused; all four isolated
+services remain stopped. Source/image/content proof, checks and limitations are
+recorded in [preparation evidence](direct-smoke-preparation.json). Earlier
+evidence retains its original source/image provenance. Final documentation-only
+handoff commits do not change this tested image or require a rebuild.
+
+Acceptance remains **30 PASS / 2 BLOCKED**. Genuine chained analyst/reviewer
+outputs and the documented image/CLI approval-resume journey are still missing.
+No inference, push, merge, publication, remote deployment or deletion of retained
+resources occurred during this preparation. A later successful direct provider
+would not diagnose either earlier OpenRouter 429 or establish enterprise readiness.

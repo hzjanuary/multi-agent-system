@@ -283,9 +283,24 @@ runtime or within a provider-pinned run. No inference during preparation.
   (13 direct-campaign tests), plus focused provider wire/identity/CF error-shape
   tests PASS. An earlier fingerprint fixture failed while source was being
   edited; the full frozen rerun passed without weakening the fingerprint guard.
-- [ ] Build/inspect affected source-labeled image; prepare blank-credential files
-  against existing DB/admin/volume/CLI/input, preserving all historical evidence.
-- [ ] Guide/report/provenance handoff; AC-08/AC-29 stay BLOCKED.
+- [x] Source `44a8c42373af1320986ad78d922aa79595775dbe`, image
+  `sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`;
+  release-content check PASS, all 93 shipped hashes match. Both private profiles
+  prepared with blank credentials/account ID, 0700/0600 permissions. All 43
+  historical artifact hashes, existing DB/admin/secrets/volume/CLI/input retained.
+- [x] Real resolved Compose checks for both profiles and canonical/override gate
+  PASS. Four actual-image API/worker one-offs verify profile delivery and limits
+  without starting dependencies or inference; missing-key preflight BLOCKED
+  before HTTP. All four persistent isolated services remain stopped.
+- [x] [Guide](../../direct-smoke-campaign.md), [report](../../release/verification.md)
+  and [source/image/content preparation evidence](../../release/direct-smoke-preparation.json)
+  updated. Zero new generation; no campaign/phase markers reserved. AC-08/AC-29
+  stay BLOCKED (30 PASS / 2 BLOCKED). Final handoff is documentation/evidence only.
+- [ ] Maintainer enters Groq key, Cloudflare Account ID/token through hidden local
+  helper and confirms native Free plans. Authenticated GET-only preflight/access
+  remains pending. On explicit initiation only, execute once with `run --approve`
+  (2/provider, 4 new, 6 cumulative); retain all outcomes, stop isolated services.
+  Genuine success is still required before changing AC-08/live AC-29.
 
 Groq Free organization and Cloudflare Workers Free account must be checked locally
 while entering credentials. Native free-plan quota enforcement, not portable
