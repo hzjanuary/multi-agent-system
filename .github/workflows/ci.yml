@@ -88,3 +88,16 @@ jobs:
           python scripts/ops/release_security.py scan-image --tool .maos/tools/trivy --image multi-agent-os:local --output .maos/security
       - name: Diff hygiene
         run: git diff --check
+      - name: Retain sanitized release proof even when vulnerability gate fails
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-security-${{ github.sha }}
+          if-no-files-found: warn
+          retention-days: 30
+          include-hidden-files: true
+          path: |
+            .maos/security/image-vulnerabilities.json
+            .maos/security/sbom.cdx.json
+            .maos/python-audit.json
+            .maos/spec-030/evidence/*/image-verification.json
