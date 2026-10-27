@@ -1,13 +1,14 @@
 # SPEC-029 acceptance evidence
 
-The original implementation and its recorded non-live acceptance checks are complete.
-Fully verified release readiness remains **BLOCKED** by AC-08 and the real-model
-portion of AC-29. The maintainer authorized one bounded OpenRouter live attempt
-following preparation. It **failed on the analyst's first request** with durable
-`provider_rate_limit`, before any reviewer or approval. No retry or new run was
-made. [Live attempt evidence](openrouter-live-attempt.json) records the result;
-fixture responses are never counted as real model evidence. No model weights
-were downloaded.
+The original implementation and recorded non-live checks remain preserved.
+Release readiness is **BLOCKED** by AC-08 and the real-model portion of AC-29.
+Two separately authorized live attempts both failed on their first analyst
+request with `provider_rate_limit`: one original plus one additional client
+request, **two consumed cumulatively out of a ceiling of three**. No reviewer,
+approval/resume or assembly was reached. The unused allowance does not authorize
+a third attempt. See [original evidence](openrouter-live-attempt.json) and
+[additional-attempt evidence](openrouter-additional-attempt.json). Fixture success
+is never counted as genuine chained execution.
 
 ## Checked source and artifacts
 
@@ -176,6 +177,88 @@ platform/account or upstream capacity. The note discloses fields not collected
 by the one-shot lookup and one metadata-only alternative; no pin was changed.
 Original attempt/evidence, stopped services and 30 PASS / 2 BLOCKED remain intact.
 
+### Separately authorized additional attempt (2026-10-27)
+
+The maintainer explicitly authorized one new attempt with up to two additional
+generation requests, model `google/gemma-4-26b-a4b-it:free` / `google-ai-studio`,
+and a cumulative ceiling of three including the old run's one request. Original
+run `75039b34-2bf1-4e89-a1c1-704dd2f0be28`, root marker and all 20 historical
+artifact hashes are unchanged; the exact old API record matches before/after.
+
+**Corrected quota:** exactly one additional authenticated GET `/api/v1/key`, at
+`2026-10-27T06:39:40.127326+00:00`, returned HTTP 200 and
+`free_model_daily_requests={used:0, limit:50, remaining:50}`, `budgets=[]`,
+`effective_budget=null`. Key credit limits/reset are null; aggregate monetary
+usage fields are zero. All relevant fields were present, and missing/null/zero
+were preserved distinctly. This observation was sufficient for two calls then;
+it is not this run's usage/cost, a post-run quota observation or an explanation
+of the original 429. No second quota poll was made in this authorization.
+
+**Narrow implementation change:** a typed, bounded OpenRouter error hook retains
+actual HTTP status, selected error code/type, explicit provider/upstream codes,
+source-labeled response IDs versus application IDs, and received whitelisted
+Retry-After/rate/reset headers. Provider messages and arbitrary headers are
+omitted. Raw upstream JSON is parsed transiently only for code/status; raw
+body/metadata, prompts and completions are never stored in diagnostics. Invalid,
+overlong, credential-bearing or request-content strings are dropped. Diagnostics
+persist in the failed node's execution metadata through the existing worker's
+fresh failure transaction; failure semantics and output schemas are unchanged.
+
+The helper adds one fixed, explicitly authorized continuation slot
+`gemma26-20261027`, preserving the original permanent marker instead of resetting
+it. Separate manifests/overlay/authorization/attempt/evidence live under
+`.maos/openrouter-free-smoke/attempts/gemma26-20261027/`. A private active pointer
+selects them. Only the isolated env's model changes; project, database volume,
+auth secrets, administrator and input are reused. Duplicate preparation/run and
+unknown third identities are rejected. No generic retry loop or fallback was added.
+
+**Source/image:** implementation `ae11ef0c804c3a84b3d45d70e843511ede3ec135`,
+image `sha256:91a258415d7f1851b4ddc1c4dde6da959efa53fc6c8e98eed0c58427e09fdb4b`,
+tag `multi-agent-os:openrouter-free-smoke-v2`. OCI source label and all **93**
+shipped file hashes match; runtime excludes tests/fakes/private config. Backend
+**237 PASS**, zero failures/skips, two existing dependency deprecation warnings;
+lock/Ruff/Black (123 files)/strict MyPy (121 files) PASS. Ops **37 PASS**, including
+quota missing/null/zero, secret exclusion, one-shot lookup, continuation history/
+budget/guard checks; scripts lint/format, Compose base/optional gates and secret
+scan PASS. PostgreSQL integration confirms safe diagnostic persistence. Prior
+image/source artifacts are retained, not relabeled as verifying this new behavior.
+
+The retained CLI access token had expired; the maintainer logged in locally with
+the existing account. Doctor and independent CLI discovery passed. No migration,
+bootstrap, account replacement or data reset occurred: one administrator and one
+historical FAILED run were present before the new attempt. API and worker agreed
+on the new image/profile with MAX_PROVIDER_CALLS=2, retries 0, output cap 1024,
+zero prompt/completion/request price ceilings, no fallback, no paid add-ons and
+only the explicit test allow/non-ZDR policy. Default privacy remains restrictive.
+
+The final exact-variant/endpoint metadata preflight passed before reservation;
+request price is **unknown/omitted**, not fabricated as a metadata zero, while
+the outbound cap remains zero. Executed the helper once with `--approve`.
+New `text_review@1.0.0` run **`ea28e301-a82b-48d1-9be8-5fa34e215601` FAILED**;
+only analyst `analyze`, execution **`4bc8a039-efad-4027-b26e-5c1716f5871d`**, attempt 1,
+one reservation/client generation request. Sanitized response: **HTTP 429**,
+`error_code=429`, explicit `provider_name="Google AI Studio"`; local application
+request ID `4461573d-a8ba-4621-9fda-29882b27c20a`. No provider response ID, upstream
+error code or retry/reset header is available in the saved diagnostic fields.
+Actual model execution, usage and provider-reported cost remain **unknown**.
+The requested model/profile is known; an error provider name is not proof of
+successful upstream generation or a diagnosis/fix of the original failed request.
+
+After the first failure the worker was stopped. Separate CLI show/nodes/events/
+approvals and a new PostgreSQL session confirmed FAILED, one failed node, six
+ordered events and zero approvals. The database contains the same one user and
+two runs with call counts 1+1=2. No reviewer, WAITING_APPROVAL, decision, resume or
+assembly occurred; no retry, repair or replacement run was attempted.
+
+The **additional live attempt FAIL**, while acceptance remains **30 PASS,
+2 BLOCKED, 0 FAIL, 0 NOT_RUN** at the item level. No successful real-model journey
+or implementation defect causing the provider 429 is demonstrated. All four
+isolated services are stopped; volume, credential/CLI/input state and both attempt
+records/evidence are retained. No third attempt, publication/push/merge/remote
+deployment or retained-volume/configuration deletion occurred. Final handoff
+changes after the tested source are documentation/evidence only, so no rebuild
+or suite rerun is needed for that SHA difference.
+
 Environment: Linux `7.0.0-38-generic` x86_64, Docker Engine `29.9.2`, Compose
 `5.6.1`, local test Python `3.12.9`. The clean-image build used:
 
@@ -302,7 +385,7 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-05 | PASS | S bounded retained-import/dependency inventory; B import tests; I release package inspection. |
 | AC-06 | PASS | B `test_two_unrelated_workflows_one_graph`: distinct typed text/arithmetic definitions without core modifications; I external test extension uses the same image. |
 | AC-07 | PASS | B production parser→LangGraph→PostgreSQL composition covers agent/tool steps through one orchestration path; I/C exercise actual deterministic tools. Live inference is AC-08. |
-| AC-08 | BLOCKED | Authorized genuine OpenRouter attempt failed on analyst request with `provider_rate_limit`; run `75039b34-2bf1-4e89-a1c1-704dd2f0be28`, call count 1. No reviewer or successful chained outputs. See live-attempt evidence. |
+| AC-08 | BLOCKED | Both separately authorized genuine attempts failed on their first analyst request with `provider_rate_limit`; call counts 1+1=2, no reviewer or successful chained outputs. Original and additional evidence retain separate provenance. |
 | AC-09 | PASS | B missing model/key/endpoint, auth rejection, timeout, exhausted transient retries, invalid output and budget refusal fail without fake success. Provider-specific tests use fixtures. |
 | AC-10 | PASS | B `test_parser_failure_is_durable_and_stops_downstream`: production parser failure persists through worker transaction end, read from a new DB session; later nodes absent. |
 | AC-11 | PASS | N accepted client disconnect without consuming response, API restart, one durable job and independent worker completion; B independent process/recovery tests. Rejected/unreceived requests are not accepted submissions. |
@@ -329,7 +412,7 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-32 | PASS | S current English README/docs/AGENTS/WORKFLOW, reconciled authority/links, MIT/NOTICE review and verified existing issue channel. Manual/unverified model/publication commands explicitly labeled. |
 
 Result: **30 PASS, 2 BLOCKED, 0 FAIL, 0 NOT_RUN** at the acceptance-item level.
-The authorized live smoke ran and failed at the first request; the two acceptance items remain externally BLOCKED. This
+Both authorized live smokes failed at their first request; the two acceptance items remain externally BLOCKED. This
 supports engineering completion; it does not support fully verified release
 readiness or a production-ready claim.
 
@@ -352,22 +435,21 @@ skipped or replaced with production fakes.
 
 ## Remaining release action
 
-Keep AC-08 and the real-model portion of AC-29 BLOCKED. The authorized attempt
-has ended after `provider_rate_limit`; do not invoke the helper again, remove
-`attempt.json`, resume the failed run or use the unused call allowance for a retry.
-Investigate free-route quota/availability through non-inference account/support
-information without weakening global policy. A later live attempt needs a new
-explicit maintainer budget decision; no model/route switch is authorized.
+Keep AC-08 and the real-model portion of AC-29 BLOCKED. Both authorized attempts
+have ended with provider_rate_limit. Total consumed is **two**, one per attempt;
+the cumulative ceiling was three, but the unused allowance is **not** permission
+for another attempt. Do not delete either marker, rerun/resume failed work, probe,
+switch route or reset a budget. No third attempt is authorized.
 
-The original release obligations remain: successful real analyst then reviewer,
-persisted validated outputs/metadata/events, WAITING_APPROVAL, normal content-bound
-approval and explicit resume, pure assembly without a third generation, and the
-documented real-model image/CLI journey. The isolated [guide](../openrouter-free-smoke.md)
-describes the flow but does not authorize replay of this failed attempt. Separate
-README provider probing remains outside this attempt's budget. Do not archive the
-active plan or promote AC-08/AC-29 without the actual missing evidence.
+The missing release proof remains genuine successful analyst/reviewer chaining,
+validated persisted outputs/events, WAITING_APPROVAL, content-bound approval and
+explicit resume, pure assembly without a third call, and the documented real-model
+image/CLI journey. Existing metadata/quota and fixture checks do not satisfy it.
+The original 429 remains unresolved; the new model's failure does not diagnose it.
+Keep the plan active and preserve all previous source/image evidence. Any future
+live work requires another separate explicit decision, without erasing consumed
+requests or changing shared privacy/account policy automatically.
 
-Prior [cleanup evidence](cleanup-evidence.json) and source/image provenance remain
-historical. The new isolated services are stopped with volumes/configuration and
-all private evidence retained. No publication, remote deployment, push or merge
-was performed.
+Both attempt records, credentials/CLI state, input, database volume and private
+raw API evidence remain retained; only the isolated verification services were
+stopped. No push, merge, publication or remote deployment was performed.

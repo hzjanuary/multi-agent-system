@@ -5,8 +5,9 @@ Started: 2026-10-26. Updated: 2026-10-27.
 ## Status
 
 Original engineering and isolated OpenRouter preparation are complete. The
-authorized live attempt failed on its first request with `provider_rate_limit`;
-no retry or fresh run followed. Release verification remains BLOCKED at AC-08
+two separately authorized live attempts each failed on their first request with
+`provider_rate_limit`; two client generation requests consumed cumulatively.
+No retry or third attempt followed. Release verification remains BLOCKED at AC-08
 and the real-model portion of AC-29. Keep this
 one plan active until that gate is resolved; do not archive as fully verified.
 
@@ -235,16 +236,32 @@ remain untouched. One new key-info GET corrects the earlier field omission.
 
 - [x] One-shot corrected quota: used 0 / limit 50 / remaining 50; budgets [],
   effective_budget null. Current observation only, no inference about old 429.
-- [ ] Current exact endpoint metadata immediately before generation;
+- [x] Current exact endpoint metadata PASS immediately before generation;
   stop if an applicable two-call quota or route/capability/price blocker exists.
 - [x] Narrow typed safe error diagnostics; 237 backend tests, 37 ops tests,
   lock/Ruff/Black/strict MyPy PASS. Error-body/message retention remains forbidden.
-- [ ] New image/source verification if runtime changes; separate linked attempt
-  mechanism, same DB/volume/admin/CLI/input, isolated model change only.
-- [ ] Reuse valid CLI session (local login only if expired); run helper once with
-  explicit approval and collect real outputs/events or partial diagnostics.
-- [ ] Stop isolated services, retain both attempts, update acceptance honestly.
+- [x] Source `ae11ef0c804c3a84b3d45d70e843511ede3ec135`, runtime image
+  `sha256:91a258415d7f1851b4ddc1c4dde6da959efa53fc6c8e98eed0c58427e09fdb4b`;
+  93 shipped hashes match. Separate linked attempt `gemma26-20261027`; old marker/
+  all 20 historical artifact hashes preserved, same DB/volume/admin/CLI/input.
+- [x] Existing token expired; maintainer logged in locally using the same account.
+  Doctor/CLI discovery PASS. Helper ran once with `--approve`; new run
+  `ea28e301-a82b-48d1-9be8-5fa34e215601` FAILED at analyst with actual HTTP 429,
+  code 429 and explicit error provider Google AI Studio. New call count 1;
+  cumulative historical count 2/3. No reviewer or subsequent approval/assembly.
+  Unknown provider IDs, upstream code, usage and cost remain unknown.
+- [x] Stop all four isolated services after separate CLI/new DB readback.
+  One user, two runs, six events for each failure; old run unchanged. Both markers,
+  volume/config/credentials/CLI/input/evidence retained. [Additional evidence](../../release/openrouter-additional-attempt.json).
+  Acceptance 30 PASS / 2 BLOCKED unchanged; live attempt FAIL is separate.
+  No implementation defect is established by the 429, no third attempt authorized.
 
 No retry, old-run resume, warm-up, repair, third attempt, pin fallback, schema
 weakening, default privacy change, push/publication/deployment or retained-data
 deletion is authorized. AC-08/AC-29 remain BLOCKED pending genuine evidence.
+
+The original 429 is not diagnosed or fixed by the new model selection. Corrected
+quota is only a pre-attempt current observation, not workflow cost or a post-run
+free-request count. The unused cumulative allowance does not authorize retry or
+another attempt; preserve the one original plus one additional consumed request.
+Final handoff edits are documentation/evidence only; no rebuild or suite rerun.
