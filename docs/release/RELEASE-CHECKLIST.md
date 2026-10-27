@@ -36,7 +36,7 @@ Root MIT applies to project-owned source. In the runtime image:
 - `/app/licenses/inventory.json` lists actual installed Python distributions,
   declared licenses, copied full notices and hashes; OS package versions and
   `/usr/share/doc/<package>/copyright`; `/usr/share/common-licenses` and
-  `/usr/local/LICENSE` remain readable in the base image.
+  `/usr/local/lib/python3.12/LICENSE.txt` remain readable in the base image.
 - Exact-version supplements and immutable upstream evidence are in
   `release/third-party/sources.json`. langchain-core 1.4.9 and langsmith 0.10.2
   wheel/sdist omit their MIT text: the build supplies full verified upstream

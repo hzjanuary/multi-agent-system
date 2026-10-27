@@ -153,13 +153,13 @@ def generate(out: Path, supplements: Path) -> dict:
         "os": {
             "packages": os_packages,
             "common_license_directory": "/usr/share/common-licenses",
-            "python_base_license": "/usr/local/LICENSE",
+            "python_base_license": "/usr/local/lib/python3.12/LICENSE.txt",
             "source_access": "Debian source packages: https://sources.debian.org/ ; Python: https://www.python.org/downloads/source/",
         },
         "deployment_stack": stack,
         "claim": "License declarations and notice integrity are recorded; no universal legal compatibility or enterprise certification is asserted.",
     }
-    if not Path("/usr/local/LICENSE").is_file():
+    if not Path("/usr/local/lib/python3.12/LICENSE.txt").is_file():
         raise ValueError("Python base license missing")
     (out / "inventory.json").write_text(
         json.dumps(inventory, indent=2, sort_keys=True) + "\n"
