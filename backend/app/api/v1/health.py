@@ -38,14 +38,27 @@ async def root(settings: SettingsDependency) -> RootResponse:
 
 
 @router.get("/health", response_model=HealthResponse)
-async def health(settings: SettingsDependency) -> HealthResponse:
+async def health(
+    settings: SettingsDependency,
+    checker: ReadinessCheckerDependency,
+    response: Response,
+) -> HealthResponse:
     """Return overall service health."""
+    checks = await checker.check_all()
+    required_ready = all(check.status == "ok" for check in checks if check.required)
+    if not required_ready:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     return HealthResponse(
-        status="ok",
+        status=(
+            "unavailable"
+            if not required_ready
+            else "ok" if all(check.status == "ok" for check in checks) else "degraded"
+        ),
         app_name=settings.app_name,
         environment=settings.app_env,
         version=API_VERSION,
         timestamp=utc_now(),
+        checks=checks,
     )
 
 

@@ -3,7 +3,9 @@
 The breaking pre-1.0 interface uses `/api/v1`. `/docs` and `/openapi.json` expose
 the generated contract. `/live` is process liveness; `/ready` checks schema,
 storage and configured definitions/provider without inference. Redis degradation
-is reported separately from required PostgreSQL readiness.
+is reported separately from required PostgreSQL readiness. `/health` returns
+`ok`, `degraded` for optional notification loss, or `unavailable` (503) for
+required dependency/configuration failure; `/live` remains process-only.
 
 Authenticate with `POST /auth/login` (email/password); send the returned access
 token in `Authorization: Bearer <token>`. Refresh rotates a stored hashed session;

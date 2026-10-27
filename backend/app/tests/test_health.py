@@ -13,7 +13,11 @@ from app.schemas import ReadinessDependencyStatus, ReadinessDependencyStatusValu
 
 def build_client() -> TestClient:
     settings = Settings()
-    return TestClient(create_app(settings))
+    app = create_app(settings)
+    app.dependency_overrides[provide_readiness_checker] = lambda: FakeReadinessChecker(
+        [dependency_status("postgres_schema"), dependency_status("configuration")]
+    )
+    return TestClient(app)
 
 
 def response_json(response: Any) -> dict[str, Any]:
@@ -90,8 +94,7 @@ def test_ready_returns_dependency_readiness() -> None:
         [
             dependency_status("postgres"),
             dependency_status("redis"),
-            dependency_status("qdrant"),
-            dependency_status("object_storage"),
+            dependency_status("configuration"),
         ],
     )
     app.dependency_overrides[provide_readiness_checker] = lambda: checker
@@ -106,8 +109,7 @@ def test_ready_returns_dependency_readiness() -> None:
     assert [check["name"] for check in data["checks"]] == [
         "postgres",
         "redis",
-        "qdrant",
-        "object_storage",
+        "configuration",
     ]
     assert {check["status"] for check in data["checks"]} == {"ok"}
     assert checker.called is True
@@ -117,10 +119,9 @@ def test_ready_returns_503_when_dependency_fails() -> None:
     app = create_app(Settings())
     checker = FakeReadinessChecker(
         [
-            dependency_status("postgres"),
-            dependency_status("redis", "failed"),
-            dependency_status("qdrant"),
-            dependency_status("object_storage"),
+            dependency_status("postgres", "failed"),
+            dependency_status("redis"),
+            dependency_status("configuration"),
         ],
     )
     app.dependency_overrides[provide_readiness_checker] = lambda: checker
@@ -131,19 +132,17 @@ def test_ready_returns_503_when_dependency_fails() -> None:
 
     assert response.status_code == 503
     assert data["status"] == "not_ready"
-    assert data["checks"][1]["name"] == "redis"
-    assert data["checks"][1]["status"] == "failed"
+    assert data["checks"][0]["name"] == "postgres"
+    assert data["checks"][0]["status"] == "failed"
 
 
-def test_health_and_live_do_not_call_readiness_checker() -> None:
+def test_live_does_not_call_readiness_checker() -> None:
     app = create_app(Settings())
     app.dependency_overrides[provide_readiness_checker] = FailingReadinessChecker
     client = TestClient(app)
 
-    health_response = client.get("/health")
     live_response = client.get("/live")
 
-    assert health_response.status_code == 200
     assert live_response.status_code == 200
 
 
@@ -172,3 +171,36 @@ def test_app_has_no_retired_product_routes() -> None:
     retired = ("knowledge", "quotation", "outbound", "/state", "/transition")
     assert not any(any(word in path for word in retired) for path in paths)
     assert "/api/v1/runs" in paths
+
+
+def test_health_aggregates_optional_notification_degradation() -> None:
+    app = create_app(Settings())
+    checker = FakeReadinessChecker(
+        [
+            dependency_status("postgres_schema"),
+            ReadinessDependencyStatus(
+                name="redis_notifications",
+                status="failed",
+                required=False,
+                message="notification delivery degraded",
+            ),
+        ]
+    )
+    app.dependency_overrides[provide_readiness_checker] = lambda: checker
+    client = TestClient(app)
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "degraded"
+    assert response.json()["checks"][1]["required"] is False
+    assert client.get("/ready").status_code == 200
+    assert checker.called
+
+
+def test_health_required_storage_failure_is_unavailable() -> None:
+    app = create_app(Settings())
+    checker = FakeReadinessChecker([dependency_status("postgres_schema", "failed")])
+    app.dependency_overrides[provide_readiness_checker] = lambda: checker
+    response = TestClient(app).get("/health")
+    assert response.status_code == 503
+    assert response.json()["status"] == "unavailable"
+    assert checker.called

@@ -98,7 +98,7 @@ def test_request_logging_includes_request_id_and_safe_path(
     client = TestClient(create_app(Settings()))
 
     response = client.get(
-        "/health?token=secret",
+        "/live?token=secret",
         headers={
             "X-Request-ID": "request-abc",
             "Authorization": "Bearer should-not-appear",
@@ -112,7 +112,7 @@ def test_request_logging_includes_request_id_and_safe_path(
     assert event["event"] == "request_completed"
     assert event["request_id"] == "request-abc"
     assert event["method"] == "GET"
-    assert event["path"] == "/health"
+    assert event["path"] == "/live"
     assert event["status_code"] == 200
     assert "duration_ms" in event
     assert "should-not-appear" not in str(logged_events)
