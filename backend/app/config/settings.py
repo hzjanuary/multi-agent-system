@@ -9,6 +9,7 @@ from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.llm.contracts import LLMProvider
+from app.llm.provider_preferences import OpenRouterProviderPreferences
 from app.llm.settings import LLMSettings
 
 
@@ -55,6 +56,9 @@ class Settings(BaseSettings):
     llm_max_output_tokens: int = Field(default=1024, ge=1, le=32768)
     groq_api_key: str = Field(default="", repr=False)
     openrouter_api_key: str = Field(default="", repr=False)
+    openrouter_provider_preferences_raw: str = Field(
+        default="", alias="OPENROUTER_PROVIDER_PREFERENCES", repr=False
+    )
     gemini_api_key: str = Field(default="", repr=False)
     ollama_base_url: str = "http://localhost:11434"
     openai_compatible_base_url: str = ""
@@ -95,11 +99,28 @@ class Settings(BaseSettings):
             max_output_tokens=self.llm_max_output_tokens,
             groq_api_key=self.groq_api_key,
             openrouter_api_key=self.openrouter_api_key,
+            openrouter_provider_preferences=(
+                OpenRouterProviderPreferences.model_validate_json(
+                    self.openrouter_provider_preferences_raw
+                )
+                if self.openrouter_provider_preferences_raw.strip()
+                else OpenRouterProviderPreferences()
+            ),
             gemini_api_key=self.gemini_api_key,
             ollama_base_url=self.ollama_base_url,
             openai_compatible_base_url=self.openai_compatible_base_url,
             openai_compatible_api_key=self.openai_compatible_api_key,
         )
+
+    @field_validator("openrouter_provider_preferences_raw")
+    @classmethod
+    def validate_openrouter_preferences(cls, value: str) -> str:
+        if value.strip():
+            try:
+                OpenRouterProviderPreferences.model_validate_json(value)
+            except ValueError:
+                raise ValueError("invalid OpenRouter provider preferences") from None
+        return value
 
     @field_validator("log_redaction_enabled")
     @classmethod

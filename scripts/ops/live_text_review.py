@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import ipaddress
 import json
+import math
 import shlex
 import subprocess
 import sys
@@ -78,7 +79,7 @@ def selected_profile(config: dict[str, str]) -> dict[str, str]:
     }
     if provider not in endpoints or not config.get("LLM_MODEL", "").strip():
         raise SmokeFailure("real_provider_and_explicit_model_required")
-    return {
+    profile = {
         "profile": "default",
         "provider": provider,
         "model": config["LLM_MODEL"].strip(),
@@ -87,6 +88,46 @@ def selected_profile(config: dict[str, str]) -> dict[str, str]:
         "max_retries": str(int(config.get("LLM_MAX_RETRIES", "2"))),
         "timeout_seconds": str(int(config.get("LLM_TIMEOUT_SECONDS", "60"))),
     }
+    if provider == "openrouter":
+        preferences = {
+            "data_collection": "deny",
+            "zdr": True,
+            "allow_fallbacks": False,
+            "require_parameters": True,
+        }
+        configured = json.loads(
+            config.get("OPENROUTER_PROVIDER_PREFERENCES", "") or "{}"
+        )
+        if not isinstance(configured, dict) or set(configured) - {
+            "data_collection",
+            "zdr",
+            "allow_fallbacks",
+            "require_parameters",
+            "only",
+            "max_price",
+        }:
+            raise SmokeFailure("invalid_openrouter_preferences")
+        preferences.update(configured)
+        if not preferences.get("only"):
+            preferences.pop("only", None)
+        if preferences.get("max_price") is None:
+            preferences.pop("max_price", None)
+        else:
+            caps = preferences["max_price"]
+            if not isinstance(caps, dict) or set(caps) != {
+                "prompt",
+                "completion",
+                "request",
+            }:
+                raise SmokeFailure("invalid_openrouter_price_caps")
+            normalized = {name: float(value) for name, value in caps.items()}
+            if any(
+                not math.isfinite(value) or value < 0 for value in normalized.values()
+            ):
+                raise SmokeFailure("invalid_openrouter_price_caps")
+            preferences["max_price"] = normalized
+        profile["routing_hash"] = digest(preferences)
+    return profile
 
 
 def main() -> int:

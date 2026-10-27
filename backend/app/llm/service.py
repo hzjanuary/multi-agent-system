@@ -7,6 +7,7 @@ import json
 import random
 from collections.abc import Awaitable, Callable
 from typing import Any
+from uuid import uuid4
 
 from app.definitions import AgentDefinition, fingerprint
 from app.llm.contracts import (
@@ -15,6 +16,7 @@ from app.llm.contracts import (
     LLMChatResponse,
     LLMErrorCategory,
     LLMMessageRole,
+    LLMProvider,
     LLMResponseFormat,
 )
 from app.llm.errors import LLMConfigurationError, LLMProviderError
@@ -48,7 +50,7 @@ class LLMService:
 
     @property
     def profile_identity(self) -> dict[str, str]:
-        return {
+        identity = {
             "profile": "default",
             "provider": self.settings.provider.value,
             "model": self.settings.selected_model,
@@ -57,6 +59,12 @@ class LLMService:
             "max_retries": str(self.settings.max_retries),
             "timeout_seconds": str(self.settings.timeout_seconds),
         }
+
+        if self.settings.provider == LLMProvider.OPENROUTER:
+            identity["routing_hash"] = fingerprint(
+                self.settings.openrouter_provider_preferences.request_dict()
+            )
+        return identity
 
     def validate_ready(self) -> None:
         self.settings.require_provider_configuration()
@@ -140,6 +148,7 @@ class LLMService:
         )
         response = await self.complete_json(
             LLMChatRequest(
+                request_id=str(uuid4()),
                 messages=(
                     LLMChatMessage(role=LLMMessageRole.SYSTEM, content=instructions),
                     LLMChatMessage(
@@ -159,4 +168,10 @@ class LLMService:
             "model": response.model,
             "attempt_count": response.metadata.get("attempt_count", 1),
             "usage": response.usage.model_dump(mode="json") if response.usage else None,
+            "request_id": response.request_id,
+            **{
+                key: response.metadata[key]
+                for key in ("provider_route", "reported_cost", "cost_currency")
+                if key in response.metadata
+            },
         }

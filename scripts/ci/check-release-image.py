@@ -37,7 +37,14 @@ def main() -> None:
         "poetry",
     ):
         assert importlib.util.find_spec(package) is None, package
-    for name in ("frontend", "datasets", ".harness-core", ".harness-backup"):
+    for name in (
+        "frontend",
+        "datasets",
+        ".harness-core",
+        ".harness-backup",
+        ".maos",
+        "private.env",
+    ):
         assert not (root / name).exists(), name
     print("release-content: PASS")
 

@@ -1,9 +1,10 @@
 # SPEC-029 acceptance evidence
 
-Engineering implementation and all non-live acceptance checks are complete.
+The original implementation and its recorded non-live acceptance checks are complete.
 Fully verified release readiness is **BLOCKED** by AC-08 and the model-dependent
-portion of AC-29. The maintainer explicitly selected leaving live inference
-blocked. No model weights were downloaded and no live/remote inference was run.
+portion of AC-29. The maintainer now authorizes preparation of an isolated
+OpenRouter free smoke, with local key entry and live execution deferred. No model
+weights were downloaded and no live/remote inference was run.
 Fixture responses are never counted as real model evidence.
 
 ## Checked source and artifacts
@@ -20,8 +21,8 @@ Fixture responses are never counted as real model evidence.
   [full backend gate log](backend-gate.log), and
   [locked dependency audit](dependency-audit.json).
 
-Later changes to these records and onboarding prose do not change the checked
-application image. The implementation commit remains the reproducible source
+The earlier documentation closeout did not change this checked
+application image. The later OpenRouter preparation below has separate provenance. The implementation commit remains the reproducible source
 identity. Artifact JSON contains commands, safe status metadata and hashes; no
 operator password, bearer token, provider key or database backup is committed.
 
@@ -174,7 +175,7 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-05 | PASS | S bounded retained-import/dependency inventory; B import tests; I release package inspection. |
 | AC-06 | PASS | B `test_two_unrelated_workflows_one_graph`: distinct typed text/arithmetic definitions without core modifications; I external test extension uses the same image. |
 | AC-07 | PASS | B production parser→LangGraph→PostgreSQL composition covers agent/tool steps through one orchestration path; I/C exercise actual deterministic tools. Live inference is AC-08. |
-| AC-08 | BLOCKED | Maintainer explicitly chose no live inference. No configured installed local model; no remote-provider enablement. `scripts/ops/live_text_review.py` is supplied but not run live. |
+| AC-08 | BLOCKED | Isolated OpenRouter free-smoke preparation authorized; key will be entered locally later. No genuine generation executed. Metadata/offline tests do not satisfy this criterion. |
 | AC-09 | PASS | B missing model/key/endpoint, auth rejection, timeout, exhausted transient retries, invalid output and budget refusal fail without fake success. Provider-specific tests use fixtures. |
 | AC-10 | PASS | B `test_parser_failure_is_durable_and_stops_downstream`: production parser failure persists through worker transaction end, read from a new DB session; later nodes absent. |
 | AC-11 | PASS | N accepted client disconnect without consuming response, API restart, one durable job and independent worker completion; B independent process/recovery tests. Rejected/unreceived requests are not accepted submissions. |
@@ -224,33 +225,24 @@ skipped or replaced with production fakes.
 
 ## Remaining release action
 
-Keep AC-08 and the model-dependent portion of AC-29 BLOCKED. The following is a
-future manual step, not authorization to run it during closeout. After explicit
-maintainer enablement, select an already installed local model and endpoint
-reachable from API/worker. For a dedicated smoke configuration set
-`MAOS_EXTENSION_MODULES=maos_examples.text_review`, `MAX_PROVIDER_CALLS=2`,
-`LLM_MAX_RETRIES=0` and `LLM_MAX_OUTPUT_TOKENS=1024` identically on both services;
-apply the configuration and obtain a fresh admin/operator CLI session. Supply
-operator-authored UTF-8 text and then run from the repository root:
+Keep AC-08 and the model-dependent portion of AC-29 BLOCKED. Follow the exact
+optional [OpenRouter free-smoke procedure](../openrouter-free-smoke.md) only when
+the maintainer supplies a dedicated key locally and initiates the live command.
+The chosen model is `google/gemma-4-31b-it:free`, provider tag
+`google-ai-studio`; the private opt-in configuration is
+`.maos/openrouter-free-smoke/private.env`, with `OPENROUTER_API_KEY` left empty.
+The request explicitly allows collection/training and disables request-level ZDR
+only for this test. Shared account/organization restrictions must not be bypassed.
 
-```bash
-backend/.venv/bin/python scripts/ops/live_text_review.py \
-  --api-url http://127.0.0.1:8000 \
-  --env-file .maos/.env \
-  --auth-file .maos/cli/auth.json \
-  --input /absolute/path/to/operator-text.txt \
-  --max-calls 2 --max-output-tokens 1024 --approve
-```
+The permanent once-only wrapper invokes the existing production smoke with
+`--enable-remote --approve --max-calls 2 --max-output-tokens 1024`. It must prove
+two chained real agent calls, persisted outputs/metadata/events, WAITING_APPROVAL,
+content-bound authenticated approval, explicit resume and pure final assembly
+without a third call. Preserve actual run/node/request IDs, usage and reported
+cost (unknown stays unknown), including partial failure evidence. Verify the
+remaining model-dependent README journey before changing AC-08/AC-29 or archiving
+the plan. Do not reset the attempt marker after failure or silently change routes.
 
-Use the configured API port if different. This script checks two chained real
-agent invocations, recorded provider/model metadata, the content-bound approval
-pause, explicit resume, final output and complete event replay. Preserve that
-evidence and verify the remaining model-dependent README commands before changing
-AC-08/AC-29 or archiving the active plan. CONTRIBUTING.md supplies general safety
-rules; the exact smoke invocation is recorded here. A hosted provider remains
-outside this closeout and would require separate explicit remote enablement.
-Do not download models or make paid calls just to turn these cells green.
-No publication, remote deployment, push or merge
-was performed. [Cleanup evidence](cleanup-evidence.json) records stopping only
-task-created verification containers while retaining their volumes/configuration;
-unrelated services were left running.
+No publication, remote deployment, push or merge was performed. Prior
+[cleanup evidence](cleanup-evidence.json) remains historical; retained operator
+and verification resources are preserved.

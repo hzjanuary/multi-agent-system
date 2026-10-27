@@ -92,6 +92,7 @@ def create_llm_client(
             api_key=settings.openrouter_api_key,
             model=model,
             transport=transport,
+            provider_preferences=settings.openrouter_provider_preferences,
             default_timeout_seconds=default_timeout_seconds,
         )
     if selected_provider is LLMProvider.OLLAMA:

@@ -16,6 +16,9 @@ Use injected test providers only under tests. Contract tests do not establish
 live provider compatibility. Real inference must be explicit and bounded; remote
 calls need operator enablement. Do not download weights in tests or normal startup.
 The public text_review extension is opt-in and consumes operator input.
+For the explicitly optional, isolated free-model verification procedure, see
+[OpenRouter free smoke](docs/openrouter-free-smoke.md). Its permissive test data
+policy is not the default for confidential deployments.
 
 Use immutable workflow/extension versions and reproducible source fingerprints;
 see docs/extending.md. Cover validation, approval, failure and recovery behavior

@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.llm.contracts import LLMProvider
 from app.llm.errors import LLMConfigurationError
+from app.llm.provider_preferences import OpenRouterProviderPreferences
 
 
 class LLMSettings(BaseModel):
@@ -20,6 +21,9 @@ class LLMSettings(BaseModel):
     max_output_tokens: int = Field(default=1024, ge=1, le=32768)
     groq_api_key: str = Field(default="", repr=False)
     openrouter_api_key: str = Field(default="", repr=False)
+    openrouter_provider_preferences: OpenRouterProviderPreferences = Field(
+        default_factory=OpenRouterProviderPreferences
+    )
     gemini_api_key: str = Field(default="", repr=False)
     ollama_base_url: str = "http://localhost:11434"
     openai_compatible_base_url: str = ""

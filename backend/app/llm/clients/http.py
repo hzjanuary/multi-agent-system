@@ -49,7 +49,10 @@ class HTTPXAsyncJSONHTTPTransport:
             async with (
                 asyncio.timeout(timeout_seconds),
                 httpx.AsyncClient(
-                    timeout=timeout_seconds, follow_redirects=False, trust_env=False
+                    timeout=timeout_seconds,
+                    follow_redirects=False,
+                    trust_env=False,
+                    transport=httpx.AsyncHTTPTransport(retries=0),
                 ) as client,
                 client.stream("POST", url, headers=headers, json=payload) as response,
             ):

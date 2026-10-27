@@ -4,14 +4,15 @@ Started: 2026-10-26. Updated: 2026-10-27.
 
 ## Status
 
-Engineering complete. Release verification BLOCKED at the maintainer-selected
+Original engineering complete. Isolated OpenRouter preparation is authorized;
+live execution is deferred until local key entry. Release verification BLOCKED at the
 live-model gate (AC-08 and the dependent real-model portion of AC-29). Keep this
 one plan active until that gate is resolved; do not archive as fully verified.
 
 Branch: `feat/spec-029-headless-oss`. Historical baseline:
 `92e5f1cfb2b0144bdb39a48db99371974bd372a5`. Checked implementation:
-`98854a807643566b720bff8ffd7feda85fa23746`. Later evidence/prose commits do not
-change the checked backend. No remote push, merge, deployment or publication.
+`98854a807643566b720bff8ffd7feda85fa23746`. The previous evidence/prose closeout did not
+change that checked backend; the new preparation changes require separate proof. No remote push, merge, deployment or publication.
 
 Provenance closeout inspected pre-closeout handoff HEAD
 `f05bf56dfbe4a29394443e9711e75a708fd8a905`. The diff from the tested source
@@ -138,15 +139,32 @@ implemented and verified within the recorded non-live scope. Acceptance:
 unproven. The maintainer explicitly chose to keep AC-08 blocked; no model was
 downloaded and no paid/remote call was attempted.
 
-AC-08 and the model-dependent portion of AC-29 remain BLOCKED. Only after explicit
-maintainer enablement, configure an already installed local model/reachable
-endpoint on API and worker, enable `maos_examples.text_review`, set
-`MAX_PROVIDER_CALLS=2`, `LLM_MAX_RETRIES=0`, `LLM_MAX_OUTPUT_TOKENS=1024`, and obtain
-a fresh admin/operator session. Run the exact future manual command in
-[Remaining release action](../../release/verification.md#remaining-release-action):
-`backend/.venv/bin/python scripts/ops/live_text_review.py` with the configuration,
-private auth file, operator text, `--max-calls 2 --max-output-tokens 1024 --approve`.
-Do not run it as part of this closeout. Preserve actual outputs/provider metadata,
-verify the remaining model-dependent README commands, then update AC-08/AC-29
-and only then archive this plan. Hosted providers would require separate explicit
-remote enablement; none is authorized here.
+AC-08 and the model-dependent portion of AC-29 remain BLOCKED. The maintainer
+selected OpenRouter free inference rather than installing a local model, and
+explicitly permits collection/training and non-ZDR routing only for the isolated
+`openrouter-free-smoke` configuration. This turn prepares only; the dedicated key
+will be entered locally later. No inference is authorized during preparation.
+
+Follow [the optional guide](../../openrouter-free-smoke.md) for the remaining
+bounded live attempt through the release image, API/worker and fresh CLI session:
+real analyst then reviewer, persisted outputs/events, WAITING_APPROVAL, normal
+explicit approval and resume, pure assembly, at most two generation HTTP attempts,
+no retries. Preserve partial evidence and never reset the budget automatically.
+Metadata and fixture tests cannot convert AC-08/AC-29 to PASS. The original
+release-verification requirements remain unresolved; archive only after genuine
+validation. No push, publication, merge, deployment or retained-resource deletion.
+
+## OpenRouter preparation closeout (2026-10-27)
+
+- [x] Inspect current clean handoff `4e4242ffd318da198ef7c9438401147946450dca`,
+  actual provider/runtime/workflow, secret/configuration and release evidence.
+- [x] Verify exact public free model and eligible endpoint; pin
+  `google/gemma-4-31b-it:free` / `google-ai-studio` and fail-closed GET-only preflight.
+- [x] Add typed host-controlled request routing, strict unset privacy defaults,
+  routing identity, explicit no transport retry, safe request/provider/cost evidence.
+- [x] Prepare helper/guide with private key slot, separate CLI/DB/Compose identities,
+  immutable image pin, normal approval/resume and permanent once-only attempt lock.
+- [ ] Run required backend/Compose and focused offline checks; build/inspect new
+  source-labeled release image and prepare the blank-key private configuration.
+- [ ] Record final source/image identities and exact results in the release report.
+- [ ] Genuine live model evidence and dependent first-run acceptance: BLOCKED.
