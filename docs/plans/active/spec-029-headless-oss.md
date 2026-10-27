@@ -299,9 +299,10 @@ runtime or within a provider-pinned run. No inference during preparation.
 - [x] Maintainer entered Groq key, Cloudflare Account ID/token through hidden local
   helper and confirmed native Free plans. Initial `metadata_HTTP_403` required
   the bounded non-inference diagnosis below; authenticated preflight now PASS.
-- [ ] On explicit initiation only, execute once with `run --approve`
-  (2/provider, 4 new, 6 cumulative); retain all outcomes, stop isolated services.
-  Genuine success is still required before changing AC-08/live AC-29.
+- [x] Explicitly initiated once with `run --approve`; direct Groq analyst failed
+  HTTP 403 `model_permission_blocked_project`. One new call/three cumulative;
+  no Cloudflare fallback for fatal permission failure. All records retained,
+  isolated services stopped. Genuine success is still required for AC-08/live AC-29.
 
 Groq Free organization and Cloudflare Workers Free account must be checked locally
 while entering credentials. Native free-plan quota enforcement, not portable
@@ -334,6 +335,48 @@ values, plan bindings, records, profile pins, budget and default privacy.
   Host helper/tests/docs only, no image-input changes;
   reuse source `44a8c42` / image `sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`.
 
-Campaign remains unreserved and all isolated operator services remain stopped.
-Historical requests = 2; new generation = 0; cap remains 2/provider, 4 new,
+At the metadata-diagnosis closeout, the campaign remained unreserved and all
+isolated operator services remained stopped. Historical requests = 2; new generation = 0; cap remains 2/provider, 4 new,
 6 cumulative. AC-08 and live AC-29 stay BLOCKED, acceptance 30 PASS / 2 BLOCKED.
+
+## Authorized direct campaign execution (2026-10-27)
+
+The maintainer explicitly initiates the existing single Groq → Cloudflare
+campaign, conditional on offline verification of the actual inference transport.
+No new campaign, third provider, generation probe or retry is authorized.
+
+- [x] Actual pinned release image, network disabled, HTTPX serialized request
+  capture: explicit `User-Agent: multi-agent-os/0.2.0`, Bearer auth, request ID,
+  timeout and JSON/token/reasoning parameters preserved; transport/application
+  retry 0 and redirects disabled. Existing focused provider tests 8 PASS.
+  Runtime already has an appropriate User-Agent, so no source/image change or
+  rebuild. Source remains `44a8c42373af1320986ad78d922aa79595775dbe`, image
+  `sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`.
+- [x] Current GET-only preflight PASS; start only the existing isolated project
+  without bootstrap/migration/secret regeneration. Original input hash matches
+  and describes a fictional company requesting ten business laptops.
+- [x] Doctor PASS. Existing CLI token expired; maintainer logged in locally to
+  the same administrator. Separate CLI workflow discovery then PASS; both
+  historical runs compare exactly before/after the new attempt.
+- [x] Exactly one `run --approve` invocation. Campaign record identity (SHA256,
+  not an application-assigned UUID)
+  `1e51ed922000dd7fabbc421234fd02985ebd89a2c302d4dac07122e5cae06cfc`;
+  Groq run `8573b056-b869-416b-87e6-e03569dbfb5f` FAILED on analyst, HTTP 403
+  `model_permission_blocked_project` / `permissions_error`. One durably reserved
+  generation request; 1 new/3 cumulative, no Cloudflare attempt. Request IDs and
+  six contiguous events persisted; no output/reviewer/approval/resume/assembly.
+  Usage/cost unknown, not zero. No new campaign/retry authorized.
+- [x] AC-08 BLOCKED: no successful genuine chained calls. AC-29 independently
+  BLOCKED: current image doctor/CLI works, but real-model operator journey did
+  not complete; historical clean-install evidence keeps its own provenance.
+  Acceptance 30 PASS / 2 BLOCKED; live campaign FAIL is a separate result.
+  [Evidence](../../release/direct-campaign-attempt.json), report and guide updated;
+  all four isolated services stopped, 43 historical artifact hashes intact,
+  volume/configuration/credentials/input/CLI and new markers retained.
+
+The provider's explicit error identifies a Groq project model permission, not a
+confirmed transport defect or availability error. No permission, Free-plan,
+shared privacy or billing policy was changed. A maintainer may review only the
+intended isolated project's model restrictions; later live execution requires a
+separate explicit decision. Do not reset/rerun the consumed campaign. No push,
+merge, publication, remote deployment or retained-resource deletion occurred.

@@ -2,12 +2,16 @@
 
 The original implementation and recorded non-live checks remain preserved.
 Release readiness is **BLOCKED** by AC-08 and the real-model portion of AC-29.
-Two separately authorized OpenRouter attempts both failed on their first analyst
-request with `provider_rate_limit`: **two historical requests consumed**. No reviewer,
-approval/resume or assembly was reached. Their unused allowance does not authorize
-another OpenRouter attempt. A later authorization prepares an isolated direct
-Groq → Cloudflare campaign, with generation deferred until explicit initiation;
-see the preparation supplement below. See [original evidence](openrouter-live-attempt.json) and
+Two separately authorized OpenRouter attempts failed on their first analyst
+request with `provider_rate_limit`. The later explicitly initiated direct
+Groq → Cloudflare campaign also failed on its first analyst request: HTTP 403,
+`model_permission_blocked_project` / `permissions_error`. Cloudflare was correctly
+not invoked for this fatal permission failure. **Three generation HTTP requests
+consumed cumulatively: two OpenRouter + one Groq; Cloudflare zero.** No reviewer,
+approval/resume or assembly was reached. The consumed campaign/attempt markers
+must not be reset; unused allowance does not authorize another campaign. See
+[direct campaign evidence](direct-campaign-attempt.json),
+[original evidence](openrouter-live-attempt.json) and
 [additional-attempt evidence](openrouter-additional-attempt.json). Fixture success
 is never counted as genuine chained execution.
 
@@ -386,7 +390,7 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-05 | PASS | S bounded retained-import/dependency inventory; B import tests; I release package inspection. |
 | AC-06 | PASS | B `test_two_unrelated_workflows_one_graph`: distinct typed text/arithmetic definitions without core modifications; I external test extension uses the same image. |
 | AC-07 | PASS | B production parser→LangGraph→PostgreSQL composition covers agent/tool steps through one orchestration path; I/C exercise actual deterministic tools. Live inference is AC-08. |
-| AC-08 | BLOCKED | Both separately authorized genuine attempts failed on their first analyst request with `provider_rate_limit`; call counts 1+1=2, no reviewer or successful chained outputs. Original and additional evidence retain separate provenance. |
+| AC-08 | BLOCKED | Two historical OpenRouter analyst requests failed with `provider_rate_limit`; the direct Groq analyst request failed HTTP 403 `model_permission_blocked_project`. Counts 1+1+1=3, no successful output/reviewer/chaining. Each attempt retains separate provenance; Cloudflare was not invoked. |
 | AC-09 | PASS | B missing model/key/endpoint, auth rejection, timeout, exhausted transient retries, invalid output and budget refusal fail without fake success. Provider-specific tests use fixtures. |
 | AC-10 | PASS | B `test_parser_failure_is_durable_and_stops_downstream`: production parser failure persists through worker transaction end, read from a new DB session; later nodes absent. |
 | AC-11 | PASS | N accepted client disconnect without consuming response, API restart, one durable job and independent worker completion; B independent process/recovery tests. Rejected/unreceived requests are not accepted submissions. |
@@ -407,13 +411,14 @@ remaining model capability/operator authorization; it is not fixture success.
 | AC-26 | PASS | I image command/content checks and 91 matching shipped file hashes; same image supplies CLI/migrations/example and excludes tests/fakes/demo/UI/removed services. |
 | AC-27 | PASS | B disposable legacy/unknown/unmarked relation/schema/view/type/function cases refused before DDL; marker/revision and existing data preserved on repeat migration. Old operator volumes untouched. |
 | AC-28 | PASS | R real separate-database pg_dump/pg_restore rehearsal preserves outputs/events/pending approval/auth and independent restored resume. |
-| AC-29 | BLOCKED | I/C verify clean local clone, final-image installation/bootstrap/private persistent login and CLI/tool journey. The full README real-model text_review/probe journey remains blocked by AC-08; public clone is a manual example until publication, which was not authorized. |
+| AC-29 | BLOCKED | I/C preserve historical clean-clone/image installation/bootstrap/login and CLI/tool evidence under its original provenance. Current direct image doctor and separate CLI discovery/login PASS, but real-model approval/resume/completion journey stopped at Groq analyst permission failure. No independent completed real-model journey is claimed. |
 | AC-30 | PASS | B 218 passed, zero skipped; Ruff/Black/strict MyPy/lock checks pass. Canonical+dev Compose checks and image/CLI/content CI commands pass. Backend-only CI updated; no remote CI run claimed. |
 | AC-31 | PASS | S current 58-package main audit has zero known findings; strict source secret checks pass. No broader host/OS/model or exhaustive history-cleanliness assertion. |
 | AC-32 | PASS | S current English README/docs/AGENTS/WORKFLOW, reconciled authority/links, MIT/NOTICE review and verified existing issue channel. Manual/unverified model/publication commands explicitly labeled. |
 
 Result: **30 PASS, 2 BLOCKED, 0 FAIL, 0 NOT_RUN** at the acceptance-item level.
-Both authorized live smokes failed at their first request; the two acceptance items remain externally BLOCKED. This
+Both historical OpenRouter smokes and the direct campaign failed at their first
+request; the two acceptance items remain externally BLOCKED. This
 supports engineering completion; it does not support fully verified release
 readiness or a production-ready claim.
 
@@ -436,20 +441,23 @@ skipped or replaced with production fakes.
 
 ## Remaining release action
 
-Keep AC-08 and the real-model portion of AC-29 BLOCKED. Both authorized attempts
-have ended with provider_rate_limit. Total consumed remains **two**, one per
-OpenRouter attempt. Do not delete either marker, rerun/resume failed work, probe,
-or reset a budget. The separately authorized direct-provider campaign below does
-not reuse or extend either historical run's allowance.
+Keep AC-08 and the real-model portion of AC-29 BLOCKED. Both OpenRouter attempts
+ended with provider_rate_limit, and the direct Groq campaign ended with a fatal
+project model-permission failure. Total consumed is **three** (2 OpenRouter,
+1 Groq, 0 Cloudflare). Do not delete any marker, rerun/resume failed work, probe,
+or reset a budget. No further campaign is authorized. The direct-provider record
+does not reuse or extend either historical run's allowance.
 
 The missing release proof remains genuine successful analyst/reviewer chaining,
 validated persisted outputs/events, WAITING_APPROVAL, content-bound approval and
 explicit resume, pure assembly without a third call, and the documented real-model
 image/CLI journey. Existing metadata/quota and fixture checks do not satisfy it.
 The original 429 remains unresolved; the new model's failure does not diagnose it.
-Keep the plan active and preserve all previous source/image evidence. Future live
-work must stay within the direct-campaign authorization below, without erasing
-consumed requests or changing shared privacy/account policy automatically.
+Keep the plan active and preserve all previous source/image evidence. Any future
+live work needs a separate explicit decision, without erasing consumed requests
+or changing shared privacy/account policy automatically. Reviewing the intended
+isolated Groq project's model permission is the smallest supported next action;
+no policy or billing change was made automatically.
 
 Both attempt records, credentials/CLI state, input, database volume and private
 raw API evidence remain retained; only the isolated verification services were
@@ -571,8 +579,77 @@ IDs, limits, checks and preserved artifact identities.
 New generation remains **0**, historical OpenRouter requests **2**; campaign cap
 remains 2/provider, 4 new/6 cumulative. No campaign/attempt marker was created,
 no operator service was started, and credentials/configuration/plan bindings,
-input/CLI state and all 43 historical artifact hashes remain unchanged. The
-existing campaign is ready for explicit initiation after the documented local
-start/doctor/auth prerequisites. **30 PASS / 2 BLOCKED** remains unchanged:
+input/CLI state and all 43 historical artifact hashes remain unchanged.
+At that preflight closeout, the existing campaign was ready for explicit
+initiation after local start/doctor/auth prerequisites. The later execution is
+recorded below. **30 PASS / 2 BLOCKED** remained unchanged:
 AC-08 and live AC-29 still require genuine workflow execution. No push, merge,
 publication, remote deployment or deletion of retained resources occurred.
+
+## Executed direct campaign: project permission failure (2026-10-27)
+
+The maintainer explicitly initiated the prepared campaign after requiring a
+final offline inference-transport check. The **actual pinned release image**,
+with network disabled and HTTPX MockTransport capture, serialized an explicit
+`User-Agent: multi-agent-os/0.2.0`, Bearer auth and application request ID. Token
+cap 1024, Groq low reasoning, timeout, no redirects and zero application/transport
+retries were verified. Eight focused provider tests passed. No shipped code or
+image input changed; source `44a8c42373af1320986ad78d922aa79595775dbe` and image
+`sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959`
+were reused. This was an offline transport proof, not a generation probe.
+
+GET-only preflight passed again; the existing isolated services started, doctor
+passed, and the maintainer refreshed an expired CLI token locally for the
+existing administrator. A separate CLI invocation discovered `text_review`.
+No bootstrap, replacement user, migration or application secret regeneration
+was performed. Original input/credential/Free-plan/profile identities were kept.
+
+Exactly one `run --approve` invocation created Groq run
+`8573b056-b869-416b-87e6-e03569dbfb5f`, pinned to requested model
+`openai/gpt-oss-20b`. The analyst's one generation HTTP request returned **403**,
+code **`model_permission_blocked_project`**, type **`permissions_error`**;
+application category `provider_authentication`. Provider response request ID
+from `header_x_request_id` is `req_01m5ye2kxtex8rqe5ggyvb8neq`, distinct from
+application request ID `cf596e10-a921-4004-a6cc-6cadf67cf833`.
+
+[Groq's documented error](https://console.groq.com/docs/model-permissions)
+identifies a project-level model restriction. It is not an eligible availability
+failure: Cloudflare remained unused, with no attempt record or generation call.
+No model change, permission/billing change, fallback override, repair or retry
+was attempted. Metadata discovery success did not establish model execution
+permission. No returned generation model, usage or cost was reported; these
+remain unknown, without assuming zero cost or upstream execution.
+
+The run is **FAILED**, ownership/lease cleared. Its one analyst execution and
+six contiguous durable events (`run.created`, `run.queued`, `run.started`,
+`node.started`, `node.failed`, `run.failed`) were read back through the API.
+There is no validated analyst/reviewer output, WAITING_APPROVAL, decision,
+resume, assembly or final output. Both historical OpenRouter runs compare
+unchanged, and all 43 historical artifact hashes still match.
+
+Campaign identity is the SHA256 of its unmodified `campaign.json`, since the
+runner assigns no separate campaign UUID:
+`1e51ed922000dd7fabbc421234fd02985ebd89a2c302d4dac07122e5cae06cfc`.
+Consumed: **1 Groq / 0 Cloudflare / 1 new / 3 cumulative**, including two
+OpenRouter requests. Limits remain 2/provider, 4 new/6 cumulative; unused
+reservation does not authorize another attempt. Campaign/provider markers and
+all evidence remain retained. The runner stopped all four isolated services
+after collecting evidence; volumes, input, configuration, credentials and CLI
+state remain. No new campaign is authorized.
+
+**AC-08 remains BLOCKED** because genuine successful chained calls were not
+observed. **AC-29 independently remains BLOCKED** because the real-model
+operator journey did not reach approval/resume/completion; current image
+doctor/CLI discovery success does not complete it. Historical clean-clone
+evidence retains its original source/image identity. Acceptance stays
+**30 PASS / 2 BLOCKED**; the live campaign itself is FAIL, without an established
+implementation defect. [Sanitized campaign evidence](direct-campaign-attempt.json)
+contains node/event identifiers, diagnostics and hashes/paths of retained private
+artifacts. No raw text/provider body or credential is published.
+
+The smallest next action is maintainer review of the intended isolated Groq
+project's model restrictions in **Settings → Projects → Limits**, without
+weakening shared production policy or changing billing. No settings were
+changed automatically. Any later live attempt needs a separate explicit decision
+while retaining this consumed campaign and all historical counts. No push,
+merge, publication, remote deployment or retained-data deletion occurred.

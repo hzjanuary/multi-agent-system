@@ -1,6 +1,29 @@
 # Optional direct-provider smoke campaign
 
-SPEC-029 preparation only: this guide does not itself initiate inference. The
+**Retained campaign ended; do not rerun it.** The authorized execution on
+2026-10-27 consumed one Groq request and failed at analyst with HTTP 403,
+`model_permission_blocked_project` / `permissions_error`. Cloudflare was not
+invoked, as required for fatal permission failures. Run
+`8573b056-b869-416b-87e6-e03569dbfb5f`, campaign/attempt markers and all data remain
+retained; all four isolated services are stopped. Cumulative requests: 3
+(2 historical OpenRouter + 1 Groq), not a new allowance to spend. No new campaign
+is authorized. See [actual campaign evidence](release/direct-campaign-attempt.json).
+
+The actual release image's Groq transport already serialized
+`User-Agent: multi-agent-os/0.2.0`. An offline HTTPX capture inside that pinned
+image (network disabled) verified headers/auth, timeout, retry=0 and token/reasoning
+parameters; 8 focused tests passed. No runtime change/image rebuild was needed.
+Metadata preflight success did not prove generation permission or capacity.
+
+The error explicitly identifies a project-level model restriction, matching
+[Groq model-permission documentation](https://console.groq.com/docs/model-permissions).
+The maintainer may review the intended isolated project at
+[Settings → Projects → Limits](https://console.groq.com/settings/project/limits);
+do not weaken shared production restrictions or change billing. Fixing a policy
+does not authorize rerunning the consumed campaign. Any later attempt requires
+a separate explicit decision and preserved historical counts/records.
+
+This guide does not itself initiate inference. The
 fixed order is **groq-smoke → cloudflare-smoke**. Each provider gets a new
 `text_review@1.0.0` run from the original non-sensitive input, pinned for analyst
 and reviewer. No production fallback/routing feature is enabled. The two failed
