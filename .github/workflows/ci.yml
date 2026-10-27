@@ -58,8 +58,8 @@ jobs:
       - name: Operations and release-security tests
         run: |
           python -m unittest discover -s scripts/ops -p 'test_*.py'
-          poetry -C backend run ruff check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py
-          poetry -C backend run black --check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py
+          poetry -C backend run ruff check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py scripts/ops/verify_release_install.py
+          poetry -C backend run black --check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py scripts/ops/verify_release_install.py
       - name: Full tracked-file secret and private-path scan
         run: |
           python scripts/ops/scan_secrets.py --strict --allow-approved-fixtures
@@ -75,6 +75,8 @@ jobs:
           docker run --rm --user "$(id -u):$(id -g)" --mount "type=bind,source=$(pwd)/.maos,target=/config" multi-agent-os:local python -m app.cli config init --output /config/.env
           docker run --rm multi-agent-os:local python -m app.cli --version
           bash scripts/ci/compose-gate.sh
+      - name: Isolated clean-clone installation without inference
+        run: python scripts/ops/verify_release_install.py --image multi-agent-os:local --source "$(git rev-parse HEAD)" --directory .maos/clean-install --project maos-spec030-ci-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Python dependency vulnerability audit (no exceptions)
         run: |
           poetry -C backend export --only main --format requirements.txt --output /tmp/maos-main-requirements.txt

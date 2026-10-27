@@ -19,6 +19,15 @@ PRIVATE_PARTS = {
     "node_modules",
     "private-evidence",
     ".private",
+    ".ssh",
+    ".aws",
+    ".azure",
+    ".kube",
+    "backups",
+    "dumps",
+    "db_exports",
+    "database_exports",
+    "credential-cache",
 }
 PRIVATE_NAMES = {
     "private.env",

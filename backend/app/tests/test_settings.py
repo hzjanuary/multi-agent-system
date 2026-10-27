@@ -46,14 +46,19 @@ def test_unsafe_jwt_secret_rejected_without_echo(secret: str) -> None:
     assert secret not in str(caught.value)
 
 
-def test_provider_never_defaults_to_inference_success() -> None:
+def test_provider_never_defaults_to_inference_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
+    monkeypatch.delenv("LLM_MODEL", raising=False)
     config = settings()
     assert config.llm_provider == LLMProvider.OLLAMA
     with pytest.raises(LLMConfigurationError):
         config.llm_settings.require_provider_configuration()
 
 
-def test_extension_configuration_is_explicit() -> None:
+def test_extension_configuration_is_explicit(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("MAOS_EXTENSION_MODULES", raising=False)
     config = settings(
         MAOS_EXTENSION_MODULES="maos_examples.text_review, company.workflows"
     )

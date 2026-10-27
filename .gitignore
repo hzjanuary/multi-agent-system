@@ -83,3 +83,13 @@ scripts/bin/harness.exe
 .git-credentials
 id_rsa
 id_ed25519
+
+**/.ssh/
+**/.aws/
+**/.azure/
+**/.kube/
+**/backups/
+**/dumps/
+**/db_exports/
+**/database_exports/
+**/credential-cache/

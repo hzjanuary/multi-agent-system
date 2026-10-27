@@ -106,6 +106,12 @@ class ArtifactTests(unittest.TestCase):
         with self.assertRaises(gate.GateError):
             gate.check_context(self.root, "HEAD")
 
+    def test_dockerfile_specific_ignore_cannot_override_context_policy(self):
+        path = self.root / "backend/Dockerfile.dockerignore"
+        path.write_text("!**")
+        with self.assertRaisesRegex(gate.GateError, "ignore_override"):
+            gate.check_context(self.root, "HEAD")
+
     def test_archive_secret_adjacent_to_approved_text_blocked(self):
         value = "gsk_" + secrets.token_hex(24)
         line = "synthetic fixture"

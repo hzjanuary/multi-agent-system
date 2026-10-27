@@ -133,6 +133,10 @@ def check_archive(root: Path, revision: str, archive: Path) -> dict:
 
 
 def check_context(root: Path, revision: str) -> dict:
+    if (root / "backend/Dockerfile.dockerignore").exists() or (
+        root / "backend/Dockerfile.dockerignore"
+    ).is_symlink():
+        raise GateError("unexpected_dockerfile_ignore_override")
     files = snapshot(root, revision)
     expected = {p: b for p, b in files.items() if build_input(p)}
     for path, contents in expected.items():

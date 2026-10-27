@@ -66,7 +66,7 @@ async def test_missing_schema_blocks_readiness_and_never_leaks_errors() -> None:
 @pytest.mark.asyncio
 async def test_missing_model_is_not_ready_without_any_model_call() -> None:
     checks = await ReadinessChecker(
-        config(), postgres_check=healthy, redis_check=healthy
+        config(llm_model=""), postgres_check=healthy, redis_check=healthy
     ).check_all()
     assert checks[1].required and checks[1].status == "failed"
 
