@@ -224,3 +224,27 @@ was prepared without applying it. See the [Vietnamese note](../../release/openro
 All 20 historical artifact hashes match; attempt/budget/pin/privacy remain intact.
 AC-08/AC-29 stay BLOCKED; any future attempt needs a separate explicit decision
 for up to two additional generation requests, preserving the one already consumed.
+
+## Explicit additional two-call authorization (2026-10-27)
+
+The maintainer authorizes one new attempt for `google/gemma-4-26b-a4b-it:free`
+through `google-ai-studio`: at most two additional generation requests and at
+most three cumulatively, including the original failed run's one request.
+Original run `75039b34-2bf1-4e89-a1c1-704dd2f0be28` and its marker/evidence must
+remain untouched. One new key-info GET corrects the earlier field omission.
+
+- [x] One-shot corrected quota: used 0 / limit 50 / remaining 50; budgets [],
+  effective_budget null. Current observation only, no inference about old 429.
+- [ ] Current exact endpoint metadata immediately before generation;
+  stop if an applicable two-call quota or route/capability/price blocker exists.
+- [x] Narrow typed safe error diagnostics; 237 backend tests, 37 ops tests,
+  lock/Ruff/Black/strict MyPy PASS. Error-body/message retention remains forbidden.
+- [ ] New image/source verification if runtime changes; separate linked attempt
+  mechanism, same DB/volume/admin/CLI/input, isolated model change only.
+- [ ] Reuse valid CLI session (local login only if expired); run helper once with
+  explicit approval and collect real outputs/events or partial diagnostics.
+- [ ] Stop isolated services, retain both attempts, update acceptance honestly.
+
+No retry, old-run resume, warm-up, repair, third attempt, pin fallback, schema
+weakening, default privacy change, push/publication/deployment or retained-data
+deletion is authorized. AC-08/AC-29 remain BLOCKED pending genuine evidence.

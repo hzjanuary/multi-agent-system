@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.llm.contracts import LLMErrorCategory, LLMProvider
+from app.llm.diagnostics import ProviderDiagnostics
 
 
 class LLMProviderError(Exception):
@@ -18,6 +19,7 @@ class LLMProviderError(Exception):
         provider: LLMProvider | None = None,
         request_id: str | None = None,
         details: dict[str, Any] | None = None,
+        diagnostics: ProviderDiagnostics | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message
@@ -25,6 +27,7 @@ class LLMProviderError(Exception):
         self.provider = provider
         self.request_id = request_id
         self.details = dict(details or {})
+        self.diagnostics = diagnostics
 
     def safe_details(self) -> dict[str, Any]:
         """Return bounded metadata suitable for logs or events."""

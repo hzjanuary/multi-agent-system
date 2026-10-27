@@ -19,6 +19,7 @@ from app.llm.contracts import (
     LLMProvider,
     LLMResponseFormat,
 )
+from app.llm.diagnostics import ProviderDiagnostics
 from app.llm.errors import LLMConfigurationError, LLMProviderError
 from app.llm.factory import LLMClientFactory, SettingsLLMClientFactory
 from app.llm.output_parser import parse_structured_output
@@ -162,7 +163,13 @@ class LLMService:
             ),
             reserve_call=reserve_call,
         )
-        output = parse_structured_output(response, agent.output_schema)
+        try:
+            output = parse_structured_output(response, agent.output_schema)
+        except LLMProviderError as error:
+            diagnostics = response.metadata.get("http_diagnostics")
+            if isinstance(diagnostics, ProviderDiagnostics):
+                error.diagnostics = diagnostics
+            raise
         return output.model_dump(mode="json"), {
             "provider": response.provider.value,
             "model": response.model,

@@ -27,6 +27,7 @@ from app.llm.contracts import (
     LLMMessageRole,
     LLMProvider,
 )
+from app.llm.diagnostics import ProviderDiagnostics
 from app.llm.errors import LLMConfigurationError, LLMProviderError
 
 
@@ -106,8 +107,27 @@ class OpenAICompatibleLLMClient:
                 category=LLMErrorCategory.UNAVAILABLE,
                 message="provider is unavailable",
             ) from exc
-        _raise_for_http_status(self.provider, request, response)
-        return self._normalize_response(response.payload, request=request, model=model)
+        diagnostics = self._error_diagnostics(request, response)
+        _raise_for_http_status(self.provider, request, response, diagnostics)
+        try:
+            result = self._normalize_response(
+                response.payload, request=request, model=model
+            )
+        except LLMProviderError as error:
+            error.diagnostics = diagnostics
+            raise
+        if diagnostics is not None:
+            result = result.model_copy(
+                update={
+                    "metadata": {**result.metadata, "http_diagnostics": diagnostics}
+                }
+            )
+        return result
+
+    def _error_diagnostics(
+        self, request: LLMChatRequest, response: HTTPResponse
+    ) -> ProviderDiagnostics | None:
+        return None
 
     def _headers(self, request: LLMChatRequest) -> dict[str, str]:
         headers = {"User-Agent": "multi-agent-os/0.2.0"}
@@ -186,6 +206,7 @@ def _raise_for_http_status(
     provider: LLMProvider,
     request: LLMChatRequest,
     response: HTTPResponse,
+    diagnostics: ProviderDiagnostics | None = None,
 ) -> None:
     if response.status_code < 400:
         return
@@ -194,6 +215,7 @@ def _raise_for_http_status(
         request=request,
         category=_category_for_status(response.status_code),
         message=f"provider returned HTTP {response.status_code}",
+        diagnostics=diagnostics,
         details={
             "http_status": response.status_code,
             "retry_after_seconds": retry_after_seconds(response),
@@ -222,6 +244,7 @@ def _provider_error(
     category: LLMErrorCategory,
     message: str,
     details: dict[str, Any] | None = None,
+    diagnostics: ProviderDiagnostics | None = None,
 ) -> LLMProviderError:
     return LLMProviderError(
         f"{provider.value} {message}",
@@ -229,6 +252,7 @@ def _provider_error(
         provider=provider,
         request_id=request.request_id,
         details=details,
+        diagnostics=diagnostics,
     )
 
 

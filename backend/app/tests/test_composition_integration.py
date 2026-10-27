@@ -161,3 +161,67 @@ async def test_config_loss_blocks_new_dispatch_but_not_idempotent_replay() -> No
         ).id == run.id
         with pytest.raises(LLMConfigurationError):
             await service.create(actor, "text_review", "1.0.0", {"text": "new input"})
+
+
+async def test_openrouter_failure_diagnostics_persist_without_private_content() -> None:
+    from app.llm.clients.http import HTTPResponse
+    from app.tests.test_openrouter_smoke import configuration
+
+    async with isolated_session() as session:
+        assert session.bind is not None
+        factory = async_sessionmaker(session.bind, expire_on_commit=False)
+        actor = uuid4()
+        session.add(
+            User(
+                id=actor,
+                email="diagnostics@example.invalid",
+                hashed_password="test-only",
+            )
+        )
+        await session.commit()
+        transport = Transport(
+            [
+                HTTPResponse(
+                    status_code=429,
+                    payload={
+                        "error": {
+                            "code": 429,
+                            "message": "PRIVATE_INPUT_TEXT test-only-key",
+                            "metadata": {
+                                "provider_name": "Google AI Studio",
+                                "raw": "PRIVATE_INPUT_TEXT",
+                            },
+                        }
+                    },
+                    headers={
+                        "Retry-After": "120",
+                        "X-Request-ID": "or-response-fixture",
+                    },
+                )
+            ]
+        )
+        llm = LLMService(
+            settings=configuration(),
+            client_factory=SettingsLLMClientFactory(transport=transport),
+        )
+        service = RunService(
+            factory, load_registry(["maos_examples.text_review"]), llm.profile_identity
+        )
+        run = await service.create(
+            actor, "text_review", "1.0.0", {"text": "PRIVATE_INPUT_TEXT"}
+        )
+        await service.start(run.id, actor)
+        assert await Worker(service, llm).tick()
+        failed = await service.get(run.id)
+        assert failed.status == RunStatus.FAILED and failed.call_count == 1
+        nodes = await service.nodes(run.id)
+        diagnostic = nodes[0].execution_metadata["provider_diagnostics"]
+        assert diagnostic["http_status"] == 429
+        assert diagnostic["received_limit_headers"]["retry-after"] == "120"
+        assert (
+            diagnostic["response_identifiers"]["header_x_request_id"]
+            == "or-response-fixture"
+        )
+        assert len(transport.requests) == 1 and len(nodes) == 1
+        safe = str(nodes[0].execution_metadata) + str(failed.error)
+        assert "PRIVATE_INPUT_TEXT" not in safe and "test-only-key" not in safe

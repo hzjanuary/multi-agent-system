@@ -119,3 +119,57 @@ acceptance or clean-release-image acceptance.
 `smoke compose stop` retains the dedicated database volume and evidence. The
 wrapper rejects volume deletion and unsafe Compose overrides. This procedure
 does not delete operator data or volumes, and does not push or deploy anything.
+
+## One explicitly authorized additional attempt
+
+The original root `attempt.json` remains permanent. A second SPEC-029 attempt is
+supported only after a separate explicit authorization for two additional calls,
+with one historical call consumed and a cumulative ceiling of three. This is
+not a general repeated-attempt loop. The fixed continuation slot is
+`attempts/gemma26-20261027/`, model `google/gemma-4-26b-a4b-it:free`, same verified
+`google-ai-studio` route and the same two-call/retry/output/zero-price/privacy
+restrictions. Repeating preparation or run after reservation is refused; no
+third slot is supported.
+
+The one-shot `python3 -m scripts.ops.openrouter_quota` uses the existing private
+key loader and an exclusive GET reservation. It retains numeric/boolean/reset
+quota fields, including `free_model_daily_requests`, `budgets` and
+`effective_budget`, excluding identifiers. Missing, null and zero stay distinct.
+It never uses monetary usage as a free-request counter or as workflow cost.
+An explicitly insufficient free-request quota prevents continuation preparation;
+unknown quota is recorded as unknown, subject to the maintainer's authorization.
+Do not rerun the lookup or remove its guard.
+
+After the required offline gates and source-labeled image build:
+
+```bash
+smoke prepare-additional --image multi-agent-os:openrouter-free-smoke-v2 --authorize-two-additional
+smoke compose up -d --wait postgres redis
+smoke compose up -d --wait api worker
+smoke compose run --rm --no-deps api python -m app.cli doctor
+# Only if the retained CLI session expired: login with the EXISTING account.
+smoke compose --profile cli run --rm cli auth login
+smoke compose --profile cli run --rm cli workflow list
+smoke run --approve
+smoke compose stop
+```
+
+Preparation requires stopped services, unchanged historical evidence and the
+original FAILED run's one-call record. It preserves original manifests/overlay,
+marker and evidence; a separate active pointer chooses the new immutable image
+and evidence directory. Only `LLM_MODEL` changes in the private env file. The
+project, database/volume, authentication secrets, administrator, CLI location and
+operator input are reused. Do not bootstrap or migrate/reset this existing DB.
+The old run's resolved profile is never edited or resumed.
+
+The final run preflight checks current exact-variant catalog/details/endpoints
+once, without generation. A missing request-price field remains unknown; the
+outgoing request-price ceiling remains zero. If either agent fails or output
+validation fails, retain its diagnostics and stop without retry or replacement.
+Typed OpenRouter failure diagnostics retain HTTP status, bounded code/type,
+explicit provider/upstream codes, source-labeled response IDs and received
+rate-limit/retry headers. Provider messages, arbitrary headers, raw provider
+bodies and `metadata.raw` are not persisted. Raw JSON may be parsed transiently
+only to select upstream code/status; secrets and request content are rejected
+from diagnostic string fields. Actual generated outputs still belong to the
+normal private workflow records, never diagnostic logs.

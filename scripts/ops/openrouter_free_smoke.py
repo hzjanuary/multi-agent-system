@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import hashlib
 import json
 import os
 import re
@@ -28,6 +29,10 @@ ROOT = Path(__file__).resolve().parents[2]
 PRIVATE = ROOT / ".maos/openrouter-free-smoke"
 MODEL = "google/gemma-4-31b-it:free"
 CANONICAL = "google/gemma-4-31b-it-20260402"
+ADDITIONAL_ID = "gemma26-20261027"
+ADDITIONAL_MODEL = "google/gemma-4-26b-a4b-it:free"
+ADDITIONAL_CANONICAL = "google/gemma-4-26b-a4b-it-20260403"
+PREVIOUS_RUN = "75039b34-2bf1-4e89-a1c1-704dd2f0be28"
 ROUTE = "google-ai-studio"
 PREFERENCES = {
     "data_collection": "allow",
@@ -99,6 +104,28 @@ def process(
     return result
 
 
+def attempt_directory(directory: Path) -> Path:
+    pointer = directory / "active-additional.json"
+    if not pointer.exists():
+        return directory
+    check(
+        not pointer.is_symlink() and stat.S_IMODE(pointer.stat().st_mode) == 0o600,
+        "private_active_pointer_required",
+    )
+    check(
+        json.loads(pointer.read_text()) == {"attempt_id": ADDITIONAL_ID},
+        "unknown_additional_attempt",
+    )
+    target = directory / "attempts" / ADDITIONAL_ID
+    check(
+        target.is_dir()
+        and not target.is_symlink()
+        and stat.S_IMODE(target.stat().st_mode) == 0o700,
+        "private_attempt_directory_required",
+    )
+    return target
+
+
 def compose_arguments(directory: Path, config: dict[str, str]) -> list[str]:
     return [
         "docker",
@@ -110,7 +137,7 @@ def compose_arguments(directory: Path, config: dict[str, str]) -> list[str]:
         "-f",
         str(ROOT / "docker-compose.yml"),
         "-f",
-        str(directory / "compose.private.json"),
+        str(attempt_directory(directory) / "compose.private.json"),
     ]
 
 
@@ -257,9 +284,25 @@ def load_private(directory: Path) -> tuple[dict[str, str], dict[str, Any]]:
             "private_files_require_0600",
         )
     config = read_config(directory / "private.env")
-    manifest = json.loads((directory / "manifest.json").read_text())
+    target = attempt_directory(directory)
+    for name in ("manifest.json", "compose.private.json"):
+        file = target / name
+        check(
+            not file.is_symlink() and stat.S_IMODE(file.stat().st_mode) == 0o600,
+            "private_active_files_required",
+        )
+    manifest = json.loads((target / "manifest.json").read_text())
+    selected_model = ADDITIONAL_MODEL if target != directory else MODEL
+    if target != directory:
+        check(
+            manifest.get("attempt_id") == ADDITIONAL_ID
+            and manifest.get("previous_run_id") == PREVIOUS_RUN
+            and manifest.get("previous_consumed") == 1
+            and manifest.get("cumulative_max") == 3,
+            "additional_budget_identity_changed",
+        )
     check(
-        manifest["model"] == MODEL and manifest["route"] == ROUTE,
+        manifest["model"] == selected_model and manifest["route"] == ROUTE,
         "fixed_selection_changed",
     )
     check(
@@ -269,7 +312,7 @@ def load_private(directory: Path) -> tuple[dict[str, str], dict[str, Any]]:
     )
     expected = {
         "LLM_PROVIDER": "openrouter",
-        "LLM_MODEL": MODEL,
+        "LLM_MODEL": selected_model,
         "LLM_MAX_RETRIES": "0",
         "LLM_MAX_OUTPUT_TOKENS": "1024",
         "MAX_PROVIDER_CALLS": "2",
@@ -322,18 +365,23 @@ def zero_price(pricing: dict[str, Any], field: str, *, optional: bool = False) -
 
 
 def validate_metadata(
-    catalog: dict[str, Any], details: dict[str, Any], endpoints: dict[str, Any]
+    catalog: dict[str, Any],
+    details: dict[str, Any],
+    endpoints: dict[str, Any],
+    *,
+    model_id: str = MODEL,
+    canonical: str = CANONICAL,
 ) -> dict[str, Any]:
-    models = [entry for entry in catalog["data"] if entry.get("id") == MODEL]
+    models = [entry for entry in catalog["data"] if entry.get("id") == model_id]
     check(len(models) == 1, "fixed_free_model_missing_or_ambiguous")
     detail, data = details["data"], endpoints["data"]
     check(
-        detail["id"] == MODEL and data["id"] == MODEL,
+        detail["id"] == model_id and data["id"] == model_id,
         "metadata_resolved_to_different_variant",
     )
     for model in (models[0], detail):
         check(
-            model.get("canonical_slug") == CANONICAL, "verified_canonical_model_changed"
+            model.get("canonical_slug") == canonical, "verified_canonical_model_changed"
         )
         check(
             all(
@@ -390,12 +438,12 @@ def validate_metadata(
         "route_token_capacity_insufficient",
     )
     return {
-        "model": MODEL,
+        "model": model_id,
         "route": ROUTE,
         "prompt_price": "0",
         "completion_price": "0",
         "request_price": route["pricing"].get(
-            "request", "not_applicable_omitted_for_free_variant"
+            "request", "unknown_omitted_for_free_variant"
         ),
         "response_format": "json_object",
         "reasoning_mandatory": False,
@@ -527,16 +575,23 @@ def preflight(
         "enter_private_key_locally_first",
     )
     resolved_compose(directory, config, manifest, running=running)
+    target = attempt_directory(directory)
+    model = manifest["model"]
+    canonical = ADDITIONAL_CANONICAL if target != directory else CANONICAL
     snapshot = {
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "catalog": get_public("/models"),
-        "details": get_public("/model/" + MODEL),
-        "endpoints": get_public("/models/" + MODEL + "/endpoints"),
+        "details": get_public("/model/" + model),
+        "endpoints": get_public("/models/" + model + "/endpoints"),
     }
     # Public raw metadata only; never credentials or resolved Compose output.
-    save_json(directory / "public-metadata.json", snapshot)
+    save_json(target / "public-metadata.json", snapshot)
     result = validate_metadata(
-        snapshot["catalog"], snapshot["details"], snapshot["endpoints"]
+        snapshot["catalog"],
+        snapshot["details"],
+        snapshot["endpoints"],
+        model_id=model,
+        canonical=canonical,
     )
     result.update(
         {
@@ -545,8 +600,128 @@ def preflight(
             "inference": "NOT_RUN",
         }
     )
-    save_json(directory / "preflight.json", result)
+    save_json(target / "preflight.json", result)
     return result
+
+
+def prepare_additional(directory: Path, image: str, authorized: bool) -> dict[str, Any]:
+    """One explicit continuation slot, not an arbitrary repeat-attempt factory."""
+    check(authorized, "explicit_two_additional_call_authorization_required")
+    check(
+        not (directory / "active-additional.json").exists(),
+        "additional_attempt_already_prepared",
+    )
+    config, old_manifest = load_private(directory)
+    old = json.loads((directory / "api-evidence.json").read_text())["run"]
+    check(
+        old["id"] == PREVIOUS_RUN
+        and old["status"] == "FAILED"
+        and old["call_count"] == 1,
+        "previous_run_evidence_mismatch",
+    )
+    proof = json.loads((ROOT / "docs/release/openrouter-live-attempt.json").read_text())
+    for artifact in proof["private_artifacts"]:
+        check(
+            hashlib.sha256((ROOT / artifact["path"]).read_bytes()).hexdigest()
+            == artifact["sha256"],
+            "historical_evidence_changed",
+        )
+    quota = json.loads(
+        (directory / "quota-correction-20261027/sanitized.json").read_text()
+    )
+    check(
+        quota.get("free_request_quota") != "INSUFFICIENT_FOR_TWO",
+        "insufficient_free_request_quota",
+    )
+    rows = process(
+        compose_arguments(directory, config) + ["ps", "--all", "--format", "json"],
+        config,
+    ).stdout.splitlines()
+    check(
+        all(json.loads(line)["State"] == "exited" for line in rows if line.strip()),
+        "stop_isolated_services_before_profile_change",
+    )
+    identity = process(
+        ["docker", "image", "inspect", image, "--format", "{{.Id}}"], config
+    ).stdout.strip()
+    revision = process(
+        [
+            "docker",
+            "image",
+            "inspect",
+            identity,
+            "--format",
+            '{{index .Config.Labels "org.opencontainers.image.revision"}}',
+        ],
+        config,
+    ).stdout.strip()
+    check(
+        bool(re.fullmatch(r"sha256:[a-f0-9]{64}", identity))
+        and bool(re.fullmatch(r"[a-f0-9]{40}", revision)),
+        "source_labeled_local_image_required",
+    )
+    parent = directory / "attempts"
+    parent.mkdir(mode=0o700, exist_ok=True)
+    check(
+        not parent.is_symlink() and stat.S_IMODE(parent.stat().st_mode) == 0o700,
+        "private_attempt_parent_required",
+    )
+    target = parent / ADDITIONAL_ID
+    target.mkdir(mode=0o700, exist_ok=False)
+    manifest = {
+        **old_manifest,
+        "attempt_id": ADDITIONAL_ID,
+        "model": ADDITIONAL_MODEL,
+        "image_id": identity,
+        "image_tag": image,
+        "source_revision": revision,
+        "previous_run_id": PREVIOUS_RUN,
+        "previous_consumed": 1,
+        "cumulative_max": 3,
+    }
+    save_json(
+        target / "authorization.json",
+        {
+            **manifest,
+            "additional_call_limit": 2,
+            "old_attempt_sha256": hashlib.sha256(
+                (directory / "attempt.json").read_bytes()
+            ).hexdigest(),
+            "quota_snapshot": quota,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        },
+        exclusive=True,
+    )
+    save_json(target / "manifest.json", manifest, exclusive=True)
+    overlay = {
+        "services": {
+            name: {"image": identity, "pull_policy": "never"}
+            for name in ("api", "worker", "cli")
+        }
+    }
+    overlay["services"]["cli"]["volumes"] = [f"{directory / 'cli'}:/cli"]
+    save_json(target / "compose.private.json", overlay, exclusive=True)
+    config["LLM_MODEL"] = ADDITIONAL_MODEL
+    private_write(
+        directory / "private.env",
+        "".join(f"{name}={shlex.quote(value)}\n" for name, value in config.items()),
+    )
+    save_json(
+        directory / "active-additional.json",
+        {"attempt_id": ADDITIONAL_ID},
+        exclusive=True,
+    )
+    resolved_compose(directory, config, manifest)
+    return {
+        "status": "PREPARED",
+        "attempt_id": ADDITIONAL_ID,
+        "additional_call_limit": 2,
+        "previous_consumed": 1,
+        "cumulative_max": 3,
+        "source_revision": revision,
+        "image_id": identity,
+        "inference": "NOT_RUN",
+    }
 
 
 def set_key(directory: Path) -> dict[str, Any]:
@@ -573,9 +748,10 @@ def set_key(directory: Path) -> dict[str, Any]:
 
 
 def run_once(directory: Path, approve: bool) -> dict[str, Any]:
+    target = attempt_directory(directory)
     check(approve, "explicit_run_approval_required")
     check(
-        not (directory / "attempt.json").exists(),
+        not (target / "attempt.json").exists(),
         "attempt_already_reserved_never_reset_budget",
     )
     preflight(directory, running=True)
@@ -595,21 +771,27 @@ def run_once(directory: Path, approve: bool) -> dict[str, Any]:
     attempt = {
         "started_at": datetime.now(timezone.utc).isoformat(),
         "project": manifest["project"],
-        "model": MODEL,
+        "model": manifest.get("model", MODEL),
+        "attempt_id": manifest.get("attempt_id", "original"),
+        "image_id": manifest.get("image_id"),
+        "source_revision": manifest.get("source_revision"),
+        "previous_run_id": manifest.get("previous_run_id"),
+        "previous_consumed": manifest.get("previous_consumed", 0),
+        "cumulative_max": manifest.get("cumulative_max", 2),
         "route": ROUTE,
         "max_calls": 2,
         "max_output_tokens": 1024,
         "retry": False,
     }
-    save_json(directory / "attempt.json", attempt, exclusive=True)
+    save_json(target / "attempt.json", attempt, exclusive=True)
     # Permanent reservation precedes the only invocation. A failure/crash is not
     # permission to reset the two-call budget or replay this command.
     with open(
-        directory / "live.stdout.json",
+        target / "live.stdout.json",
         "x",
         opener=lambda path, flags: os.open(path, flags | os.O_NOFOLLOW, 0o600),
     ) as stdout, open(
-        directory / "live.stderr.json",
+        target / "live.stderr.json",
         "x",
         opener=lambda path, flags: os.open(path, flags | os.O_NOFOLLOW, 0o600),
     ) as stderr:
@@ -646,8 +828,8 @@ def run_once(directory: Path, approve: bool) -> dict[str, Any]:
         "evidence": "private live.stdout.json and live.stderr.json",
         "inference": "ATTEMPTED",
     }
-    result["api_evidence"] = collect_evidence(directory, config, auth)
-    save_json(directory / "outcome.json", result)
+    result["api_evidence"] = collect_evidence(target, config, auth)
+    save_json(target / "outcome.json", result)
     return result
 
 
@@ -778,6 +960,9 @@ def main() -> int:
     parser.add_argument("--directory", type=Path, default=PRIVATE)
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("prepare").add_argument("--image", required=True)
+    additional = commands.add_parser("prepare-additional")
+    additional.add_argument("--image", required=True)
+    additional.add_argument("--authorize-two-additional", action="store_true")
     commands.add_parser("preflight").add_argument(
         "--metadata-only", action="store_true"
     )
@@ -792,6 +977,10 @@ def main() -> int:
         check(directory == PRIVATE, "fixed_private_directory_required")
         if args.command == "prepare":
             result = prepare(directory, args.image)
+        elif args.command == "prepare-additional":
+            result = prepare_additional(
+                directory, args.image, args.authorize_two_additional
+            )
         elif args.command == "preflight":
             result = preflight(directory, metadata_only=args.metadata_only)
         elif args.command == "set-key":

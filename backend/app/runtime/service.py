@@ -17,6 +17,7 @@ from pydantic import BaseModel, ValidationError
 from sqlalchemy import func, select
 
 from app.definitions import NodeDefinition, resolve_mapping
+from app.llm.errors import LLMProviderError
 from app.models import Approval, Job, NodeExecution, Run, RunStatus
 from app.runtime.graph import build_workflow_graph
 from app.workflows.service import RunError, RunService, bounded, digest
@@ -370,6 +371,16 @@ class Worker:
                 for row in rows:
                     row.status = "FAILED"
                     row.error = run.error
+                    if (
+                        isinstance(exc, LLMProviderError)
+                        and exc.diagnostics is not None
+                    ):
+                        row.execution_metadata = {
+                            **row.execution_metadata,
+                            "provider_diagnostics": exc.diagnostics.model_dump(
+                                mode="json", exclude_none=True
+                            ),
+                        }
                 if rows:
                     self.service._event(
                         session,

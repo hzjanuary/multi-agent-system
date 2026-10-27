@@ -43,9 +43,7 @@ def metadata() -> tuple[dict, dict, dict]:
 class MetadataTests(unittest.TestCase):
     def test_explicit_free_variant_and_omitted_request_fee(self) -> None:
         result = smoke.validate_metadata(*metadata())
-        self.assertEqual(
-            result["request_price"], "not_applicable_omitted_for_free_variant"
-        )
+        self.assertEqual(result["request_price"], "unknown_omitted_for_free_variant")
         self.assertEqual(result["response_format"], "json_object")
 
     def test_rejects_paid_canonical_details(self) -> None:
@@ -428,3 +426,139 @@ class IsolationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AdditionalAttemptTests(unittest.TestCase):
+    def setup_profile(self, root):
+        directory = root / "private"
+
+        def fake_process(arguments, config):
+            if arguments[:3] == ["docker", "image", "inspect"]:
+                value = "sha256:" + "a" * 64 if arguments[-1] == "{{.Id}}" else "b" * 40
+                return subprocess.CompletedProcess(arguments, 0, value + "\n", "")
+            if "config" in arguments and "init" in arguments:
+                smoke.private_write(
+                    directory / "private.env",
+                    "POSTGRES_PASSWORD=test-private\nJWT_SECRET_KEY=test-private-jwt\n",
+                )
+                return subprocess.CompletedProcess(arguments, 0, "", "")
+            if "ps" in arguments:
+                return subprocess.CompletedProcess(
+                    arguments, 0, '{"State":"exited"}\n', ""
+                )
+            raise AssertionError("unexpected command")
+
+        with patch.object(smoke, "process", side_effect=fake_process):
+            smoke.prepare(directory, "test-original")
+        smoke.save_json(directory / "attempt.json", {"original": True}, exclusive=True)
+        smoke.save_json(
+            directory / "api-evidence.json",
+            {"run": {"id": smoke.PREVIOUS_RUN, "status": "FAILED", "call_count": 1}},
+            exclusive=True,
+        )
+        (directory / "quota-correction-20261027").mkdir(mode=0o700)
+        smoke.save_json(
+            directory / "quota-correction-20261027/sanitized.json",
+            {"free_request_quota": "REPORTED_AT_LEAST_TWO"},
+            exclusive=True,
+        )
+        import hashlib
+
+        artifacts = [
+            {
+                "path": str(p.relative_to(root)),
+                "sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
+            }
+            for p in (
+                directory / "attempt.json",
+                directory / "manifest.json",
+                directory / "compose.private.json",
+                directory / "api-evidence.json",
+            )
+        ]
+        report = root / "docs/release/openrouter-live-attempt.json"
+        report.parent.mkdir(parents=True)
+        report.write_text(json.dumps({"private_artifacts": artifacts}))
+        return directory, fake_process, artifacts
+
+    def test_separate_explicit_attempt_preserves_history_and_cannot_repeat(self):
+        import hashlib
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            directory, process, artifacts = self.setup_profile(root)
+            with patch.object(smoke, "ROOT", root), patch.object(
+                smoke, "process", side_effect=process
+            ), patch.object(smoke, "resolved_compose"):
+                with self.assertRaisesRegex(smoke.Failure, "authorization"):
+                    smoke.prepare_additional(directory, "test-new", False)
+                result = smoke.prepare_additional(directory, "test-new", True)
+                self.assertEqual(result["cumulative_max"], 3)
+                config, manifest = smoke.load_private(directory)
+                self.assertEqual(config["LLM_MODEL"], smoke.ADDITIONAL_MODEL)
+                self.assertEqual(manifest["previous_consumed"], 1)
+                self.assertIn(
+                    str(
+                        directory
+                        / "attempts"
+                        / smoke.ADDITIONAL_ID
+                        / "compose.private.json"
+                    ),
+                    smoke.compose_arguments(directory, config),
+                )
+                with self.assertRaisesRegex(smoke.Failure, "already_prepared"):
+                    smoke.prepare_additional(directory, "test-new", True)
+                for item in artifacts:
+                    self.assertEqual(
+                        hashlib.sha256((root / item["path"]).read_bytes()).hexdigest(),
+                        item["sha256"],
+                    )
+                target = smoke.attempt_directory(directory)
+                smoke.private_write(
+                    directory / "cli/auth.json", '{"access_token":"test-session"}'
+                )
+                smoke.private_write(directory / "input.txt", "non-sensitive test text")
+                with patch.object(smoke, "preflight"), patch.object(
+                    smoke, "collect_evidence", return_value="private"
+                ), patch.object(
+                    smoke.subprocess,
+                    "run",
+                    return_value=subprocess.CompletedProcess([], 1),
+                ) as run:
+                    self.assertEqual(smoke.run_once(directory, True)["status"], "FAIL")
+                    with self.assertRaisesRegex(smoke.Failure, "already_reserved"):
+                        smoke.run_once(directory, True)
+                    self.assertEqual(run.call_count, 1)
+                self.assertTrue((target / "attempt.json").exists())
+                self.assertEqual(
+                    json.loads((directory / "attempt.json").read_text()),
+                    {"original": True},
+                )
+
+    def test_insufficient_quota_never_activates_or_changes_configuration(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            directory, process, _ = self.setup_profile(root)
+            before = (directory / "private.env").read_bytes()
+            smoke.save_json(
+                directory / "quota-correction-20261027/sanitized.json",
+                {"free_request_quota": "INSUFFICIENT_FOR_TWO"},
+            )
+            with patch.object(smoke, "ROOT", root), patch.object(
+                smoke, "process", side_effect=process
+            ):
+                with self.assertRaisesRegex(smoke.Failure, "insufficient"):
+                    smoke.prepare_additional(directory, "test-new", True)
+            self.assertFalse((directory / "active-additional.json").exists())
+            self.assertEqual((directory / "private.env").read_bytes(), before)
+
+    def test_only_one_continuation_identity_is_supported(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            smoke.save_json(
+                directory / "active-additional.json",
+                {"attempt_id": "third-attempt"},
+                exclusive=True,
+            )
+            with self.assertRaisesRegex(smoke.Failure, "unknown_additional"):
+                smoke.attempt_directory(directory)

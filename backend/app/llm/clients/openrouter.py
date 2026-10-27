@@ -5,9 +5,10 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from app.llm.clients.http import AsyncJSONHTTPTransport
+from app.llm.clients.http import AsyncJSONHTTPTransport, HTTPResponse
 from app.llm.clients.openai_compatible import OpenAICompatibleLLMClient
 from app.llm.contracts import LLMChatRequest, LLMChatResponse, LLMProvider
+from app.llm.diagnostics import ProviderDiagnostics, extract_diagnostics
 from app.llm.provider_preferences import OpenRouterProviderPreferences
 
 
@@ -35,6 +36,11 @@ class OpenRouterLLMClient(OpenAICompatibleLLMClient):
             transport=transport,
             default_timeout_seconds=default_timeout_seconds,
         )
+
+    def _error_diagnostics(
+        self, request: LLMChatRequest, response: HTTPResponse
+    ) -> ProviderDiagnostics | None:
+        return extract_diagnostics(response, request, self._api_key)
 
     def _build_payload(self, *, request: LLMChatRequest, model: str) -> dict[str, Any]:
         payload = super()._build_payload(request=request, model=model)
