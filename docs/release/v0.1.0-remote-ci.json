@@ -1,0 +1,537 @@
+{
+  "observed_at": "2026-10-28T04:09:12.994364+00:00",
+  "scope": "Genuine CI on the repaired source candidate; source-only publication condition, not Docker security signoff",
+  "status": "FUNCTIONAL_INSTALL_ARTIFACT_AUDIT_PASS_KNOWN_VULNERABILITY_GATE_FAIL",
+  "candidate_sha": "108547c771e8b8a088733f493e8e9d53837b7a71",
+  "runs": [
+    {
+      "id": 40629729678,
+      "event": "push",
+      "head_sha": "108547c771e8b8a088733f493e8e9d53837b7a71",
+      "url": "https://github.com/hzjanuary/multi-agent-system/actions/runs/40629729678",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 122623054912,
+          "name": "backend",
+          "status": "completed",
+          "conclusion": "failure",
+          "run_id": 40629729678,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Initialize containers",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Install locked tooling and dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Generate isolated secrets",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6
+            },
+            {
+              "name": "Offline and database gates",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7
+            },
+            {
+              "name": "Operations and release-security tests",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Full tracked-file secret and private-path scan",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Source archive, release build, revision, licenses and image manifest",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Validate CLI and Compose without provider credentials",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            },
+            {
+              "name": "Isolated clean-clone installation without inference",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 12
+            },
+            {
+              "name": "Python dependency vulnerability audit (no exceptions)",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 13
+            },
+            {
+              "name": "OS and language vulnerability scan, SBOM (HIGH/CRITICAL block release)",
+              "status": "completed",
+              "conclusion": "failure",
+              "number": 14
+            },
+            {
+              "name": "Diff hygiene",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 15
+            },
+            {
+              "name": "Retain sanitized release proof even when vulnerability gate fails",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 16
+            },
+            {
+              "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 30
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 31
+            },
+            {
+              "name": "Stop containers",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 32
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 33
+            }
+          ]
+        }
+      ],
+      "backend_tests": 242,
+      "ops_tests": 90,
+      "verification": {
+        "scan_status": "FAIL",
+        "counts": {
+          "CRITICAL": 0,
+          "HIGH": 40,
+          "MEDIUM": 58,
+          "LOW": 60,
+          "UNKNOWN": 1
+        },
+        "new_rows": [],
+        "removed_rows": [],
+        "same_database": false,
+        "database": {
+          "Version": 2,
+          "NextUpdate": "2026-10-29T01:21:08.391884123Z",
+          "UpdatedAt": "2026-10-28T01:21:08.391884645Z",
+          "DownloadedAt": "2026-10-28T04:03:13.960485746Z"
+        },
+        "database_sha256": "e68b667c74000c274351566d7bce26de2022f7937e4cc6e2787e2dbdac96e978",
+        "image": {
+          "gate": "release_image",
+          "image": "sha256:9148acdf76a0a8e2d54adf433b219a4eea89d216455336711ecebfbd4b98095c",
+          "os_packages": 86,
+          "python_distributions": 58,
+          "shipped_files": 170,
+          "source": "108547c771e8b8a088733f493e8e9d53837b7a71",
+          "status": "PASS"
+        },
+        "clean_install": {
+          "status": "PASS",
+          "source_clone": "108547c771e8b8a088733f493e8e9d53837b7a71",
+          "runtime_source": "108547c771e8b8a088733f493e8e9d53837b7a71",
+          "image": "sha256:9148acdf76a0a8e2d54adf433b219a4eea89d216455336711ecebfbd4b98095c",
+          "generation_requests": 0,
+          "containers_start_attempted": true,
+          "services_stopped_volumes_retained": true,
+          "resolved_configuration": {
+            "status": "PASS",
+            "services": [
+              "api",
+              "worker",
+              "cli"
+            ],
+            "database_host": "postgres",
+            "redis_host": "redis",
+            "profile_credentials_match": true,
+            "provider_credentials_absent": true
+          },
+          "service_status_before_stop": {
+            "collection": "collected",
+            "services": {
+              "api": {
+                "state": "running",
+                "health": "healthy",
+                "exit_code": 0
+              },
+              "postgres": {
+                "state": "running",
+                "health": "healthy",
+                "exit_code": 0
+              },
+              "redis": {
+                "state": "running",
+                "health": "healthy",
+                "exit_code": 0
+              },
+              "worker": {
+                "state": "running",
+                "health": "healthy",
+                "exit_code": 0
+              }
+            }
+          },
+          "service_status_after_stop": {
+            "collection": "collected",
+            "services": {
+              "api": {
+                "state": "exited",
+                "health": "",
+                "exit_code": 0
+              },
+              "postgres": {
+                "state": "exited",
+                "health": "",
+                "exit_code": 0
+              },
+              "redis": {
+                "state": "exited",
+                "health": "",
+                "exit_code": 0
+              },
+              "worker": {
+                "state": "exited",
+                "health": "",
+                "exit_code": 137
+              }
+            }
+          }
+        },
+        "python_audit": {
+          "dependencies": 58,
+          "vulnerabilities": 0
+        },
+        "artifact_sha256": "4586a8aaf4a4ee5f25e096789d5a42a4ad74548bafa6467ce06389b4e1b489d2",
+        "artifact_files": [
+          "security/image-vulnerabilities.json",
+          "security/sbom.cdx.json",
+          "python-audit.json",
+          "clean-install-summary.json",
+          "spec-030/evidence/108547c771e8b8a088733f493e8e9d53837b7a71/image-verification.json"
+        ]
+      }
+    },
+    {
+      "id": 40629733848,
+      "event": "pull_request",
+      "head_sha": "108547c771e8b8a088733f493e8e9d53837b7a71",
+      "url": "https://github.com/hzjanuary/multi-agent-system/actions/runs/40629733848",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 122623067765,
+          "name": "backend",
+          "status": "completed",
+          "conclusion": "failure",
+          "run_id": 40629733848,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Initialize containers",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Install locked tooling and dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Generate isolated secrets",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6
+            },
+            {
+              "name": "Offline and database gates",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7
+            },
+            {
+              "name": "Operations and release-security tests",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Full tracked-file secret and private-path scan",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Source archive, release build, revision, licenses and image manifest",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Validate CLI and Compose without provider credentials",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            },
+            {
+              "name": "Isolated clean-clone installation without inference",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 12
+            },
+            {
+              "name": "Python dependency vulnerability audit (no exceptions)",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 13
+            },
+            {
+              "name": "OS and language vulnerability scan, SBOM (HIGH/CRITICAL block release)",
+              "status": "completed",
+              "conclusion": "failure",
+              "number": 14
+            },
+            {
+              "name": "Diff hygiene",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 15
+            },
+            {
+              "name": "Retain sanitized release proof even when vulnerability gate fails",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 16
+            },
+            {
+              "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 30
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 31
+            },
+            {
+              "name": "Stop containers",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 32
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 33
+            }
+          ]
+        }
+      ],
+      "backend_tests": 242,
+      "ops_tests": 90,
+      "verification": {
+        "scan_status": "FAIL",
+        "counts": {
+          "CRITICAL": 0,
+          "HIGH": 40,
+          "MEDIUM": 58,
+          "LOW": 60,
+          "UNKNOWN": 1
+        },
+        "new_rows": [],
+        "removed_rows": [],
+        "same_database": false,
+        "database": {
+          "Version": 2,
+          "NextUpdate": "2026-10-29T01:21:08.391884123Z",
+          "UpdatedAt": "2026-10-28T01:21:08.391884645Z",
+          "DownloadedAt": "2026-10-28T04:04:01.027247619Z"
+        },
+        "database_sha256": "e68b667c74000c274351566d7bce26de2022f7937e4cc6e2787e2dbdac96e978",
+        "image": {
+          "gate": "release_image",
+          "image": "sha256:9a3e48f2f1da4bc8401086a1ce2f2e667d4564e231d366f6db0d83eaa1556298",
+          "os_packages": 86,
+          "python_distributions": 58,
+          "shipped_files": 170,
+          "source": "8f609371c078878e88fa305dbf345de4db3d3d06",
+          "status": "PASS"
+        },
+        "clean_install": {
+          "status": "PASS",
+          "source_clone": "8f609371c078878e88fa305dbf345de4db3d3d06",
+          "runtime_source": "8f609371c078878e88fa305dbf345de4db3d3d06",
+          "image": "sha256:9a3e48f2f1da4bc8401086a1ce2f2e667d4564e231d366f6db0d83eaa1556298",
+          "generation_requests": 0,
+          "containers_start_attempted": true,
+          "services_stopped_volumes_retained": true,
+          "resolved_configuration": {
+            "status": "PASS",
+            "services": [
+              "api",
+              "worker",
+              "cli"
+            ],
+            "database_host": "postgres",
+            "redis_host": "redis",
+            "profile_credentials_match": true,
+            "provider_credentials_absent": true
+          },
+          "service_status_before_stop": {
+            "collection": "collected",
+            "services": {
+              "api": {
+                "state": "running",
+                "health": "healthy",
+                "exit_code": 0
+              },
+              "postgres": {
+                "state": "running",
+                "health": "healthy",
+                "exit_code": 0
+              },
+              "redis": {
+                "state": "running",
+                "health": "healthy",
+                "exit_code": 0
+              },
+              "worker": {
+                "state": "running",
+                "health": "healthy",
+                "exit_code": 0
+              }
+            }
+          },
+          "service_status_after_stop": {
+            "collection": "collected",
+            "services": {
+              "api": {
+                "state": "exited",
+                "health": "",
+                "exit_code": 0
+              },
+              "postgres": {
+                "state": "exited",
+                "health": "",
+                "exit_code": 0
+              },
+              "redis": {
+                "state": "exited",
+                "health": "",
+                "exit_code": 0
+              },
+              "worker": {
+                "state": "exited",
+                "health": "",
+                "exit_code": 137
+              }
+            }
+          }
+        },
+        "python_audit": {
+          "dependencies": 58,
+          "vulnerabilities": 0
+        },
+        "artifact_sha256": "6ca3f64e41d8ad67ba9b987b113a74db4bcc3e5feb4932ddb2048eb0cacc6f89",
+        "artifact_files": [
+          "security/image-vulnerabilities.json",
+          "security/sbom.cdx.json",
+          "python-audit.json",
+          "clean-install-summary.json",
+          "spec-030/evidence/8f609371c078878e88fa305dbf345de4db3d3d06/image-verification.json"
+        ]
+      }
+    }
+  ],
+  "security_comparison": "Full multiset of (class,CVE,package,installed,fixed,severity) identical to original Phase2 baseline; newer DB e68b... updated 2026-10-28T01:21:08Z, zero new/removed rows. All 159 raw finding severities retained.",
+  "source_archive": {
+    "source": "108547c771e8b8a088733f493e8e9d53837b7a71",
+    "github_source_archive_sha256": "6114f7e2105d3638c4964b6a977024c40a12ad9736b9b0775436949d1967f57c",
+    "status": "PASS",
+    "files": 251,
+    "manifest_matches_committed_tree": true,
+    "README_relative_links": "PASS",
+    "required_security_notice": "PRESENT",
+    "privacy_and_license_gate": "PASS",
+    "archive_url": "https://api.github.com/repos/hzjanuary/multi-agent-system/tarball/108547c771e8b8a088733f493e8e9d53837b7a71"
+  },
+  "diff_hygiene": "Remote SKIPPED after failing vulnerability gate; local git diff --check PASS",
+  "private_artifact_validation": "Exactly five allowlisted artifact files per run; no configuration, CLI session, private process output or credential file. Downloaded ZIP hashes match GitHub artifact digests.",
+  "historical_failed_runs": [
+    40550114746,
+    40550164202
+  ],
+  "owner_scope": "Early source publication only; no image publication or security reviewer acceptance",
+  "generation_requests": 0,
+  "remote_retries": 0,
+  "trivy_policy_changed": false,
+  "spec029": "32 PASS / 0 BLOCKED; original live evidence unchanged"
+}

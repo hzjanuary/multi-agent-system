@@ -342,3 +342,19 @@ or branch protection; no force push/bypass. Keep this SPEC030 plan active.
 - Private `.maos/spec-030/source-preview/ci-fix/` retains detailed logs/credentials;
   public `v0.1.0-clean-install-fix.json` only approved proof. Fresh remote push/
   PR Actions and source-only merge/release decision remain pending.
+
+- New push40629729678/job122623054912 and PR40629733848/job122623067765 on
+  head108547c completed: backend242/ops90/clean-install/audit/source/image/licenses
+  PASS; only Trivy FAIL, diff hygiene SKIPPED (localPASS). Downloaded five exact
+  allowlisted artifacts per run; ZIP digests match GitHub metadata. Both private
+  profiles resolve postgres/redis correctly; all four services stopped.
+- Trivy fetched updated DB2026-10-28T01:21:08Z/hash e68b667c74000c274351566d7bce26de2022f7937e4cc6e2787e2dbdac96e978.
+  Full159-row multiset identical to historical scan:0new/0removed; raw0C/40H/
+  58M/60L/1U, no gate/threshold/status changes. Python audit58deps/0vulns.
+  Push source108547c image9148acdf76a0a8e2d54adf433b219a4eea89d216455336711ecebfbd4b98095c;
+  PR synthetic merge source8f609371c078878e88fa305dbf345de4db3d3d06 image9a3e48f2f1da4bc8401086a1ce2f2e667d4564e231d366f6db0d83eaa1556298.
+- Public actual evidence v0.1.0-remote-ci.json; earlier failed attempt evidence
+  unchanged. Documentation-only checkpoint records observed results, not a false
+  all-green CI or completed publication. Verify final candidate Actions and live
+  rules, then owner-authorized normal merge/source-only prerelease. SPEC030 remains
+  open for security maintenance; no Docker publication/production approval.

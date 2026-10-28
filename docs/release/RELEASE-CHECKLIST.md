@@ -182,3 +182,15 @@ Detailed `install-evidence.json`, `process-records.json`, `.env`, password and C
 sessions stay private and are never included in the artifact. Trivy still runs
 when clean install succeeds even if Python audit fails; either failure keeps the
 job red. No scan gate is disabled. See [local repair proof](v0.1.0-clean-install-fix.json).
+
+
+### Repaired candidate remote observation (2026-10-28)
+
+[Push40629729678](https://github.com/hzjanuary/multi-agent-system/actions/runs/40629729678)
+and [PR40629733848](https://github.com/hzjanuary/multi-agent-system/actions/runs/40629733848)
+on source108547c pass backend242, ops90, install, Python audit and artifact gates.
+Both jobs FAIL solely at Trivy with all159 known finding rows unchanged, despite
+an updated DB; diff hygiene is remotely skipped/localPASS. See
+[exact jobs, artifact hashes and source/image identities](v0.1.0-remote-ci.json).
+Final documentation-only source updates must still have their genuine Actions
+results reviewed before normal merge. No protection bypass or image signoff.

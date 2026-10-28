@@ -1,26 +1,28 @@
 # SPEC-030 — Publication readiness
 
-> **Clean-install CI repair (local proof complete; new remote checks pending):**
-> Explicit subprocess environment isolation and pre-start profile equality checks
-> now pass a real clean-clone rehearsal with hostile CI variables. Backend242,
-> ops90, lock/lint/type, archive/image/licenses and Python audit PASS locally.
-> Frozen-DB scan remains0C/40H/58M/60L/1U, gateFAIL, with identical rows.
-> See [repair evidence](v0.1.0-clean-install-fix.json). Historical failed Actions
-> remain recorded in [original attempt](v0.1.0-publication-attempt.json).
-> Main is not yet merged and v0.1.0 is not yet released; await genuine new CI.
+> **Source-preview CI repair verified (2026-10-28):** real push/PR Actions
+> on `108547c771e8b8a088733f493e8e9d53837b7a71` PASS backend242/ops90,
+> clean-install, dependency audit, secrets and artifact/license gates. Jobs remain
+> **FAIL only at Trivy**:0C/40H/58M/60L/1U. Newer DB, all159 finding rows identical;
+> no new security delta or policy relaxation. Remote diff hygiene was SKIPPED;
+> local check PASS. See [actual CI/artifact evidence](v0.1.0-remote-ci.json).
+> Source-only publication is separately authorized, conditional on the reviewed
+> final candidate and repository rules. [PR #1](https://github.com/hzjanuary/multi-agent-system/pull/1)
+> records merge status; [GitHub Releases](https://github.com/hzjanuary/multi-agent-system/releases)
+> records publication. Image-distribution/security **NO-GO remains**.
 
 > **2026-10-28 source-only owner decision:** early public source preview is
 > authorized with disclosed residual OS risks. See [v0.1.0 decision](v0.1.0-source-preview.md).
 > This does not clear the Docker image or change the existing security gate.
 > The unrestricted image/security **NO-GO remains**; no reviewer approval is invented.
 
-> **Phase 3 — owner decision package:** [SECURITY-SIGNOFF](SPEC-030-SECURITY-SIGNOFF.md).
+> **Historical Phase 3 — owner decision package:** [SECURITY-SIGNOFF](SPEC-030-SECURITY-SIGNOFF.md).
 > 40 HIGH rows reconciled: 0 supported-fix available, 6 confirmed affected/no-fix,
 > 31 unresolved binary attribution, 3 not affected by concrete component absence.
 > Six image-level CVEs still have affected components. Raw counts/gate unchanged;
 > no exception, risk approval or remote CI. **NO-GO; owner decisions pending.**
 
-> **Phase 2 mới nhất (2026-10-27): NO-GO.** Đã remediation và scan cùng DB:
+> **Historical Phase 2 (2026-10-27): NO-GO.** Đã remediation và scan cùng DB:
 > **40 HIGH / 58 MEDIUM / 60 LOW / 1 UNKNOWN**, 159 rows tổng (158 OS + 1 Python).
 > 242 backend + 79 ops tests và packaging/install gates PASS; security gate FAIL.
 > GitHub private vulnerability reporting được xác nhận **disabled** bằng GET.
