@@ -18,3 +18,12 @@ and emits a CycloneDX SBOM. HIGH/CRITICAL are blocking without blanket exception
 See [release checklist](../docs/release/RELEASE-CHECKLIST.md). Ops tests run with
 `python3 -m unittest discover -s scripts/ops -p 'test_*.py'`. No inference keys
 are needed. Remote CI status must be recorded independently.
+
+
+`ops/verify_release_install.py` rehearses an empty installation without inference
+in a new private clone/project. It isolates subprocess configuration from parent
+CI settings and validates resolved API/worker/CLI profiles before starting any
+service. `--public-diagnostic` selects the allowlisted summary (default
+`.maos/clean-install-summary.json`). Never upload its private process records,
+configuration, generated administrator password or CLI session. Existing project
+resources are refused; only rehearsal services stop, with volumes retained.

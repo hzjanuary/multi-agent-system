@@ -325,3 +325,20 @@ or branch protection; no force push/bypass. Keep this SPEC030 plan active.
   checks pass and remaining scan failure is limited to disclosed findings. Stop
   for new unexpected failure, material security delta or repository protection.
   No image publication, security policy relaxation, data deletion or new campaign.
+
+- Local repair source866126702552e67017dd5d9679cb6ee9ff2e0449 verified:
+  backend242PASS/2warnings/210.60s; ops90PASS (11 new regression tests), lock,
+  Ruff/Black/MyPy122sourcefiles, Compose, tracked secrets/private paths, source
+  archive, LICENSE/NOTICE and image integrity PASS. Runtime build inputs unchanged
+  (139/hash86f6a9a6...), local rebuilt image3c33bcd31de18dccb7b08e0759787d224c93d41614c27cdd398f065b83b0b616.
+- Actual hostile-parent install PASS: users/runs/events0/0/0 after migration,
+  explicit bootstrap1/0/0, API/worker healthy and contained, separate CLI login/
+  text_review discovery, auth0600. Four services stopped; volume/evidence retained.
+- pip-audit2.10.1:58dependencies/0findings. Trivy0.76.1 frozen Phase2 DB:
+  exactly identical159rows,0C/40H/58M/60L/1U; raw gateFAIL, no changed policy.
+  First local setup errors (bridgeDNS, missing Redis test service) retained and
+  corrected using existing host build-network option/isolated Redis; full gates
+  subsequently PASS. No application/runtime/build-input change or model request.
+- Private `.maos/spec-030/source-preview/ci-fix/` retains detailed logs/credentials;
+  public `v0.1.0-clean-install-fix.json` only approved proof. Fresh remote push/
+  PR Actions and source-only merge/release decision remain pending.

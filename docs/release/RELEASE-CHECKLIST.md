@@ -166,3 +166,19 @@ OS failure is not converted to PASS. Private reporting was confirmed enabled
 live; recheck after release. No binary/image assets or production-security
 approval are included. All full-image risk/security gates remain open and the
 SPEC-030 plan remains active.
+
+
+### Clean-install isolation and diagnostics
+
+The rehearsal drops inherited application/provider/Compose variables and keeps
+only allowlisted host/Docker client settings. Before startup it checks resolved
+API/worker/CLI database and Redis service hostnames plus private credential and
+model identity; mismatch fails closed. Do not substitute the host CI database.
+Use a new project/directory; existing resources and evidence are refused.
+
+CI uploads only `.maos/clean-install-summary.json` even on failure: safe stage,
+operation, exit code/category, startup state and allowlisted service state/health.
+Detailed `install-evidence.json`, `process-records.json`, `.env`, password and CLI
+sessions stay private and are never included in the artifact. Trivy still runs
+when clean install succeeds even if Python audit fails; either failure keeps the
+job red. No scan gate is disabled. See [local repair proof](v0.1.0-clean-install-fix.json).

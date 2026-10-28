@@ -1,10 +1,13 @@
 # SPEC-030 — Publication readiness
 
-> **Source publication attempt stopped at a new CI blocker:** branch and
-> [PR #1](https://github.com/hzjanuary/multi-agent-system/pull/1) exist; main is
-> unchanged and v0.1.0 is not released. Real Actions clean-install FAIL occurred
-> before dependency/OS scanning. See [actual outcomes](v0.1.0-publication-attempt.json).
-> This is distinct from the owner-accepted disclosure of known OS findings.
+> **Clean-install CI repair (local proof complete; new remote checks pending):**
+> Explicit subprocess environment isolation and pre-start profile equality checks
+> now pass a real clean-clone rehearsal with hostile CI variables. Backend242,
+> ops90, lock/lint/type, archive/image/licenses and Python audit PASS locally.
+> Frozen-DB scan remains0C/40H/58M/60L/1U, gateFAIL, with identical rows.
+> See [repair evidence](v0.1.0-clean-install-fix.json). Historical failed Actions
+> remain recorded in [original attempt](v0.1.0-publication-attempt.json).
+> Main is not yet merged and v0.1.0 is not yet released; await genuine new CI.
 
 > **2026-10-28 source-only owner decision:** early public source preview is
 > authorized with disclosed residual OS risks. See [v0.1.0 decision](v0.1.0-source-preview.md).

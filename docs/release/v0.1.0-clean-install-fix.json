@@ -1,0 +1,168 @@
+{
+  "observed_at": "2026-10-28T03:58:35.049524+00:00",
+  "status": "LOCAL_CHECKS_PASS_REMOTE_PENDING",
+  "previous_publication_attempt": "v0.1.0-publication-attempt.json",
+  "pr": "https://github.com/hzjanuary/multi-agent-system/pull/1",
+  "tested_source": "866126702552e67017dd5d9679cb6ee9ff2e0449",
+  "tested_image": "sha256:3c33bcd31de18dccb7b08e0759787d224c93d41614c27cdd398f065b83b0b616",
+  "runtime_build_inputs_sha256": "86f6a9a6a47dfd34dc804c5ad8bd5558c7a40241e46dfaf2df7af726ae8a1e43",
+  "image_inputs_changed": false,
+  "fix": "Allowlist host/Docker client subprocess environment; do not inherit CI application/provider/Compose variables; compare resolved API/worker/CLI private profile before any startup.",
+  "public_diagnostics": "Allowlisted stage, operation, exit code, category, startup state and service health; no process output/environment/credentials. Separate private command records remain local.",
+  "regression_tests": 11,
+  "ops_tests": 90,
+  "backend_tests": 242,
+  "backend_warnings": 2,
+  "backend_duration_seconds": 210.6,
+  "lock_ruff_black_strict_mypy": "PASS",
+  "ops_ruff_black": "PASS",
+  "compose": "PASS",
+  "secret_private_paths_source_image_licenses": "PASS",
+  "clean_install": {
+    "status": "PASS",
+    "source_clone": "866126702552e67017dd5d9679cb6ee9ff2e0449",
+    "runtime_source": "866126702552e67017dd5d9679cb6ee9ff2e0449",
+    "image": "sha256:3c33bcd31de18dccb7b08e0759787d224c93d41614c27cdd398f065b83b0b616",
+    "generation_requests": 0,
+    "containers_start_attempted": true,
+    "services_stopped_volumes_retained": true,
+    "resolved_configuration": {
+      "status": "PASS",
+      "services": [
+        "api",
+        "worker",
+        "cli"
+      ],
+      "database_host": "postgres",
+      "redis_host": "redis",
+      "profile_credentials_match": true,
+      "provider_credentials_absent": true
+    },
+    "service_status_before_stop": {
+      "collection": "collected",
+      "services": {
+        "api": {
+          "state": "running",
+          "health": "healthy",
+          "exit_code": 0
+        },
+        "postgres": {
+          "state": "running",
+          "health": "healthy",
+          "exit_code": 0
+        },
+        "redis": {
+          "state": "running",
+          "health": "healthy",
+          "exit_code": 0
+        },
+        "worker": {
+          "state": "running",
+          "health": "healthy",
+          "exit_code": 0
+        }
+      }
+    },
+    "service_status_after_stop": {
+      "collection": "collected",
+      "services": {
+        "api": {
+          "state": "exited",
+          "health": "",
+          "exit_code": 0
+        },
+        "postgres": {
+          "state": "exited",
+          "health": "",
+          "exit_code": 0
+        },
+        "redis": {
+          "state": "exited",
+          "health": "",
+          "exit_code": 0
+        },
+        "worker": {
+          "state": "exited",
+          "health": "",
+          "exit_code": 137
+        }
+      }
+    },
+    "empty_after_migration": {
+      "users": 0,
+      "runs": 0,
+      "events": 0
+    },
+    "after_explicit_bootstrap": {
+      "users": 1,
+      "runs": 0,
+      "events": 0
+    },
+    "final_counts": {
+      "users": 1,
+      "runs": 0,
+      "events": 0
+    },
+    "cli_auth_file_mode": "0o600",
+    "workflow_ids": [
+      "text_review"
+    ]
+  },
+  "hostile_parent": {
+    "database_host": "localhost",
+    "redis_host": "localhost",
+    "jwt": "different synthetic value",
+    "APP_ENV": "testing",
+    "LLM_PROVIDER": "groq",
+    "model": "different",
+    "COMPOSE_FILE": "invalid parent override; excluded"
+  },
+  "python_audit": {
+    "tool": "pip-audit",
+    "version": "2.10.1",
+    "dependencies": 58,
+    "known_vulnerabilities": 0,
+    "status": "PASS"
+  },
+  "trivy": {
+    "status": "FAIL",
+    "counts": {
+      "CRITICAL": 0,
+      "HIGH": 40,
+      "MEDIUM": 58,
+      "LOW": 60,
+      "UNKNOWN": 1
+    },
+    "version": "v0.76.1",
+    "database": {
+      "Version": 2,
+      "NextUpdate": "2026-10-28T13:12:49.474279763Z",
+      "UpdatedAt": "2026-10-27T13:12:49.474279883Z",
+      "DownloadedAt": "2026-10-27T15:14:44.805351599Z"
+    },
+    "database_sha256": "9d08581c36e14a521489a0f659093fd0bf435151361e6b01c13d2d6ec6672047",
+    "comparison": "Every row including installed/fixed version and severity identical to Phase2 candidate on frozen DB; 0 new rows. Not security clearance."
+  },
+  "commands": [
+    "bash scripts/ci/backend-gate.sh (isolated PostgreSQL/Redis and private generated environment)",
+    "python3 -m unittest discover -s scripts/ops -p test_*.py",
+    "MAOS_BUILD_NETWORK=host MAOS_RELEASE_IMAGE=multi-agent-os:ci-isolation-fix bash scripts/ci/release-gate.sh",
+    "python3 scripts/ops/verify_release_install.py --image multi-agent-os:ci-isolation-fix --source 866126702552e67017dd5d9679cb6ee9ff2e0449 --directory .maos/spec-030/source-preview/ci-fix/hostile-install --project maos-spec030-cifix-install-866126702552 --public-diagnostic .maos/spec-030/source-preview/ci-fix/clean-install-summary.json",
+    "pip-audit --require-hashes --disable-pip --no-deps -r <private exported locked requirements> --format json --output <private report>",
+    "python3 scripts/ops/release_security.py scan-image --tool .maos/spec-030/tools/trivy --image multi-agent-os:ci-isolation-fix --cache-dir .maos/spec-030/phase2/trivy-cache --skip-db-update --output .maos/spec-030/source-preview/ci-fix/security"
+  ],
+  "earlier_local_setup_failures": [
+    "Docker bridge DNS: used existing supported MAOS_BUILD_NETWORK=host; no base or policy change.",
+    "First backend run lacked Redis test service; preserved failure log, added isolated Redis, then full gate passed."
+  ],
+  "private_evidence_directory": ".maos/spec-030/source-preview/ci-fix/",
+  "private_evidence_published": false,
+  "test_services_stopped": true,
+  "volumes_and_credentials_retained": true,
+  "generation_requests": 0,
+  "spec029": "32 PASS / 0 BLOCKED; historical inference provenance unchanged",
+  "security_gate": "FAIL unchanged; no exceptions/threshold changes; source-only decision separate",
+  "remote_ci": "PENDING new candidate push; prior runs remain FAIL and audit/Trivy SKIPPED",
+  "docker_image_published": false,
+  "merge_release": "NOT_EXECUTED"
+}
