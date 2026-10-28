@@ -10,7 +10,7 @@ from app.models import User
 
 OBSERVABILITY_READ_ROLES: tuple[RoleName, ...] = (
     RoleName.ADMIN,
-    RoleName.MANAGER,
+    RoleName.OPERATOR,
 )
 
 ObservabilityReadAccessDependency = Annotated[

@@ -24,8 +24,9 @@ class HealthResponse(BaseModel):
     app_name: str
     environment: AppEnvironment
     version: str
-    status: Literal["ok"]
+    status: Literal["ok", "degraded", "unavailable"]
     timestamp: datetime
+    checks: list["ReadinessDependencyStatus"]
 
 
 class ReadyResponse(BaseModel):

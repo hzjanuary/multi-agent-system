@@ -59,3 +59,14 @@ def test_unhandled_exception_returns_structured_error_response() -> None:
         },
         "request_id": request_id,
     }
+
+
+def test_validation_errors_do_not_echo_rejected_secrets() -> None:
+    client = TestClient(build_test_app())
+    secret = "private-user-password-not-for-error-output"
+    response = client.post(
+        "/api/v1/auth/login", json={"email": [], "password": {"value": secret}}
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "invalid_input"
+    assert secret not in response.text

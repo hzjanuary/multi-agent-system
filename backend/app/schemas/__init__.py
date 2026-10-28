@@ -1,4 +1,4 @@
-"""Application schema package."""
+"""Public API schemas."""
 
 from app.schemas.auth import (
     CurrentUserResponse,
@@ -16,36 +16,18 @@ from app.schemas.health import (
     RootResponse,
 )
 from app.schemas.user import UserProfile
-from app.schemas.workflows_api import (
-    WorkflowApiErrorDetail,
-    WorkflowCreateRequest,
-    WorkflowEventListResponse,
-    WorkflowEventResponse,
-    WorkflowListResponse,
-    WorkflowResponse,
-    WorkflowStateUpdateRequest,
-    WorkflowTransitionRequest,
-)
 
 __all__ = [
     "CurrentUserResponse",
+    "LoginRequest",
+    "LogoutResponse",
+    "RefreshRequest",
+    "TokenResponse",
     "HealthResponse",
     "LiveResponse",
     "ReadinessDependencyStatus",
     "ReadinessDependencyStatusValue",
-    "LoginRequest",
-    "LogoutResponse",
     "ReadyResponse",
-    "RefreshRequest",
     "RootResponse",
-    "TokenResponse",
     "UserProfile",
-    "WorkflowApiErrorDetail",
-    "WorkflowCreateRequest",
-    "WorkflowEventListResponse",
-    "WorkflowEventResponse",
-    "WorkflowListResponse",
-    "WorkflowResponse",
-    "WorkflowStateUpdateRequest",
-    "WorkflowTransitionRequest",
 ]

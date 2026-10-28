@@ -17,33 +17,22 @@ from app.auth.rbac import (
     require_all_roles,
     require_any_role,
 )
-from app.config import get_settings
 from app.core.dependencies import provide_db_session
-from app.db import create_database_engine, create_session_factory
 from app.models import Role, User
 
 AdminUserDependency = Annotated[User, Depends(require_any_role(RoleName.ADMIN))]
 AdminSalesUserDependency = Annotated[
     User,
-    Depends(require_all_roles(RoleName.ADMIN, RoleName.SALES)),
+    Depends(require_all_roles(RoleName.ADMIN, RoleName.OPERATOR)),
 ]
 
 
 @pytest.fixture
 async def db_session() -> AsyncIterator[AsyncSession]:
-    """Provide a rollback-only database session for RBAC tests."""
-    engine = create_database_engine(get_settings().database_url)
-    session_factory = create_session_factory(engine)
-    try:
-        async with session_factory() as session:
-            transaction = await session.begin()
-            try:
-                yield session
-            finally:
-                if transaction.is_active:
-                    await transaction.rollback()
-    finally:
-        await engine.dispose()
+    from app.tests.db_helpers import isolated_session
+
+    async with isolated_session() as session:
+        yield session
 
 
 @pytest.fixture
@@ -126,7 +115,7 @@ def test_get_user_role_names_returns_case_sensitive_role_names() -> None:
         ],
     )
 
-    assert get_user_role_names(user) == {"Admin", "admin"}
+    assert get_user_role_names(user) == {"admin"}
 
 
 @pytest.mark.asyncio
@@ -185,7 +174,7 @@ async def test_all_required_roles_must_be_present(
 ) -> None:
     user = await create_user_with_roles(
         db_session,
-        role_names=[RoleName.ADMIN, RoleName.SALES],
+        role_names=[RoleName.ADMIN, RoleName.OPERATOR],
     )
 
     response = await client.get("/admin-and-sales", headers=auth_headers(user))
@@ -210,7 +199,7 @@ async def test_role_comparison_is_case_sensitive(
     client: AsyncClient,
     db_session: AsyncSession,
 ) -> None:
-    user = await create_user_with_roles(db_session, role_names=["admin"])
+    user = await create_user_with_roles(db_session, role_names=["Admin"])
 
     response = await client.get("/admin", headers=auth_headers(user))
 

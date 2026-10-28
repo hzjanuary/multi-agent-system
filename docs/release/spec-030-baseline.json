@@ -1,0 +1,25 @@
+{
+  "baseline_source": "320e527a48ef9a6a2e725342ce165e3d6835931e",
+  "runtime_source": "44a8c42373af1320986ad78d922aa79595775dbe",
+  "image_digest": "sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959",
+  "actual_image_license_paths": {
+    "/app/LICENSE": false,
+    "/app/NOTICE": false,
+    "/app/licenses/project/LICENSE": false,
+    "/app/licenses/project/NOTICE": false
+  },
+  "synthetic_scanner_baseline": {
+    "test_file_findings": 0,
+    "credential_dsn_findings": 0,
+    "substring_exception_findings": 0
+  },
+  "credentials": "random synthetic values generated in memory; not persisted",
+  "original_spec029_log_sha256": "5fe24a610e153aac9fc52cad3facc0c4febdeb49f4bdf39e8a9514559f625e92",
+  "private_original_log": ".maos/spec-030/evidence/spec029-backend-gate.original.log",
+  "commands": [
+    "docker run --rm --network none <baseline image> python <license-path inspection>",
+    "scan_text(random synthetic credential, test path, allow_test_placeholders=True)",
+    "scan_text(random credentialized PostgreSQL DSN)",
+    "scan_text(random credential containing example substring)"
+  ]
+}

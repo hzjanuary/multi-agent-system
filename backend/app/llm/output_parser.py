@@ -65,7 +65,6 @@ def _invalid_response_error(
         category=LLMErrorCategory.INVALID_RESPONSE,
         provider=response.provider,
         request_id=response.request_id,
-        details={"snippet": _safe_error_snippet(raw_content)},
     )
 
 

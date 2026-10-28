@@ -1,0 +1,267 @@
+{
+  "recorded_at": "2026-10-27T10:23:49.296028+00:00",
+  "scope": "One explicitly authorized direct Groq -> Cloudflare campaign; no replacement campaign or retry",
+  "campaign_id": {
+    "kind": "SHA256 identity of unmodified campaign.json (runner does not assign a separate UUID)",
+    "value": "1e51ed922000dd7fabbc421234fd02985ebd89a2c302d4dac07122e5cae06cfc"
+  },
+  "started_at": "2026-10-27T10:21:42.109437+00:00",
+  "status": "FAIL",
+  "failure_stage": "analyst",
+  "safe_terminal_state": {
+    "status": "FAILED",
+    "owner": null,
+    "lease_expires_at": null
+  },
+  "provenance": {
+    "branch": "feat/spec-029-headless-oss",
+    "host_runner_head": "d6e3661a4b2ee4135f95abfa189c72bf84719500",
+    "tested_runtime_source": "44a8c42373af1320986ad78d922aa79595775dbe",
+    "runtime_image_id": "sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959",
+    "release_content_identity_reference": "docs/release/direct-smoke-preparation.json",
+    "image_rebuilt": false,
+    "reason": "Production compatible adapter already sends explicit User-Agent. Actual image offline HTTPX request serialization verified; no runtime/image input changes."
+  },
+  "inference_transport_offline_verification": {
+    "status": "PASS",
+    "scope": "actual release image; offline HTTPX serialized request capture",
+    "generation_requests": 0,
+    "target": "https://api.groq.com/openai/v1/chat/completions",
+    "method": "POST",
+    "user_agent": "multi-agent-os/0.2.0",
+    "authorization_scheme": "Bearer",
+    "authorization_value": "WITHHELD_TEST_ONLY",
+    "application_request_id_header_present": true,
+    "content_type": "application/json",
+    "max_completion_tokens": 1024,
+    "reasoning_effort": "low",
+    "include_reasoning": false,
+    "transport_retries": 0,
+    "application_retries": 0,
+    "follow_redirects": false,
+    "trust_env": false,
+    "timeout_seconds": 12,
+    "network": "none; mock transport only",
+    "runtime_change_required": false
+  },
+  "focused_offline_tests": {
+    "command": "cd backend && .venv/bin/poetry run pytest app/tests/test_direct_provider_smoke.py app/tests/test_llm_provider_clients.py -k 'direct_provider or stable_user_agent or groq_client_maps or overlarge_response' -q",
+    "passed": 8,
+    "deselected": 7,
+    "generation_requests": 0
+  },
+  "operator_prerequisites": {
+    "metadata_preflight": "PASS immediately before start and within campaign; GET-only",
+    "doctor": "PASS actual release image",
+    "cli_session": "Expired token detected; maintainer logged in locally to existing administrator; separate CLI workflow list then succeeded using persisted session",
+    "workflow": "text_review@1.0.0",
+    "input": "Preserved non-sensitive original input describing fictional company requesting ten business laptops; hash checked, contents not published",
+    "historical_runs_verified_unchanged_before_and_after_attempt": true
+  },
+  "attempts": [
+    {
+      "profile": "groq-smoke",
+      "attempt_record": ".maos/direct-smoke/groq-smoke/attempt.json",
+      "run_id": "8573b056-b869-416b-87e6-e03569dbfb5f",
+      "workflow_id": "text_review",
+      "workflow_version": "1.0.0",
+      "definition_hash": "e0e45904abf82e0f2e4cd416ffef771bb3147c72f3711c1fe5bb7d18f2d1b628",
+      "target_service": "groq",
+      "target_generation_endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "requested_model": "openai/gpt-oss-20b",
+      "returned_generation_model": null,
+      "successful_generations": 0,
+      "client_generation_requests_consumed": 1,
+      "attempt_status": "FAIL",
+      "run_status": "FAILED",
+      "normalized_error_code": "provider_authentication",
+      "nodes": [
+        {
+          "execution_id": "d43df76f-ecfe-455f-aa68-5c35406c1ddc",
+          "node_id": "analyze",
+          "kind": "agent",
+          "attempt": 1,
+          "generation": 1,
+          "status": "FAILED",
+          "output": null,
+          "execution_metadata": {
+            "reserved_calls": 1,
+            "provider_diagnostics": {
+              "error_code": "model_permission_blocked_project",
+              "error_type": "permissions_error",
+              "http_status": 403,
+              "response_identifiers": {
+                "header_x_request_id": "req_01m5ye2kxtex8rqe5ggyvb8neq"
+              },
+              "application_request_id": "cf596e10-a921-4004-a6cc-6cadf67cf833",
+              "received_limit_headers": {}
+            }
+          }
+        }
+      ],
+      "usage": null,
+      "reported_cost": null,
+      "cost_currency": null,
+      "usage_cost_state": "not reported; not zero and not inferred from account aggregate",
+      "upstream_generation_execution": "unconfirmed; HTTP request explicitly rejected for project model permission"
+    }
+  ],
+  "cloudflare": {
+    "status": "NOT_ATTEMPTED_FATAL_PRIMARY_FAILURE",
+    "generation_requests": 0,
+    "attempt_record_created": false,
+    "live_verified": false,
+    "configured_model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+  },
+  "fallback_reason": null,
+  "fallback_decision": "Correctly forbidden: HTTP403 model_permission_blocked_project / permissions_error is a project-permission failure, not eligible availability failure",
+  "durable_events": [
+    {
+      "id": "30c0d647-26ee-448b-bd26-532f36ae650b",
+      "sequence": 1,
+      "event_type": "run.created",
+      "node_id": null,
+      "created_at": "2026-10-27T10:21:42.310851+00:00"
+    },
+    {
+      "id": "b89fbfeb-a2cb-4706-95b7-464bf5628046",
+      "sequence": 2,
+      "event_type": "run.queued",
+      "node_id": null,
+      "created_at": "2026-10-27T10:21:42.357070+00:00"
+    },
+    {
+      "id": "ce447891-8bd8-4eaa-b688-68b261ea4a81",
+      "sequence": 3,
+      "event_type": "run.started",
+      "node_id": null,
+      "created_at": "2026-10-27T10:21:42.942515+00:00"
+    },
+    {
+      "id": "fb0f9375-3f68-42d6-952b-33b28627dbae",
+      "sequence": 4,
+      "event_type": "node.started",
+      "node_id": "analyze",
+      "created_at": "2026-10-27T10:21:43.004020+00:00"
+    },
+    {
+      "id": "35506f62-5c4d-48d4-b937-af4d75c5f038",
+      "sequence": 5,
+      "event_type": "node.failed",
+      "node_id": "analyze",
+      "created_at": "2026-10-27T10:21:43.325317+00:00"
+    },
+    {
+      "id": "25f13796-ef17-4aca-b7bc-fd366e4cc938",
+      "sequence": 6,
+      "event_type": "run.failed",
+      "node_id": null,
+      "created_at": "2026-10-27T10:21:43.325333+00:00"
+    }
+  ],
+  "journey": {
+    "analyst": "FAILED no validated output",
+    "reviewer": "NOT_EXECUTED",
+    "actual_chaining_verified": false,
+    "waiting_approval_reached": false,
+    "approval_count": 0,
+    "approval_decision": null,
+    "explicit_resume": false,
+    "assembly_executed": false,
+    "final_output": null,
+    "final_run_state": "FAILED"
+  },
+  "request_counts": {
+    "groq": 1,
+    "cloudflare": 0,
+    "new_campaign_total": 1,
+    "historical_openrouter": 2,
+    "cumulative_total": 3,
+    "max_per_provider": 2,
+    "max_new_campaign": 4,
+    "max_cumulative": 6,
+    "unused_reservation_authorizes_another_campaign": false,
+    "automatic_retries": 0,
+    "output_token_cap": 1024
+  },
+  "acceptance": {
+    "AC-08": {
+      "state": "BLOCKED",
+      "reason": "No successful analyst output or reviewer invocation; project permissions prevent genuine chained model execution."
+    },
+    "AC-29": {
+      "state": "BLOCKED",
+      "reason": "Doctor and preserved administrator/CLI discovery verified on current image, but live-model approval/resume/completion operator journey did not occur. Historical clean-clone evidence retains its original image provenance."
+    },
+    "pass": 30,
+    "blocked": 2,
+    "acceptance_fail": 0,
+    "live_attempt_status": "FAIL (distinct from acceptance BLOCKED)"
+  },
+  "preservation": {
+    "historical_openrouter_runs": [
+      "75039b34-2bf1-4e89-a1c1-704dd2f0be28",
+      "ea28e301-a82b-48d1-9be8-5fa34e215601"
+    ],
+    "historical_artifact_hashes_match": 43,
+    "credentials_account_plan_config_input_manifest_overlay_hashes_unchanged": true,
+    "cli_session": "Only authorized local re-login refreshed authentication; configuration retained",
+    "campaign_and_provider_records_retained": true,
+    "services": "all four isolated services stopped by runner finally; database volume, credentials/input/CLI retained",
+    "push_merge_publish_remote_deploy_delete": false
+  },
+  "private_artifacts": [
+    {
+      "path": ".maos/direct-smoke/campaign.json",
+      "sha256": "1e51ed922000dd7fabbc421234fd02985ebd89a2c302d4dac07122e5cae06cfc"
+    },
+    {
+      "path": ".maos/direct-smoke/outcome.json",
+      "sha256": "d957a56c896db2b6f219b5d6a31f165f5f946839e532eeb75910d885cbab0479"
+    },
+    {
+      "path": ".maos/direct-smoke/inference-transport-capture.json",
+      "sha256": "832a28885ece01b5bb3da3030c8be48a22338a707c2ca3b297eea9029328ea09"
+    },
+    {
+      "path": ".maos/direct-smoke/operator-doctor.json",
+      "sha256": "14b3d408cf7ac780c69a6e14193a5562b5d61970e142b4b957fe0209783b4118"
+    },
+    {
+      "path": ".maos/direct-smoke/operator-workflow-list-after-login.json",
+      "sha256": "a6ed774bb8e7e3cf84a9ee3a708f283a36d4b0c86021bc515e1589258230bcef"
+    },
+    {
+      "path": ".maos/direct-smoke/groq-smoke/attempt.json",
+      "sha256": "7e54fda4aaa2201eca9b5aeb666c65ddeee7caae074eb362a25f07e7c274337a"
+    },
+    {
+      "path": ".maos/direct-smoke/groq-smoke/live.stdout.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".maos/direct-smoke/groq-smoke/live.stderr.json",
+      "sha256": "5b548d61bf5c5ff16f1e83756e75443149d20b6800ce91f49a52980fe9c4566e"
+    },
+    {
+      "path": ".maos/direct-smoke/groq-smoke/api-evidence.json",
+      "sha256": "e73873bfc58e4d1da36a7de136057fe4177aeb0c76ea661ea09596b75a6ab6da"
+    },
+    {
+      "path": ".maos/direct-smoke/groq-smoke/outcome.json",
+      "sha256": "98e49bc090404d60f70e39e2e00186196ea2cd0be57cf5776b8e65b566f51383"
+    }
+  ],
+  "supported_next_step": {
+    "action": "Maintainer may review intended isolated Groq project model policy in Settings > Projects > Limits. No permission/account policy change was made automatically; do not weaken shared production restrictions or change billing. A future attempt requires a separate explicit decision and must preserve this consumed campaign.",
+    "official_explanation": "https://console.groq.com/docs/model-permissions",
+    "settings": "https://console.groq.com/settings/project/limits",
+    "no_automatic_retry": true
+  },
+  "handoff_checks": {
+    "tracked_file_secret_scan": "PASS (200 files)",
+    "git_diff_check": "PASS",
+    "runtime_or_image_input_changes": false,
+    "handoff_changes": "documentation and sanitized evidence only"
+  }
+}

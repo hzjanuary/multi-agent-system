@@ -1,4 +1,4 @@
-"""LLM retry and fallback classification helpers."""
+"""LLM retry classification helpers."""
 
 from __future__ import annotations
 
@@ -26,9 +26,4 @@ NON_RETRYABLE_ERROR_CATEGORIES: frozenset[LLMErrorCategory] = frozenset(
 
 def is_retryable_llm_error(category: LLMErrorCategory) -> bool:
     """Return whether the category is safe to retry."""
-    return category in RETRYABLE_ERROR_CATEGORIES
-
-
-def is_fallback_eligible_llm_error(category: LLMErrorCategory) -> bool:
-    """Return whether a failure can use configured fallback behavior."""
     return category in RETRYABLE_ERROR_CATEGORIES

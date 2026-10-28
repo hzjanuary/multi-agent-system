@@ -91,8 +91,8 @@ def usage_from_values(
     prompt = _coerce_non_negative_int(prompt_tokens)
     completion = _coerce_non_negative_int(completion_tokens)
     total = _coerce_non_negative_int(total_tokens)
-    if total is None and (prompt is not None or completion is not None):
-        total = (prompt or 0) + (completion or 0)
+    if total is None and prompt is not None and completion is not None:
+        total = prompt + completion
     if prompt is None and completion is None and total is None:
         return None
     return LLMUsage(

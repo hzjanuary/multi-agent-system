@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 class LLMProvider(StrEnum):
     """Supported LLM provider identifiers."""
 
-    FAKE = "fake"
+    OPENAI_COMPATIBLE = "openai_compatible"
     GROQ = "groq"
     OPENROUTER = "openrouter"
     OLLAMA = "ollama"
@@ -65,7 +65,7 @@ class LLMChatMessage(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     role: LLMMessageRole
-    content: str = Field(min_length=1, max_length=20000)
+    content: str = Field(min_length=1, max_length=1048576)
     name: str | None = Field(default=None, min_length=1, max_length=100)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -151,7 +151,7 @@ class LLMChatResponse(BaseModel):
 
     provider: LLMProvider
     model: str = Field(min_length=1, max_length=200)
-    content: str = Field(default="", max_length=200000)
+    content: str = Field(default="", max_length=10485760)
     structured_json: dict[str, Any] | None = None
     structured_metadata: LLMStructuredResponseMetadata | None = None
     finish_reason: LLMFinishReason = LLMFinishReason.UNKNOWN

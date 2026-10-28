@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
+from uuid import uuid4
 
 import jwt
 from jwt import PyJWTError
@@ -62,6 +63,7 @@ def create_token(
     expires_at = issued_at + expires_delta
     payload: dict[str, object] = {
         "sub": subject,
+        "jti": str(uuid4()),
         "token_type": token_type,
         "iat": issued_at,
         "exp": expires_at,

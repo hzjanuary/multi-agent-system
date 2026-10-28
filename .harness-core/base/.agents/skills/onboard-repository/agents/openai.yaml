@@ -1,6 +1,0 @@
-interface:
-  display_name: "Onboard Repository"
-  short_description: "Map a brownfield repository before edits"
-  default_prompt: "Use $onboard-repository to inspect this repository and propose evidence-backed onboarding improvements without editing files."
-policy:
-  allow_implicit_invocation: false

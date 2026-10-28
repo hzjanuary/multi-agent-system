@@ -1,10 +1,11 @@
 [tool.poetry]
-name = "enterprise-multi-agent-os-backend"
-version = "0.1.0"
-description = "FastAPI backend for Enterprise Multi-Agent OS."
-authors = ["Enterprise Multi-Agent OS"]
+name = "multi-agent-os"
+version = "0.2.0"
+description = "Headless self-hosted typed multi-agent workflow runtime."
+authors = ["hzjanuary"]
+license = "MIT"
 readme = "README.md"
-packages = [{ include = "app" }]
+packages = [{ include = "app" }, { include = "maos_examples" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -19,14 +20,15 @@ alembic = ">=1.14.0,<2.0.0"
 argon2-cffi = ">=23.1.0,<26.0.0"
 PyJWT = ">=2.10.0,<3.0.0"
 redis = ">=5.2.0,<6.0.0"
-qdrant-client = ">=1.12.0,<1.14.0"
-minio = ">=7.2.0,<8.0.0"
-langgraph = ">=0.2.0,<1.0.0"
+langgraph = ">=1.0.10,<2.0.0"
+langgraph-checkpoint = ">=4.1.1,<5.0.0"
+langgraph-sdk = ">=0.4.4,<1.0.0"
+
+httpx = ">=0.27.0,<1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.2.0,<9.0.0"
 pytest-asyncio = ">=0.23.0,<1.0.0"
-httpx = ">=0.27.0,<1.0.0"
 ruff = ">=0.6.0,<1.0.0"
 black = ">=24.4.0,<26.0.0"
 mypy = ">=1.10.0,<2.0.0"
@@ -51,6 +53,7 @@ target-version = ["py312"]
 line-length = 88
 
 [tool.mypy]
+plugins = ["pydantic.mypy"]
 python_version = "3.12"
 strict = true
 packages = ["app"]

@@ -1,58 +1,45 @@
-"""Provider-independent LLM service with retry and optional fallback."""
+"""One real-provider invocation path with bounded retries and typed validation."""
 
 from __future__ import annotations
 
 import asyncio
+import json
 import random
 from collections.abc import Awaitable, Callable
 from typing import Any
+from uuid import uuid4
 
-from app.llm.clients import LLMClient
+from app.definitions import AgentDefinition, fingerprint
 from app.llm.contracts import (
+    LLMChatMessage,
     LLMChatRequest,
     LLMChatResponse,
     LLMErrorCategory,
+    LLMMessageRole,
     LLMProvider,
     LLMResponseFormat,
 )
-from app.llm.errors import LLMProviderError
+from app.llm.diagnostics import ProviderDiagnostics
+from app.llm.errors import LLMConfigurationError, LLMProviderError
 from app.llm.factory import LLMClientFactory, SettingsLLMClientFactory
-from app.llm.retry import is_fallback_eligible_llm_error, is_retryable_llm_error
+from app.llm.output_parser import parse_structured_output
+from app.llm.retry import is_retryable_llm_error
 from app.llm.settings import LLMSettings
 
-SleepCallable = Callable[[float], Awaitable[None]]
-
-BACKOFF_BASE_SECONDS = 0.5
-BACKOFF_MULTIPLIER = 2.0
-BACKOFF_MAX_SECONDS = 8.0
-BACKOFF_JITTER_FRACTION = 0.25
+ReserveCall = Callable[[], Awaitable[None]]
 
 
-def backoff_delay_seconds(
-    attempt: int,
-    *,
-    base_seconds: float = BACKOFF_BASE_SECONDS,
-    multiplier: float = BACKOFF_MULTIPLIER,
-    max_seconds: float = BACKOFF_MAX_SECONDS,
-    jitter_fraction: float = BACKOFF_JITTER_FRACTION,
-    rng: random.Random | None = None,
-) -> float:
-    """Return a bounded exponential backoff delay with jitter for a retry attempt."""
-    exponential = min(max_seconds, base_seconds * multiplier ** max(attempt, 0))
-    sample = rng.random() if rng is not None else random.random()
-    jitter = exponential * jitter_fraction * (2 * sample - 1)
-    return exponential + jitter
+def backoff_delay_seconds(attempt: int) -> float:
+    return float(min(8.0, 0.5 * 2 ** min(attempt, 6)) * random.uniform(0.75, 1.0))
 
 
 class LLMService:
-    """Stable service API for future runtime nodes and agents."""
-
     def __init__(
         self,
         *,
         settings: LLMSettings,
         client_factory: LLMClientFactory | None = None,
-        sleep: SleepCallable | None = None,
+        sleep: Callable[[float], Awaitable[None]] | None = None,
     ) -> None:
         self._settings = settings
         self._client_factory = client_factory or SettingsLLMClientFactory()
@@ -60,101 +47,143 @@ class LLMService:
 
     @property
     def settings(self) -> LLMSettings:
-        """Return the immutable LLM settings used by this service."""
         return self._settings
 
-    def validate_ready(self) -> None:
-        """Validate the selected primary provider configuration."""
-        self._create_client(self._settings.provider).validate_ready()
-
-    async def complete(self, request: LLMChatRequest) -> LLMChatResponse:
-        """Complete a chat request with bounded retries and optional fallback."""
-        provider = request.provider or self._settings.provider
-        primary_client = self._create_client(provider)
-        try:
-            return await self._complete_with_retries(primary_client, request)
-        except LLMProviderError as exc:
-            if not self._should_use_fallback(exc, provider):
-                raise
-            return await self._complete_with_fallback(
-                request=request,
-                failed_provider=provider,
-                failure=exc,
-            )
-        except Exception as exc:
-            raise LLMProviderError(
-                "llm service encountered an unexpected provider error",
-                category=LLMErrorCategory.UNKNOWN,
-                provider=provider,
-                request_id=request.request_id,
-            ) from exc
-
-    async def complete_json(self, request: LLMChatRequest) -> LLMChatResponse:
-        """Complete a request while requiring JSON-object response mode."""
-        json_request = request.model_copy(
-            update={
-                "response_format": LLMResponseFormat.JSON_OBJECT,
-                "structured_json": True,
-            },
-        )
-        return await self.complete(json_request)
-
-    def _create_client(self, provider: LLMProvider) -> LLMClient:
-        return self._client_factory(self._settings, provider=provider)
-
-    async def _complete_with_retries(
-        self,
-        client: LLMClient,
-        request: LLMChatRequest,
-    ) -> LLMChatResponse:
-        attempts_remaining = self._settings.max_retries + 1
-        last_error: LLMProviderError | None = None
-        while attempts_remaining > 0:
-            try:
-                return await client.complete(request)
-            except LLMProviderError as exc:
-                last_error = exc
-                attempts_remaining -= 1
-                if attempts_remaining <= 0 or not is_retryable_llm_error(exc.category):
-                    raise
-                retry_attempt = self._settings.max_retries - attempts_remaining
-                await self._sleep(backoff_delay_seconds(retry_attempt))
-        if last_error is not None:
-            raise last_error
-        raise LLMProviderError(
-            "llm service exhausted retry attempts",
-            category=LLMErrorCategory.UNKNOWN,
-            provider=client.provider,
-            request_id=request.request_id,
-        )
-
-    def _should_use_fallback(
-        self,
-        failure: LLMProviderError,
-        failed_provider: LLMProvider,
-    ) -> bool:
-        if not self._settings.fallback_enabled:
-            return False
-        if self._settings.fallback_provider is failed_provider:
-            return False
-        return is_fallback_eligible_llm_error(failure.category)
-
-    async def _complete_with_fallback(
-        self,
-        *,
-        request: LLMChatRequest,
-        failed_provider: LLMProvider,
-        failure: LLMProviderError,
-    ) -> LLMChatResponse:
-        fallback_provider = self._settings.fallback_provider
-        fallback_client = self._create_client(fallback_provider)
-        fallback_response = await fallback_client.complete(
-            request.model_copy(update={"provider": fallback_provider}),
-        )
-        metadata: dict[str, Any] = {
-            **fallback_response.metadata,
-            "fallback_used": True,
-            "fallback_from_provider": failed_provider.value,
-            "fallback_error_category": failure.category.value,
+    @property
+    def profile_identity(self) -> dict[str, str]:
+        identity = {
+            "profile": "default",
+            "provider": self.settings.provider.value,
+            "model": self.settings.selected_model,
+            "endpoint_hash": fingerprint(self.settings.endpoint),
+            "max_output_tokens": str(self.settings.max_output_tokens),
+            "max_retries": str(self.settings.max_retries),
+            "timeout_seconds": str(self.settings.timeout_seconds),
         }
-        return fallback_response.model_copy(update={"metadata": metadata})
+
+        if self.settings.provider == LLMProvider.OPENROUTER:
+            identity["routing_hash"] = fingerprint(
+                self.settings.openrouter_provider_preferences.request_dict()
+            )
+        if (
+            self.settings.provider == LLMProvider.GROQ
+            and self.settings.groq_reasoning_effort
+        ):
+            identity["reasoning_effort"] = self.settings.groq_reasoning_effort
+        return identity
+
+    def validate_ready(self) -> None:
+        self.settings.require_provider_configuration()
+        self._client_factory(self.settings).validate_ready()
+
+    async def complete(
+        self, request: LLMChatRequest, *, reserve_call: ReserveCall | None = None
+    ) -> LLMChatResponse:
+        self.validate_ready()
+        if (request.provider and request.provider != self.settings.provider) or (
+            request.model and request.model != self.settings.selected_model
+        ):
+            raise LLMConfigurationError(
+                "request does not match the pinned provider profile"
+            )
+        request = request.model_copy(
+            update={
+                "provider": self.settings.provider,
+                "model": self.settings.selected_model,
+            }
+        )
+        client = self._client_factory(self.settings)
+        for attempt in range(self.settings.max_retries + 1):
+            # This callback reserves in PostgreSQL under the worker fencing claim.
+            # It runs before every dispatch, including retries and recovered attempts.
+            if reserve_call:
+                await reserve_call()
+            try:
+                response = await client.complete(request)
+                return response.model_copy(
+                    update={
+                        "metadata": {**response.metadata, "attempt_count": attempt + 1}
+                    }
+                )
+            except LLMProviderError as exc:
+                if attempt == self.settings.max_retries or not is_retryable_llm_error(
+                    exc.category
+                ):
+                    raise
+                retry_after = exc.details.get("retry_after_seconds")
+                delay = (
+                    min(8.0, max(0.0, float(retry_after)))
+                    if isinstance(retry_after, (int, float))
+                    else backoff_delay_seconds(attempt)
+                )
+                await self._sleep(delay)
+            except Exception as exc:
+                raise LLMProviderError(
+                    "provider operation failed",
+                    category=LLMErrorCategory.UNKNOWN,
+                    provider=self.settings.provider,
+                ) from exc
+        raise AssertionError("bounded retry loop exhausted without a result")
+
+    async def complete_json(
+        self, request: LLMChatRequest, *, reserve_call: ReserveCall | None = None
+    ) -> LLMChatResponse:
+        return await self.complete(
+            request.model_copy(
+                update={
+                    "response_format": LLMResponseFormat.JSON_OBJECT,
+                    "structured_json": True,
+                }
+            ),
+            reserve_call=reserve_call,
+        )
+
+    async def invoke(
+        self,
+        agent: AgentDefinition,
+        input_value: dict[str, Any],
+        reserve_call: ReserveCall,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        if agent.profile != "default":
+            raise LLMConfigurationError("agent profile is unavailable")
+        validated = agent.input_schema.model_validate(input_value)
+        instructions = (
+            agent.instructions
+            + "\nReturn only one JSON object conforming to this schema:\n"
+            + json.dumps(agent.output_schema.model_json_schema(), separators=(",", ":"))
+        )
+        response = await self.complete_json(
+            LLMChatRequest(
+                request_id=str(uuid4()),
+                messages=(
+                    LLMChatMessage(role=LLMMessageRole.SYSTEM, content=instructions),
+                    LLMChatMessage(
+                        role=LLMMessageRole.USER, content=validated.model_dump_json()
+                    ),
+                ),
+                max_tokens=min(agent.max_tokens, self.settings.max_output_tokens),
+                timeout_seconds=min(
+                    agent.timeout_seconds, self.settings.timeout_seconds
+                ),
+            ),
+            reserve_call=reserve_call,
+        )
+        try:
+            output = parse_structured_output(response, agent.output_schema)
+        except LLMProviderError as error:
+            diagnostics = response.metadata.get("http_diagnostics")
+            if isinstance(diagnostics, ProviderDiagnostics):
+                error.diagnostics = diagnostics
+            raise
+        return output.model_dump(mode="json"), {
+            "provider": response.provider.value,
+            "model": response.model,
+            "attempt_count": response.metadata.get("attempt_count", 1),
+            "usage": response.usage.model_dump(mode="json") if response.usage else None,
+            "request_id": response.request_id,
+            **{
+                key: response.metadata[key]
+                for key in ("provider_route", "reported_cost", "cost_currency")
+                if key in response.metadata
+            },
+        }

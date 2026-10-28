@@ -1,0 +1,555 @@
+{
+  "recorded_at": "2026-10-27T11:04:17.531881+00:00",
+  "status": "PASS",
+  "campaign_id": "groq-permissions-20261027",
+  "campaign_record_sha256": "065e0db97a915003cf50ee78818240303898314713454cb86b3d999560c0108a",
+  "started_at": "2026-10-27T10:50:27.853433+00:00",
+  "provenance": {
+    "branch": "feat/spec-029-headless-oss",
+    "tested_host_runner_commit": "d688138d3c270a21670d115f8b2f46524562d9d6",
+    "tested_runtime_source": "44a8c42373af1320986ad78d922aa79595775dbe",
+    "image_digest": "sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959",
+    "source_image_content_reference": "docs/release/direct-smoke-preparation.json (93 shipped hashes)",
+    "image_rebuilt": false,
+    "reason": "Only host campaign allocation/selection, tests and docs changed; shipped backend/examples/migrations/dependencies/Docker/Compose/template inputs unchanged. Actual image transport already sends explicit application User-Agent."
+  },
+  "authorization": {
+    "historical_consumed": 3,
+    "max_new": 4,
+    "cumulative_max": 7,
+    "per_provider_max": 2,
+    "application_retries": 0,
+    "transport_retries": 0,
+    "max_output_tokens": 1024,
+    "groq_reasoning_effort": "low",
+    "allocation": ".maos/direct-smoke/new-campaign.json",
+    "existing_campaign_reopened_or_reset": false,
+    "new_campaign_reinvocation": "refused by exclusive allocation and selected campaign/provider records"
+  },
+  "operator_prerequisites": {
+    "preflight": "PASS GET-only; exact model list/search/schema checks; metadata alone not treated as inference permission",
+    "doctor": "PASS actual pinned image",
+    "cli_discovery": "PASS separate container; existing session reused without another login or bootstrap",
+    "input": "Existing non-sensitive fictional-company ten-laptop input; unchanged hash, contents withheld",
+    "existing_operator_user_count": 1,
+    "new_campaign_database_administrator_created": false
+  },
+  "provider": {
+    "actual_service": "groq",
+    "generation_endpoint": "https://api.groq.com/openai/v1/chat/completions",
+    "requested_model": "openai/gpt-oss-20b",
+    "returned_models": [
+      "openai/gpt-oss-20b"
+    ],
+    "cloudflare": "UNUSED_NOT_LIVE_VERIFIED",
+    "cloudflare_generation_requests": 0,
+    "fallback_reason": null,
+    "optional_tools_search_plugins": "not sent",
+    "default_privacy_changed": false,
+    "free_plans": "Existing operator confirmations/credential bindings preserved; no paid billing enabled"
+  },
+  "run": {
+    "id": "dd922648-beb2-4afb-94e5-8bea36a2070f",
+    "workflow_id": "text_review",
+    "workflow_version": "1.0.0",
+    "definition_hash": "e0e45904abf82e0f2e4cd416ffef771bb3147c72f3711c1fe5bb7d18f2d1b628",
+    "status": "COMPLETED",
+    "call_count": 2,
+    "event_sequence": 16,
+    "generation": 2,
+    "owner": null,
+    "lease_expires_at": null
+  },
+  "nodes": [
+    {
+      "execution_id": "1bea804e-3f57-4ca3-a5ae-f2157ea7a3f2",
+      "node_id": "analyze",
+      "kind": "agent",
+      "status": "COMPLETED",
+      "attempt": 1,
+      "generation": 1,
+      "output_schema_fields": [
+        "summary",
+        "key_points"
+      ],
+      "validated_output_sha256": "0005152f3d75674faee83fe7f1f38f9dc732dca0ac30d94cd0cfa8e7108c6a19",
+      "full_validated_output_private_reference": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/api-evidence.json -> /nodes node_id=analyze output",
+      "execution_metadata": {
+        "model": "openai/gpt-oss-20b",
+        "usage": {
+          "currency": null,
+          "total_tokens": 997,
+          "prompt_tokens": 662,
+          "estimated_cost": null,
+          "completion_tokens": 335
+        },
+        "provider": "groq",
+        "request_id": "chatcmpl-f7e76b04-d0d5-4f02-ae86-c6fad9b64afc",
+        "attempt_count": 1,
+        "reserved_calls": 1
+      }
+    },
+    {
+      "execution_id": "7e86e658-fd75-484b-9c9d-5a96ad1ce096",
+      "node_id": "review",
+      "kind": "agent",
+      "status": "COMPLETED",
+      "attempt": 1,
+      "generation": 1,
+      "output_schema_fields": [
+        "assessment",
+        "suggestions"
+      ],
+      "validated_output_sha256": "c08993c2b646a7f82250c9a04fa80f8bb77805ba8265819bb2f12514eb195c5c",
+      "full_validated_output_private_reference": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/api-evidence.json -> /nodes node_id=review output",
+      "execution_metadata": {
+        "model": "openai/gpt-oss-20b",
+        "usage": {
+          "currency": null,
+          "total_tokens": 1276,
+          "prompt_tokens": 976,
+          "estimated_cost": null,
+          "completion_tokens": 300
+        },
+        "provider": "groq",
+        "request_id": "chatcmpl-396eb0fa-48ff-40e5-921b-d7134ca6c354",
+        "attempt_count": 1,
+        "reserved_calls": 1
+      }
+    },
+    {
+      "execution_id": "742c428b-317c-4167-b813-771aced8a603",
+      "node_id": "approve",
+      "kind": "approval",
+      "status": "COMPLETED",
+      "attempt": 1,
+      "generation": 1,
+      "output_schema_fields": [
+        "review",
+        "analysis"
+      ],
+      "validated_output_sha256": "8c7390883a352fe8034defa638446f651f58d7251a428e58894b8c4524e8dedd",
+      "full_validated_output_private_reference": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/api-evidence.json -> /nodes node_id=approve output",
+      "execution_metadata": {}
+    },
+    {
+      "execution_id": "ecf7dac2-def2-4977-8b9c-e17ea2ce60a3",
+      "node_id": "assemble",
+      "kind": "tool",
+      "status": "COMPLETED",
+      "attempt": 1,
+      "generation": 2,
+      "output_schema_fields": [
+        "result"
+      ],
+      "validated_output_sha256": "134d1e0a6962c53aa0a3649239febbbd4b0b150086f00aee5d18446944bac532",
+      "full_validated_output_private_reference": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/api-evidence.json -> /nodes node_id=assemble output",
+      "execution_metadata": {}
+    }
+  ],
+  "request_identifier_semantics": {
+    "node_execution_metadata_request_id": "Provider completion response body.id, not an HTTP request header ID",
+    "http_response_request_headers": "Not retained by success node-metadata path; unknown, not claimed absent",
+    "application_request_id": "Not retained in successful node metadata; distinct from execution IDs and body.id",
+    "upstream_internal_dispatches": "Not observable by client; counts below refer to application client-generation attempts/reservations"
+  },
+  "chaining_and_independent_db_readback": {
+    "status": "PASS",
+    "scope": "fresh independent read-only DB session through actual release image; no inference",
+    "run_id": "dd922648-beb2-4afb-94e5-8bea36a2070f",
+    "workflow_definition_hash": "e0e45904abf82e0f2e4cd416ffef771bb3147c72f3711c1fe5bb7d18f2d1b628",
+    "immutable_definition_snapshot_matches_packaged_source": true,
+    "review_input_mapping": {
+      "text": "input.text",
+      "analysis": "nodes.analyze"
+    },
+    "reviewer_analysis_equals_persisted_analyst_output": true,
+    "original_text_sha256": "f1a452ef1efcae26dbf192661cdd5385fee33cf9c3cea652a82a11e988f438e7",
+    "analyst_output_sha256": "0005152f3d75674faee83fe7f1f38f9dc732dca0ac30d94cd0cfa8e7108c6a19",
+    "review_input_analysis_sha256": "0005152f3d75674faee83fe7f1f38f9dc732dca0ac30d94cd0cfa8e7108c6a19",
+    "reviewer_output_sha256": "c08993c2b646a7f82250c9a04fa80f8bb77805ba8265819bb2f12514eb195c5c",
+    "outputs_schema_validated": true,
+    "approval_content_equals_persisted_outputs": true,
+    "approval_hash": "8c7390883a352fe8034defa638446f651f58d7251a428e58894b8c4524e8dedd",
+    "explicit_approval_then_resume_then_assembly_order": true,
+    "assembly_matches_pure_function": true,
+    "final_output_sha256": "134d1e0a6962c53aa0a3649239febbbd4b0b150086f00aee5d18446944bac532",
+    "provider_call_count": 2,
+    "agent_reserved_calls": [
+      1,
+      1
+    ],
+    "assembly_reserved_calls": 0,
+    "durable_events": 16,
+    "existing_operator_user_count": 1,
+    "evidence_limit": "Raw outbound prompts intentionally not retained; chaining proven by persisted immutable definition, actual outputs and checked deterministic production mapping/invocation path."
+  },
+  "approval": {
+    "id": "d94918be-367e-4a78-acd7-ed968fd132e3",
+    "node_id": "approve",
+    "decision": "approved",
+    "content_revision": 8,
+    "content_hash": "8c7390883a352fe8034defa638446f651f58d7251a428e58894b8c4524e8dedd",
+    "decided_at": "2026-10-27T10:50:31.872098+00:00"
+  },
+  "journey": {
+    "analyst": "COMPLETED validated actual output",
+    "reviewer": "COMPLETED with actual persisted analyst output",
+    "WAITING_APPROVAL": "observed by live entry point before decision; approval.requested event sequence9",
+    "approval": "normal authenticated POST decision, status APPROVED checked before explicit resume",
+    "resume": "normal authenticated POST /resume, durable run.resumed sequence12",
+    "assembly": "pure installed tool in generation2 after resume; no provider reservation",
+    "final_state": "COMPLETED",
+    "raw_prompts_or_full_provider_response_published": false
+  },
+  "durable_events": [
+    {
+      "id": "372a81d3-c15f-40d4-956d-f6dd9b47a6b3",
+      "sequence": 1,
+      "event_type": "run.created",
+      "node_id": null,
+      "created_at": "2026-10-27T10:50:28.089886+00:00"
+    },
+    {
+      "id": "c81f53c3-cced-4087-aea0-8d35cfdbed85",
+      "sequence": 2,
+      "event_type": "run.queued",
+      "node_id": null,
+      "created_at": "2026-10-27T10:50:28.131033+00:00"
+    },
+    {
+      "id": "69fa6689-182d-47f1-a316-0c3d2f0a59d5",
+      "sequence": 3,
+      "event_type": "run.started",
+      "node_id": null,
+      "created_at": "2026-10-27T10:50:28.844576+00:00"
+    },
+    {
+      "id": "51548b8d-4652-46b9-988d-fe6e7239a78f",
+      "sequence": 4,
+      "event_type": "node.started",
+      "node_id": "analyze",
+      "created_at": "2026-10-27T10:50:28.917331+00:00"
+    },
+    {
+      "id": "d9f32b74-3f10-4ec2-b9bd-e34e1cf41cb3",
+      "sequence": 5,
+      "event_type": "node.completed",
+      "node_id": "analyze",
+      "created_at": "2026-10-27T10:50:30.161242+00:00"
+    },
+    {
+      "id": "f0ff52b0-07f7-496d-889e-1207aa4c08ae",
+      "sequence": 6,
+      "event_type": "node.started",
+      "node_id": "review",
+      "created_at": "2026-10-27T10:50:30.194304+00:00"
+    },
+    {
+      "id": "1145ca47-dd81-4e65-b928-dc281b3e2c5e",
+      "sequence": 7,
+      "event_type": "node.completed",
+      "node_id": "review",
+      "created_at": "2026-10-27T10:50:31.234671+00:00"
+    },
+    {
+      "id": "de2c0947-c4c0-46f9-a733-1e3c09f80f59",
+      "sequence": 8,
+      "event_type": "node.started",
+      "node_id": "approve",
+      "created_at": "2026-10-27T10:50:31.283439+00:00"
+    },
+    {
+      "id": "ebd5af16-a692-416e-88f9-23736be65824",
+      "sequence": 9,
+      "event_type": "approval.requested",
+      "node_id": null,
+      "created_at": "2026-10-27T10:50:31.283445+00:00"
+    },
+    {
+      "id": "e74e37fc-6448-4a99-8a14-6f260f0e1eb2",
+      "sequence": 10,
+      "event_type": "node.completed",
+      "node_id": "approve",
+      "created_at": "2026-10-27T10:50:31.884962+00:00"
+    },
+    {
+      "id": "8c2966e4-f026-4d15-b9c6-b661b2e41dcc",
+      "sequence": 11,
+      "event_type": "approval.decided",
+      "node_id": "approve",
+      "created_at": "2026-10-27T10:50:31.884967+00:00"
+    },
+    {
+      "id": "6f0edb0b-b905-43d9-bda1-3263142c426a",
+      "sequence": 12,
+      "event_type": "run.resumed",
+      "node_id": null,
+      "created_at": "2026-10-27T10:50:31.939732+00:00"
+    },
+    {
+      "id": "179c73bf-6a9e-467f-ad31-7ecf95c63212",
+      "sequence": 13,
+      "event_type": "run.started",
+      "node_id": null,
+      "created_at": "2026-10-27T10:50:32.328934+00:00"
+    },
+    {
+      "id": "06297506-407e-4b09-a468-ce6870af0163",
+      "sequence": 14,
+      "event_type": "node.started",
+      "node_id": "assemble",
+      "created_at": "2026-10-27T10:50:32.394371+00:00"
+    },
+    {
+      "id": "8deaf20c-ab49-4b12-ad11-f722fad936e4",
+      "sequence": 15,
+      "event_type": "node.completed",
+      "node_id": "assemble",
+      "created_at": "2026-10-27T10:50:32.414759+00:00"
+    },
+    {
+      "id": "a895e3f3-b736-403c-916a-671754403219",
+      "sequence": 16,
+      "event_type": "run.completed",
+      "node_id": null,
+      "created_at": "2026-10-27T10:50:32.433397+00:00"
+    }
+  ],
+  "usage": {
+    "analyst": {
+      "currency": null,
+      "total_tokens": 997,
+      "prompt_tokens": 662,
+      "estimated_cost": null,
+      "completion_tokens": 335
+    },
+    "reviewer": {
+      "currency": null,
+      "total_tokens": 1276,
+      "prompt_tokens": 976,
+      "estimated_cost": null,
+      "completion_tokens": 300
+    },
+    "reported_token_totals": {
+      "prompt_tokens": 1638,
+      "completion_tokens": 635,
+      "total_tokens": 2273
+    },
+    "provider_reported_cost": null,
+    "cost_currency": null,
+    "cost_state": "unknown, not reported; not calculated from catalog price or aggregate account usage"
+  },
+  "requests": {
+    "new_campaign": 2,
+    "groq": 2,
+    "cloudflare": 0,
+    "prior_openrouter": 2,
+    "prior_groq_failed_campaign": 1,
+    "historical_before": 3,
+    "cumulative_observed": 5,
+    "cumulative_authorized_max": 7,
+    "additional_campaign_authorized": false
+  },
+  "acceptance": {
+    "AC-08": {
+      "state": "PASS",
+      "proof": "Two genuine successful Groq agent calls; strict validated outputs; independent DB snapshot/production mapper proof of actual persisted analyst -> reviewer chaining."
+    },
+    "AC-29": {
+      "state": "PASS",
+      "proof": "Independent clean local clone, exact current image pinned by scoped override, generated private config, actual fresh migration with zero initial records, explicit separate verification bootstrap, API/worker doctor, 0600 login persisted across separate CLI containers; plus same-image actual live approval/resume/assembly journey on existing smoke DB/admin."
+    },
+    "pass": 32,
+    "blocked": 0,
+    "fail": 0,
+    "not_run": 0
+  },
+  "clean_clone_current_image": {
+    "status": "PASS",
+    "scope": "independent clean local clone and actual current release image first installation; no inference",
+    "checked_at": "2026-10-27T10:59:47.436843+00:00",
+    "clone": "/tmp/maos-spec029-ac29-pinned-20261027",
+    "checkout_head": "d688138d3c270a21670d115f8b2f46524562d9d6",
+    "runtime_source": "44a8c42373af1320986ad78d922aa79595775dbe",
+    "image_id": "sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959",
+    "backend_git_tree_identical_to_image_source": true,
+    "image_reused_no_rebuild": true,
+    "private_image_override": "Pins actual digest for API/worker/CLI; does not retag multi-agent-os:local; base Compose hardcodes that tag",
+    "project": "maos-spec029-ac29-pinned-20261027",
+    "config_init": "actual image; preserves generated DB/JWT secrets",
+    "fresh_after_migration": {
+      "users": 0,
+      "runs": 0,
+      "nodes": 0,
+      "events": 0,
+      "approvals": 0,
+      "jobs": 0
+    },
+    "after_explicit_verification_bootstrap": {
+      "users": 1,
+      "runs": 0,
+      "nodes": 0,
+      "events": 0,
+      "approvals": 0,
+      "jobs": 0
+    },
+    "bootstrap_scope": "Disposable verification principal in separate fresh DB; campaign administrator/database untouched",
+    "doctor": "ready",
+    "persistent_login_separate_cli_invocations": [
+      {
+        "exit_code": 0,
+        "text_review_discovered": true
+      },
+      {
+        "exit_code": 0,
+        "text_review_discovered": true
+      }
+    ],
+    "auth_file_permissions": "0600",
+    "runtime_services_have_no_cli_mount": true,
+    "generation_requests": 0,
+    "new_live_runs_created": 0,
+    "operator_smoke_project_changed": false,
+    "clean_worktree": true,
+    "retained_volumes_configuration_credentials": true
+  },
+  "clean_clone_verification_correction": {
+    "status": "FAIL verification assertion, not an application or live failure",
+    "generation_requests": 0,
+    "project": "maos-spec029-ac29-current-20261027",
+    "clone": "/tmp/maos-spec029-ac29-current-20261027",
+    "reason": "Base Compose image is hardcoded multi-agent-os:local; MAOS_IMAGE is not a consumed setting. Actual container Image check caught wrong image tag. No release claim made from this attempt.",
+    "disposition": "All four services stopped; test volume/configuration/fixture administrator retained. Corrected check uses separate fresh project and explicit private digest overlay. No operator/campaign data changed."
+  },
+  "verification": {
+    "backend_gate": {
+      "passed": 242,
+      "skipped": 0,
+      "failed": 0,
+      "warnings": 2,
+      "lock_ruff_black_mypy": "PASS"
+    },
+    "ops_tests": {
+      "passed": 58,
+      "direct_campaign_methods": 21,
+      "script_black_ruff": "PASS"
+    },
+    "private_gate_log": ".maos/direct-smoke/campaigns/groq-permissions-20261027/backend-gate.log",
+    "final_secret_and_diff_checks": "PASS strict tracked-file secret scan (201 files) and cached Git diff check"
+  },
+  "preservation": {
+    "prior_run_ids": [
+      "75039b34-2bf1-4e89-a1c1-704dd2f0be28",
+      "ea28e301-a82b-48d1-9be8-5fa34e215601",
+      "8573b056-b869-416b-87e6-e03569dbfb5f"
+    ],
+    "prior_artifacts_sha256_verified": 83,
+    "root_old_campaign_and_attempts_unchanged": true,
+    "existing_credentials_plans_config_input_unchanged": true,
+    "retained_operator_admin_count": 1,
+    "all_campaign_services_stopped": true,
+    "all_clean_clone_verification_services_stopped": true,
+    "all_volumes_credentials_cli_inputs_retained": true,
+    "global_image_tag_changed": false,
+    "push_merge_publish_remote_deploy_or_delete": false,
+    "old_openrouter_429_cause": "not diagnosed by this successful Groq run"
+  },
+  "private_artifacts": [
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/active.json",
+      "sha256": "3c877555db3a1376c435d32f5da8fe4053943ee183ee0824e6d3a535582d1950"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/backend-gate.log",
+      "sha256": "592480a8cef4b3a99f6369ab9bab9c39f29521097bae4b24812a9407933cead3"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/campaign.json",
+      "sha256": "065e0db97a915003cf50ee78818240303898314713454cb86b3d999560c0108a"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/clean-clone-current-image.json",
+      "sha256": "2aaf35576476eecf43d7e2171b02008ac2cd14e55ffda519864e6d653bf769d7"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/clean-clone-tag-attempt.json",
+      "sha256": "39422736631ea98012188038e4eda269723ac41b5ab29c82e9a809475720a72e"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/api-evidence.json",
+      "sha256": "b8df89b694099c6351f4fde596ec8dc733fb6365530dd8fe2104951acb6303d5"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/attempt.json",
+      "sha256": "bde9ba3473a4c68ac5dc3ff0421331a9d59be7f3f87e38fabaa4037409ce1af0"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/live.stderr.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/live.stdout.json",
+      "sha256": "62fb4a7801c351866b3f0befc3c9e8fe33d036e8f36229f95a1f5571d6a23dbb"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/groq-smoke/outcome.json",
+      "sha256": "6063e615c595ebfb227fb60b0f2e1abd26faf914b2894dc900f354fb93cae435"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/independent-db-chaining.json",
+      "sha256": "91fe7a187dd3e4e504177ad46b0d3fe84921a5189e88129769a1a71ed9aed67e"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/manifest.json",
+      "sha256": "16715fe1173eb4e2e9e6f3927ae4337a14e2370bc96d1f943d8366a80d73a6c5"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/metadata-diagnostics/203b97121b4948ffb96a47377d5661a2.json",
+      "sha256": "00acd0864b35496ca0ed808377508bc74fc96954c4346bc2745d91b5df7af4a1"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/metadata-diagnostics/253c96f8cfae4205a27b602832c5e288.json",
+      "sha256": "7f6cf58b9a819c1d1ffffb5a919edb26b375d1d644a27d1577a5c18ca52fb01c"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/metadata-diagnostics/29e2f77dad8746f68a57fb675541b77f.json",
+      "sha256": "481fe197d3f7323d4fac8d47d7f90ea0e6430691b2bca52db6f578a6655b76ba"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/metadata-diagnostics/90ff280bc75d43bbade441622f4ae1d1.json",
+      "sha256": "ac9bb4c03dac350d2f0c8952690d88c77073fb6e0f805bc002a6cee54dcdd96b"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/metadata-diagnostics/9f1dc84c9cf5497c9dab34c519e934e3.json",
+      "sha256": "969c3a924105486215bcfe70c45bd875e8dbbd01943cfbe4ddcdd06e0f822971"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/metadata-diagnostics/aef8066557dd43c3a66db97e5bd944c7.json",
+      "sha256": "567e1e354121c145c274fa9d6a8d9a8ff59d29c2d2e087d00badf9d6cbb89984"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/operator-doctor.json",
+      "sha256": "899f65b4f8101362201d313bd1466092befe129db68c6fc0e9065f383cfbe9ed"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/operator-workflow-list.json",
+      "sha256": "a6ed774bb8e7e3cf84a9ee3a708f283a36d4b0c86021bc515e1589258230bcef"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/outcome.json",
+      "sha256": "62fca5f2b79d1ba52d8e8555c1a29d61093019cde62f9700686ca6e427f390ca"
+    },
+    {
+      "path": ".maos/direct-smoke/campaigns/groq-permissions-20261027/preflight.json",
+      "sha256": "57006ef971f8b5c399d59f1d12969278f39a1e42a03a7f42636439c3bc505bd6"
+    }
+  ],
+  "prior_public_evidence": [
+    "docs/release/openrouter-live-attempt.json",
+    "docs/release/openrouter-additional-attempt.json",
+    "docs/release/direct-campaign-attempt.json",
+    "docs/release/direct-preflight-diagnosis.json"
+  ],
+  "handoff_scope": "Final changes after tested runner commit are documentation/evidence and plan archival only; runtime source/image remain separate from final handoff HEAD."
+}

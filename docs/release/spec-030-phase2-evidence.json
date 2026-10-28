@@ -1,0 +1,272 @@
+{
+  "application_business_code_changed": false,
+  "application_lock_changed": false,
+  "base_decision": "Existing latest same-suite digest retained; no apt upgrades available; no suite migration or Essential removal",
+  "base_options": [
+    {
+      "digest": "sha256:12316debbfb86890f6b2d825820612741ba527ad5a44e3902759141d572bfe8f",
+      "reference": "python:3.12-slim@sha256:12316debbfb86890f6b2d825820612741ba527ad5a44e3902759141d572bfe8f",
+      "retrieved_at": "2026-10-27T16:07:18.422029+00:00",
+      "source": "https://registry-1.docker.io/v2/library/python/manifests/3.12-slim",
+      "tag": "3.12-slim"
+    },
+    {
+      "digest": "sha256:12316debbfb86890f6b2d825820612741ba527ad5a44e3902759141d572bfe8f",
+      "reference": "python:3.12-slim-trixie@sha256:12316debbfb86890f6b2d825820612741ba527ad5a44e3902759141d572bfe8f",
+      "retrieved_at": "2026-10-27T16:07:20.052198+00:00",
+      "source": "https://registry-1.docker.io/v2/library/python/manifests/3.12-slim-trixie",
+      "tag": "3.12-slim-trixie"
+    },
+    {
+      "digest": "sha256:6dd8b6dab6b3adc7812bab69eca5dbdc1a5cc690ad28306d234ffb4ef8ac9753",
+      "reference": "python:3.12-slim-bookworm@sha256:6dd8b6dab6b3adc7812bab69eca5dbdc1a5cc690ad28306d234ffb4ef8ac9753",
+      "retrieved_at": "2026-10-27T16:07:21.364109+00:00",
+      "source": "https://registry-1.docker.io/v2/library/python/manifests/3.12-slim-bookworm",
+      "tag": "3.12-slim-bookworm"
+    }
+  ],
+  "baseline_handoff": "f185c02c8399270ced6bb6d895c74116bd6e57ba",
+  "build_input_sha256": "86f6a9a6a47dfd34dc804c5ad8bd5558c7a40241e46dfaf2df7af726ae8a1e43",
+  "changes": [
+    "Purge non-essential unused mount (no autoremove/force-essential)",
+    "Uninstall pip and remove ensurepip from merged final runtime",
+    "Install dependencies with lock hashes in build stage; fresh inventory matches actual runtime",
+    "Compose application services cap_drop ALL / no-new-privileges, default non-root retained",
+    "Trivy records actual DB/image identity, full severities and separate OS/language counts; refuses missing OS results",
+    "Read-only runtime/vendor triage, same-DB comparison; no risk exemptions granted",
+    "Pinned Actions upload for exact sanitized proof files, scoped branch push filter; no remote execution"
+  ],
+  "commands": [
+    "MAOS_BUILD_NETWORK=host bash scripts/ci/release-gate.sh",
+    "bash scripts/ci/backend-gate.sh (isolated MAOS_TEST_DATABASE_URL and MAOS_TEST_POSTGRES_CONTAINER, generated JWT via process environment)",
+    "python3 -m unittest discover -s scripts/ops -p test_*.py",
+    "python3 scripts/ops/release_security.py scan-image --tool .maos/spec-030/tools/trivy --cache-dir .maos/spec-030/phase2/trivy-cache --skip-db-update --image <actual-image-id> --output <separate-baseline-or-candidate-directory>",
+    "python3 scripts/ops/verify_release_install.py --image multi-agent-os:spec030-281537a24220 --source 281537a24220f6a2fe2df2aaa438e1f9cb60a6a6 --directory .maos/spec-030/phase2/clean-install --project maos-spec030-p2-clean-install",
+    "python3 scripts/ops/os_vulnerability_triage.py --evidence .maos/spec-030/phase2 --output <sanitized-triage.json>"
+  ],
+  "comparison": {
+    "after": {
+      "CRITICAL": 0,
+      "HIGH": 40,
+      "LOW": 60,
+      "MEDIUM": 58,
+      "UNKNOWN": 1
+    },
+    "before": {
+      "CRITICAL": 0,
+      "HIGH": 44,
+      "LOW": 62,
+      "MEDIUM": 64,
+      "UNKNOWN": 1
+    },
+    "new_records": [],
+    "remaining_fixable_records": 1,
+    "remaining_no_scanner_fix_records": 158,
+    "removed_records": [
+      {
+        "class": "lang-pkgs",
+        "cve": "CVE-2025-8869",
+        "old_version": "25.0.1",
+        "package": "pip",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "MEDIUM"
+      },
+      {
+        "class": "lang-pkgs",
+        "cve": "CVE-2026-13346",
+        "old_version": "25.0.1",
+        "package": "pip",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "MEDIUM"
+      },
+      {
+        "class": "lang-pkgs",
+        "cve": "CVE-2026-1703",
+        "old_version": "25.0.1",
+        "package": "pip",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "LOW"
+      },
+      {
+        "class": "lang-pkgs",
+        "cve": "CVE-2026-3219",
+        "old_version": "25.0.1",
+        "package": "pip",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "MEDIUM"
+      },
+      {
+        "class": "lang-pkgs",
+        "cve": "CVE-2026-6357",
+        "old_version": "25.0.1",
+        "package": "pip",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "MEDIUM"
+      },
+      {
+        "class": "lang-pkgs",
+        "cve": "CVE-2026-8643",
+        "old_version": "25.0.1",
+        "package": "pip",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "MEDIUM"
+      },
+      {
+        "class": "os-pkgs",
+        "cve": "CVE-2022-0563",
+        "old_version": "2.41.5-0+deb13u1",
+        "package": "mount",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "LOW"
+      },
+      {
+        "class": "os-pkgs",
+        "cve": "CVE-2026-3184",
+        "old_version": "2.41.5-0+deb13u1",
+        "package": "mount",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "MEDIUM"
+      },
+      {
+        "class": "os-pkgs",
+        "cve": "CVE-2026-76642",
+        "old_version": "2.41.5-0+deb13u1",
+        "package": "mount",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "HIGH"
+      },
+      {
+        "class": "os-pkgs",
+        "cve": "CVE-2026-78408",
+        "old_version": "2.41.5-0+deb13u1",
+        "package": "mount",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "HIGH"
+      },
+      {
+        "class": "os-pkgs",
+        "cve": "CVE-2026-78409",
+        "old_version": "2.41.5-0+deb13u1",
+        "package": "mount",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "HIGH"
+      },
+      {
+        "class": "os-pkgs",
+        "cve": "CVE-2026-78410",
+        "old_version": "2.41.5-0+deb13u1",
+        "package": "mount",
+        "reason": "PACKAGE_REMOVED_NOT_VERSION_FIXED",
+        "severity": "HIGH"
+      }
+    ],
+    "vendor_version_fixes_claimed": 0
+  },
+  "date": "2026-10-27",
+  "disclosure": {
+    "connector": "GET endpoint unsupported; fallback to public unauthenticated documented API",
+    "credential_sent": false,
+    "enabled": false,
+    "http_status": 200,
+    "method": "GET",
+    "observed_at": "2026-10-27T16:08:12.186413+00:00",
+    "url": "https://api.github.com/repos/hzjanuary/multi-agent-system/private-vulnerability-reporting"
+  },
+  "gates": {
+    "backend": {
+      "black": "PASS;124 files",
+      "failed": 0,
+      "lock": "PASS",
+      "passed": 242,
+      "ruff": "PASS",
+      "strict_mypy": "PASS;122 source files",
+      "warnings": 2
+    },
+    "compose": "PASS; canonical/development and actual API/worker containment delivery",
+    "installation": "PASS; zero initial users/runs/events, explicit fresh verification bootstrap, API/worker healthy, doctor ready, separate CLI login/discovery; auth0600",
+    "ops_security": {
+      "failed": 0,
+      "passed": 79
+    },
+    "python_audit": {
+      "dependencies": 58,
+      "known_findings": 0,
+      "limitation": "Trivy separately retains one Mako Windows-path MEDIUM; advisory coverage differs, not suppressed",
+      "tool": "pip-audit2.10.1"
+    },
+    "secret_index_artifacts": "PASS; full tracked index/worktree; private path/source/context/image/license gates",
+    "security": "FAIL;40 HIGH; no exception or ignore-unfixed"
+  },
+  "host_triage_source": "f5a1bc79d282dbd78642ca1961d4173950fd4884",
+  "image": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+  "image_scope": "Local OCI index identity, not a published registry artifact",
+  "platform": "linux/amd64",
+  "postgres_redis_changed": false,
+  "publication": "NO-GO; no residual-risk acceptance or final owner publication approval",
+  "remote_ci": "NOT_RUN; candidate not pushed; workflow must run on exact owner-approved future push",
+  "runtime_inventory": {
+    "manifest_sha256": "a5ccb15f92c72b8130017812b60bcf509d7993c86a1dd97ab80da1b7e01d6474",
+    "os_packages": 86,
+    "python_distributions": 58,
+    "shipped_files": 170
+  },
+  "sbom": {
+    "format": "CycloneDX",
+    "public": "spec-030-phase2-sbom.cdx.json",
+    "sha256": "f20c8d9d921db1866d6739747bdc88afafe067103fcc0961a60e3d70b0c70d20"
+  },
+  "scan_provenance": {
+    "baseline": {
+      "binary_sha256": "d1dfca6ae10a1ad4540bb94e64f0510077c47008920a9b554986b39dca573d83",
+      "database": {
+        "DownloadedAt": "2026-10-27T15:14:44.805351599Z",
+        "NextUpdate": "2026-10-28T13:12:49.474279763Z",
+        "UpdatedAt": "2026-10-27T13:12:49.474279883Z",
+        "Version": 2
+      },
+      "database_sha256": "9d08581c36e14a521489a0f659093fd0bf435151361e6b01c13d2d6ec6672047",
+      "database_updates_disabled": true,
+      "ignore_unfixed": false,
+      "ignorefile": "/dev/null",
+      "image": "sha256:21f4073e53b9f3a657a933867c6d6921fd9634c1d503618da25224cc59c42100",
+      "observed_at": "2026-10-27T16:12:34.350481+00:00",
+      "scan_created_at": "2026-10-27T23:12:31.633675251+07:00",
+      "scanner": "Trivy",
+      "version": "v0.76.1"
+    },
+    "candidate": {
+      "binary_sha256": "d1dfca6ae10a1ad4540bb94e64f0510077c47008920a9b554986b39dca573d83",
+      "database": {
+        "DownloadedAt": "2026-10-27T15:14:44.805351599Z",
+        "NextUpdate": "2026-10-28T13:12:49.474279763Z",
+        "UpdatedAt": "2026-10-27T13:12:49.474279883Z",
+        "Version": 2
+      },
+      "database_sha256": "9d08581c36e14a521489a0f659093fd0bf435151361e6b01c13d2d6ec6672047",
+      "database_updates_disabled": true,
+      "ignore_unfixed": false,
+      "ignorefile": "/dev/null",
+      "image": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+      "observed_at": "2026-10-27T16:16:21.003445+00:00",
+      "scan_created_at": "2026-10-27T23:16:17.687636862+07:00",
+      "scanner": "Trivy",
+      "version": "v0.76.1"
+    },
+    "original_scan_unchanged": true,
+    "settings": "--scanners vuln --skip-db-update --ignorefile /dev/null; all severities; no ignore-unfixed"
+  },
+  "source_archive_at_runtime_build": {
+    "files": 235,
+    "sha256": "62db97f1b6bae4dae37c24ba532045061389bca2634ea7e304411cb01a75de31"
+  },
+  "spec029": {
+    "blocked": 0,
+    "historical_generation_requests": 5,
+    "new_generation_requests": 0,
+    "original_image": "sha256:0bd614b44c98c0bef95402bedee371dba46ed7ad50c68b704cb237ec3a03c959",
+    "original_source": "44a8c42373af1320986ad78d922aa79595775dbe",
+    "pass": 32
+  },
+  "tested_runtime_source": "281537a24220f6a2fe2df2aaa438e1f9cb60a6a6",
+  "verification_services": "Only new SPEC-030 phase2 services stopped, volumes/config/admin/CLI retained; historical and operator services unchanged"
+}

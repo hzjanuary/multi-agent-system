@@ -16,12 +16,9 @@ RoleDependency = Callable[[User], Awaitable[User]]
 class RoleName(StrEnum):
     """Supported application role names."""
 
-    ADMIN = "Admin"
-    MANAGER = "Manager"
-    SALES = "Sales"
-    LEGAL = "Legal"
-    FINANCE = "Finance"
-    VIEWER = "Viewer"
+    ADMIN = "admin"
+    OPERATOR = "operator"
+    VIEWER = "viewer"
 
 
 def normalize_role_name(role: str | RoleName) -> str:

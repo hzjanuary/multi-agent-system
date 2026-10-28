@@ -9,28 +9,18 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import create_access_token, create_refresh_token, hash_password
-from app.config import Settings, get_settings
+from app.config import Settings
 from app.core.dependencies import provide_db_session
-from app.db import create_database_engine, create_session_factory
 from app.main import create_app
 from app.models import User
 
 
 @pytest.fixture
 async def db_session() -> AsyncIterator[AsyncSession]:
-    """Provide a rollback-only database session for auth API tests."""
-    engine = create_database_engine(get_settings().database_url)
-    session_factory = create_session_factory(engine)
-    try:
-        async with session_factory() as session:
-            transaction = await session.begin()
-            try:
-                yield session
-            finally:
-                if transaction.is_active:
-                    await transaction.rollback()
-    finally:
-        await engine.dispose()
+    from app.tests.db_helpers import isolated_session
+
+    async with isolated_session() as session:
+        yield session
 
 
 @pytest.fixture
@@ -117,7 +107,7 @@ async def test_login_rejects_invalid_credentials(
     )
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid credentials"
+    assert response.json()["detail"]["code"] == "unauthorized"
 
 
 @pytest.mark.asyncio
@@ -133,7 +123,7 @@ async def test_login_rejects_inactive_user(
     )
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid credentials"
+    assert response.json()["detail"]["code"] == "unauthorized"
 
 
 @pytest.mark.asyncio
@@ -253,11 +243,20 @@ async def test_me_rejects_inactive_user(
 
 
 @pytest.mark.asyncio
-async def test_logout_returns_success(client: AsyncClient) -> None:
-    response = await client.post("/api/v1/auth/logout")
-
+async def test_logout_returns_success(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    user = await create_test_user(db_session)
+    tokens = await login(client, email=user.email, password="correct-password")
+    response = await client.post(
+        "/api/v1/auth/logout", json={"refresh_token": tokens["refresh_token"]}
+    )
     assert response.status_code == 200
     assert response.json() == {"success": True}
+    replay = await client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": tokens["refresh_token"]}
+    )
+    assert replay.status_code == 401
 
 
 @pytest.mark.asyncio
@@ -305,3 +304,26 @@ async def test_me_does_not_log_bearer_token(
 
     assert response.status_code == 200
     assert access_token not in str(logged_events)
+
+
+async def test_refresh_rotation_rejects_reused_token(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    from hashlib import sha256
+
+    from sqlalchemy import select
+
+    from app.models.refresh_session import RefreshSession
+
+    user = await create_test_user(db_session)
+    tokens = await login(client, email=user.email, password="correct-password")
+    refresh = tokens["refresh_token"]
+    stored = (await db_session.scalars(select(RefreshSession))).all()
+    assert len(stored) == 1
+    assert stored[0].token_hash == sha256(refresh.encode()).hexdigest()
+    assert stored[0].token_hash != refresh
+    rotated = await client.post("/api/v1/auth/refresh", json={"refresh_token": refresh})
+    assert rotated.status_code == 200
+    assert rotated.json()["refresh_token"] != refresh
+    replay = await client.post("/api/v1/auth/refresh", json={"refresh_token": refresh})
+    assert replay.status_code == 401

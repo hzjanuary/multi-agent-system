@@ -1,135 +1,134 @@
+# One application image. All persistent services stay on the private network.
+x-application: &application
+  image: ${MAOS_IMAGE:-multi-agent-os:local}
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+    target: runtime
+  environment: &runtime-environment
+    APP_NAME: ${APP_NAME:-Multi-Agent OS}
+    APP_ENV: ${APP_ENV:-production}
+    DEBUG: ${DEBUG:-false}
+    DATABASE_URL: ${DATABASE_URL:?Run config init and select a new database}
+    JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Run config init to generate secrets}
+    JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+    REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    API_V1_PREFIX: /api/v1
+    BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-}
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    LOG_FORMAT: ${LOG_FORMAT:-json}
+    LOG_REDACTION_ENABLED: ${LOG_REDACTION_ENABLED:-true}
+    LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+    LLM_MODEL: ${LLM_MODEL:-}
+    OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    OPENAI_COMPATIBLE_BASE_URL: ${OPENAI_COMPATIBLE_BASE_URL:-}
+    OPENAI_COMPATIBLE_API_KEY: ${OPENAI_COMPATIBLE_API_KEY:-}
+    GROQ_API_KEY: ${GROQ_API_KEY:-}
+    GROQ_REASONING_EFFORT: ${GROQ_REASONING_EFFORT:-}
+    OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    OPENROUTER_PROVIDER_PREFERENCES: ${OPENROUTER_PROVIDER_PREFERENCES:-}
+    GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-60}
+    LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-2}
+    LLM_MAX_OUTPUT_TOKENS: ${LLM_MAX_OUTPUT_TOKENS:-1024}
+    MAOS_EXTENSION_MODULES: ${MAOS_EXTENSION_MODULES:-}
+    WORKER_HEARTBEAT_SECONDS: ${WORKER_HEARTBEAT_SECONDS:-10}
+    WORKER_LEASE_SECONDS: ${WORKER_LEASE_SECONDS:-60}
+    WORKER_POLL_SECONDS: ${WORKER_POLL_SECONDS:-1}
+    WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-1}
+    MAX_WORKFLOW_NODES: ${MAX_WORKFLOW_NODES:-32}
+    MAX_PROVIDER_CALLS: ${MAX_PROVIDER_CALLS:-16}
+    MAX_INPUT_BYTES: ${MAX_INPUT_BYTES:-65536}
+    MAX_NODE_OUTPUT_BYTES: ${MAX_NODE_OUTPUT_BYTES:-65536}
+    MAX_RUN_BYTES: ${MAX_RUN_BYTES:-1048576}
+    MAX_EVENT_PAYLOAD_BYTES: ${MAX_EVENT_PAYLOAD_BYTES:-4096}
+    ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+    REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+    READINESS_TIMEOUT_SECONDS: ${READINESS_TIMEOUT_SECONDS:-2}
+    METRICS_ENABLED: ${METRICS_ENABLED:-true}
+    METRICS_ROUTE_ENABLED: ${METRICS_ROUTE_ENABLED:-false}
+    METRICS_MAX_PATH_LABEL_LENGTH: ${METRICS_MAX_PATH_LABEL_LENGTH:-120}
+  extra_hosts:
+    - host.docker.internal:host-gateway
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  restart: unless-stopped
+
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: runtime
-    container_name: enterprise-os-backend
-    environment:
-      APP_NAME: "Enterprise Multi-Agent OS"
-      APP_ENV: development
-      DEBUG: "true"
-      API_V1_PREFIX: /api/v1
-      BACKEND_CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
-      LOG_LEVEL: INFO
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/enterprise_os
-      REDIS_URL: redis://redis:6379/0
-      QDRANT_URL: http://qdrant:6333
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET_NAME: enterprise-multi-agent-os
-      LLM_PROVIDER: fake
-      LLM_MODEL: ""
-      LLM_RUNTIME_ENABLED: "false"
-      LLM_TIMEOUT_SECONDS: "30"
-      LLM_MAX_RETRIES: "2"
-      LLM_FALLBACK_ENABLED: "false"
-      LLM_FALLBACK_PROVIDER: fake
-      GROQ_API_KEY: ""
-      GROQ_MODEL: ""
-      OPENROUTER_API_KEY: ""
-      OPENROUTER_MODEL: ""
-      GEMINI_API_KEY: ""
-      GEMINI_MODEL: ""
-      OLLAMA_BASE_URL: http://host.docker.internal:11434
-      OLLAMA_MODEL: ""
+  api:
+    <<: *application
     ports:
-      - "8000:8000"
+      - 127.0.0.1:${MAOS_API_PORT:-8000}:8000
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-      qdrant:
-        condition: service_started
-      minio:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
-      interval: 30s
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=3).read()"]
+      interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 20s
-    restart: unless-stopped
+      start_period: 15s
 
-  backend-test:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: dev
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/enterprise_os
-      REDIS_URL: redis://redis:6379/0
-      QDRANT_URL: http://qdrant:6333
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET_NAME: enterprise-multi-agent-os
-    command: ["pytest"]
+  worker:
+    <<: *application
+    command: [python, -m, app.worker]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -m, app.worker, --healthcheck]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   postgres:
-    image: postgres:16-alpine
-    container_name: enterprise-os-postgres
+    image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: enterprise_os
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-maos}
+      POSTGRES_USER: ${POSTGRES_USER:-maos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run config init to generate secrets}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - maos_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d enterprise_os"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 12
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
-    container_name: enterprise-os-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+    image: redis:7-alpine@sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af
+    command: [redis-server, --save, '', --appendonly, 'no']
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 12
     restart: unless-stopped
 
-  qdrant:
-    image: qdrant/qdrant:v1.12.5
-    container_name: enterprise-os-qdrant
-    ports:
-      - "6333:6333"
-    volumes:
-      - qdrant_data:/qdrant/storage
-    restart: unless-stopped
-
-  minio:
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
-    container_name: enterprise-os-minio
-    command: server /data --console-address ":9001"
+  cli:
+    <<: *application
+    profiles: [cli]
+    user: ${MAOS_UID:?Run config init}:${MAOS_GID:?Run config init}
+    entrypoint: [python, -m, app.cli]
+    command: [--help]
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+      <<: *runtime-environment
+      MAOS_API_URL: http://api:8000
+      MAOS_AUTH_FILE: /cli/auth.json
+      HOME: /cli
     volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./.maos/cli:/cli
+    restart: 'no'
+
+  ollama:
+    image: ollama/ollama:0.13.5@sha256:2c9595c555fd70a28363489ac03bd5bf9e7c5bdf2890373c3a830ffd7252ce6d
+    profiles: [ollama]
+    volumes:
+      - maos_ollama_data:/root/.ollama
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-  redis_data:
-  qdrant_data:
-  minio_data:
+  maos_postgres_data:
+  maos_ollama_data:

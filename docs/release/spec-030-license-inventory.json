@@ -1,0 +1,1641 @@
+{
+  "certifi_source": {
+    "installed_readable_source": "/usr/local/lib/python3.12/site-packages/certifi/cacert.pem",
+    "license": "MPL-2.0",
+    "notice": "The unmodified readable PEM source and upstream notice are shipped; MPL does not relicense application code.",
+    "sha256": "2ef52ad56b4803e264045c915e55c236cbfa045b84b81efefc218a19eb44bd2b"
+  },
+  "claim": "License declarations and notice integrity are recorded; no universal legal compatibility or enterprise certification is asserted.",
+  "deployment_stack": {
+    "base_os": {
+      "image": "python:3.12-slim@sha256:12316debbfb86890f6b2d825820612741ba527ad5a44e3902759141d572bfe8f",
+      "licenses": "Python PSF license plus individual Debian component copyright/common-license files; image inventory enumerates installed versions and locations."
+    },
+    "external_models": {
+      "privacy": "Self-hosting the runtime does not make remote model processing local. Test opt-ins are not production defaults.",
+      "scope": "No model weights distributed. Groq, Cloudflare Workers AI, OpenRouter, Gemini, local-model weights and other endpoints have independent provider/model/data terms."
+    },
+    "infrastructure": [
+      {
+        "component": "PostgreSQL",
+        "image": "postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+        "license": "PostgreSQL License plus container OS/package licenses",
+        "upstream": "https://www.postgresql.org/about/licence/"
+      },
+      {
+        "component": "Redis 7.4",
+        "disposition": "Retained by explicit SPEC-030 authority; do not describe the entire stack as MIT/OSI-only. Valkey migration is a separate future architectural decision.",
+        "image": "redis:7-alpine@sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af",
+        "license": "RSALv2 OR SSPLv1; source-available, neither is OSI-approved",
+        "upstream": "https://redis.io/legal/licenses/"
+      },
+      {
+        "component": "Optional Ollama",
+        "image": "ollama/ollama:0.13.5@sha256:2c9595c555fd70a28363489ac03bd5bf9e7c5bdf2890373c3a830ffd7252ce6d",
+        "license": "Ollama software terms separate from any operator-installed model weights",
+        "upstream": "https://github.com/ollama/ollama/blob/main/LICENSE"
+      }
+    ],
+    "project": {
+      "license": "MIT",
+      "name": "Multi-Agent OS",
+      "scope": "Project-owned source only; canonical root LICENSE and NOTICE copied into image"
+    },
+    "python_dependencies": "See actual installed inventory and complete notice files; MPL, Apache, BSD and other declarations are not replaced by MIT."
+  },
+  "license_texts": [
+    {
+      "file": "release/third-party/MPL-2.0.txt",
+      "license": "MPL-2.0",
+      "path": "texts/MPL-2.0.txt",
+      "reason": "Full official MPL-2.0 text accompanies certifi notice; certifi cacert.pem source is distributed as readable PEM with the installed package.",
+      "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
+      "upstream_url": "https://www.mozilla.org/MPL/2.0/index.txt"
+    }
+  ],
+  "os": {
+    "common_license_directory": "/usr/share/common-licenses",
+    "packages": [
+      {
+        "copyright_file": "/usr/share/doc/adduser/copyright",
+        "name": "adduser",
+        "sha256": "46a62796c410dd88c0df99066519127a29ddca803078f7a8554fc779c30101bb",
+        "version": "3.152"
+      },
+      {
+        "copyright_file": "/usr/share/doc/apt/copyright",
+        "name": "apt",
+        "sha256": "77ab918ade9bce20b07524572fc8eab3f8c0cab4d246f282043892aaa9538803",
+        "version": "3.0.3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/base-files/copyright",
+        "name": "base-files",
+        "sha256": "c84c664bce3a83eaa327bb9e354c0df588bc535b5e95474aab7ca3cce74937cd",
+        "version": "13.8+deb13u7"
+      },
+      {
+        "copyright_file": "/usr/share/doc/base-passwd/copyright",
+        "name": "base-passwd",
+        "sha256": "0f1cde79bd80a75f9029ae9a8c252b642223027ef36f6989c63a8230aae576a7",
+        "version": "3.6.7"
+      },
+      {
+        "copyright_file": "/usr/share/doc/bash/copyright",
+        "name": "bash",
+        "sha256": "06319d84c3e5ed096036f6a9310a030c7e84e50dff2b8a6792285c83ec0ada73",
+        "version": "5.2.37-2+b10"
+      },
+      {
+        "copyright_file": "/usr/share/doc/bsdutils/copyright",
+        "name": "bsdutils",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "1:2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/ca-certificates/copyright",
+        "name": "ca-certificates",
+        "sha256": "e85e1bcad3a915dc7e6f41412bc5bdeba275cadd817896ea0451f2140a93967c",
+        "version": "20250419+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/coreutils/copyright",
+        "name": "coreutils",
+        "sha256": "3a63d4b11a7ba4c1c17175072ea28e07b0f80c7bc1ca042b27431fe65a14755b",
+        "version": "9.7-3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/dash/copyright",
+        "name": "dash",
+        "sha256": "d98c53f281321baad38164aa9ae6e368a9253be6ec51bd26a759b5e72b326f4a",
+        "version": "0.5.12-12"
+      },
+      {
+        "copyright_file": "/usr/share/doc/debconf/copyright",
+        "name": "debconf",
+        "sha256": "57163c71bd8a5289660892827dd0dfaa7fef47f89deedc9dc6711ced7d0a28d7",
+        "version": "1.5.91"
+      },
+      {
+        "copyright_file": "/usr/share/doc/debian-archive-keyring/copyright",
+        "name": "debian-archive-keyring",
+        "sha256": "8f918c0bebd1454a084698a95c09d9a03cec8453dad1fc6eab9e6427da9d33a9",
+        "version": "2025.1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/debianutils/copyright",
+        "name": "debianutils",
+        "sha256": "aeb68ea374f488431b8963df24f05482692edfa70d7556d7e528dd06d255461c",
+        "version": "5.23.2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/diffutils/copyright",
+        "name": "diffutils",
+        "sha256": "ac6fcf18142bab7569188ae75b204a9e1c73c050c0f9467adaf080759e516123",
+        "version": "1:3.10-4"
+      },
+      {
+        "copyright_file": "/usr/share/doc/dpkg/copyright",
+        "name": "dpkg",
+        "sha256": "3376ec6f7bebf6b1e55da9d5dc591c73e752b45dccb0488e8365d2cf216a1746",
+        "version": "1.22.22"
+      },
+      {
+        "copyright_file": "/usr/share/doc/findutils/copyright",
+        "name": "findutils",
+        "sha256": "f51541fbdfe15c01cd3fd3a06ad3b74478902d36a958d95b1756434979d97ed5",
+        "version": "4.10.0-3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/gcc-14-base/copyright",
+        "name": "gcc-14-base:amd64",
+        "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+        "version": "14.2.0-19"
+      },
+      {
+        "copyright_file": "/usr/share/doc/grep/copyright",
+        "name": "grep",
+        "sha256": "42d9b4d610396b1e8d1303dcb9487af3f5a2d2709623cf03a04cf76acdf6c5e3",
+        "version": "3.11-4"
+      },
+      {
+        "copyright_file": "/usr/share/doc/gzip/copyright",
+        "name": "gzip",
+        "sha256": "02c197fa26ad056ed2382bb8c3e6323d47edfda4539f727b4ab3f4dbf64ac413",
+        "version": "1.13-1+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/hostname/copyright",
+        "name": "hostname",
+        "sha256": "94189fc5a9a7b7224d96e1a0cfdfe9be0df2018b04bf21d591627ab96b30cad1",
+        "version": "3.25"
+      },
+      {
+        "copyright_file": "/usr/share/doc/init-system-helpers/copyright",
+        "name": "init-system-helpers",
+        "sha256": "7534601cc4fa513804d16490359f5831e7b6a1212da3bbf948bebdd4c8799783",
+        "version": "1.69~deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libacl1/copyright",
+        "name": "libacl1:amd64",
+        "sha256": "9a2dfb4a5abc7e84be2cc41f1089be665519c9409549296f6c19de57ab1d37c2",
+        "version": "2.3.2-2+b1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libapt-pkg7.0/copyright",
+        "name": "libapt-pkg7.0:amd64",
+        "sha256": "77ab918ade9bce20b07524572fc8eab3f8c0cab4d246f282043892aaa9538803",
+        "version": "3.0.3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libattr1/copyright",
+        "name": "libattr1:amd64",
+        "sha256": "0cbec745d85ea775450b2d54fac55277197f429e52d611f72852ed420450620e",
+        "version": "1:2.5.2-3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libaudit-common/copyright",
+        "name": "libaudit-common",
+        "sha256": "6c7011e93f643b112c4cc3622131e28a30477afad6c4f5efe466b13aa7f603cc",
+        "version": "1:4.0.2-2+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libaudit1/copyright",
+        "name": "libaudit1:amd64",
+        "sha256": "6c7011e93f643b112c4cc3622131e28a30477afad6c4f5efe466b13aa7f603cc",
+        "version": "1:4.0.2-2+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libblkid1/copyright",
+        "name": "libblkid1:amd64",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libbsd0/copyright",
+        "name": "libbsd0:amd64",
+        "sha256": "47eaa031b1741a33a93e7cc8909bfe153acaec7ddff12e4dc7377d0e2ec10e91",
+        "version": "0.12.2-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libbz2-1.0/copyright",
+        "name": "libbz2-1.0:amd64",
+        "sha256": "832ed535ff3c3d025a8d2348eb1b697b89addcf2eaadbc17650262040b9145e2",
+        "version": "1.0.8-6"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libc-bin/copyright",
+        "name": "libc-bin",
+        "sha256": "f5788886720a2605a946e81d571e6c8162b09f58d2e2ceb8d36e5768fccd850d",
+        "version": "2.41-12+deb13u4"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libc6/copyright",
+        "name": "libc6:amd64",
+        "sha256": "f5788886720a2605a946e81d571e6c8162b09f58d2e2ceb8d36e5768fccd850d",
+        "version": "2.41-12+deb13u4"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libcap-ng0/copyright",
+        "name": "libcap-ng0:amd64",
+        "sha256": "567997de097e3738564c90e6fe13343b2daae21a7926d6fb161df41322c1840b",
+        "version": "0.8.5-4+b1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libcap2/copyright",
+        "name": "libcap2:amd64",
+        "sha256": "04f9fb974e10f6ca0cd226811f72b3855f8383daad0e5de7adac8d5b0b7796c3",
+        "version": "1:2.75-10+deb13u1+b3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libcrypt1/copyright",
+        "name": "libcrypt1:amd64",
+        "sha256": "5a5e7ca0e9f3f9679977e3a3e9ede45ad92885a3297ea78e766979f9866c5a16",
+        "version": "1:4.4.38-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libdb5.3t64/copyright",
+        "name": "libdb5.3t64:amd64",
+        "sha256": "8b53da37d73289d9df7317b3a2dbe16491f1fa9fec8b77b86d69704b40ce2c26",
+        "version": "5.3.28+dfsg2-9"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libdebconfclient0/copyright",
+        "name": "libdebconfclient0:amd64",
+        "sha256": "cf63099896d1c0f6529c41b8d95738e6fea342ffba609187d339c4f38ce36ecc",
+        "version": "0.280"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libffi8/copyright",
+        "name": "libffi8:amd64",
+        "sha256": "25ee86cfccc2b7eb9a156a127f1e1b38c46c231f516ff201912223eaf62ee186",
+        "version": "3.4.8-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libgcc-s1/copyright",
+        "name": "libgcc-s1:amd64",
+        "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+        "version": "14.2.0-19"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libgdbm6t64/copyright",
+        "name": "libgdbm6t64:amd64",
+        "sha256": "c68f7e6c9b84dd360916a21c951a11829cc55b8793d66094dbfc39eba1618696",
+        "version": "1.24-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libgmp10/copyright",
+        "name": "libgmp10:amd64",
+        "sha256": "7d366aef5ba325150246de1d7820c4c9926cd27ca61a69948492b26cd3b61601",
+        "version": "2:6.3.0+dfsg-3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libhogweed6t64/copyright",
+        "name": "libhogweed6t64:amd64",
+        "sha256": "344396197142cd506468b20029ea5722d507c980129bb3db4af02424ed6f39c6",
+        "version": "3.10.1-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/liblastlog2-2/copyright",
+        "name": "liblastlog2-2:amd64",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/liblz4-1/copyright",
+        "name": "liblz4-1:amd64",
+        "sha256": "8dce0cb8c5a4486e4aac00466e4dd4b0b5b28d70efe3b3256ea4594099a8509c",
+        "version": "1.10.0-4"
+      },
+      {
+        "copyright_file": "/usr/share/doc/liblzma5/copyright",
+        "name": "liblzma5:amd64",
+        "sha256": "d755588e2d89d7845d0d4e718ac45d49ae9fc53cec4540af105963c20598f9d7",
+        "version": "5.8.1-1+deb13u2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libmd0/copyright",
+        "name": "libmd0:amd64",
+        "sha256": "4365ef6255ad553fce69dd4bc0e093472c5d0e41b8ea493a545cc926ce171aa6",
+        "version": "1.1.0-2+b1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libmount1/copyright",
+        "name": "libmount1:amd64",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libncursesw6/copyright",
+        "name": "libncursesw6:amd64",
+        "sha256": "f838d6048fbc59356b7e56c207a7cb32dc6bf4adea95514a002596bde8f6e1e7",
+        "version": "6.5+20250216-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libnettle8t64/copyright",
+        "name": "libnettle8t64:amd64",
+        "sha256": "344396197142cd506468b20029ea5722d507c980129bb3db4af02424ed6f39c6",
+        "version": "3.10.1-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libpam-modules/copyright",
+        "name": "libpam-modules:amd64",
+        "sha256": "6b11ef9ab5429d9618cc72e8dfd4efefde363165ef174be0549918e0c44f5dcb",
+        "version": "1.7.0-5"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libpam-modules-bin/copyright",
+        "name": "libpam-modules-bin",
+        "sha256": "6b11ef9ab5429d9618cc72e8dfd4efefde363165ef174be0549918e0c44f5dcb",
+        "version": "1.7.0-5"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libpam-runtime/copyright",
+        "name": "libpam-runtime",
+        "sha256": "6b11ef9ab5429d9618cc72e8dfd4efefde363165ef174be0549918e0c44f5dcb",
+        "version": "1.7.0-5"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libpam0g/copyright",
+        "name": "libpam0g:amd64",
+        "sha256": "6b11ef9ab5429d9618cc72e8dfd4efefde363165ef174be0549918e0c44f5dcb",
+        "version": "1.7.0-5"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libpcre2-8-0/copyright",
+        "name": "libpcre2-8-0:amd64",
+        "sha256": "e915cde4251f96ec6af107ecd2e194440a4e69440893b0c982802f8a1e4ae40a",
+        "version": "10.46-1~deb13u3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libreadline8t64/copyright",
+        "name": "libreadline8t64:amd64",
+        "sha256": "854c6f5f249a109a913e1e58528445c4fec96f063ae8ba496bfb2b460bcc6866",
+        "version": "8.2-6"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libseccomp2/copyright",
+        "name": "libseccomp2:amd64",
+        "sha256": "6da0653a365b80ab31478dbfe9e7c358e80d58b6d2b52b4e16b4dbb42d7d9f5c",
+        "version": "2.6.0-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libselinux1/copyright",
+        "name": "libselinux1:amd64",
+        "sha256": "864f1bb189f609075d580b8c4aada16d85a44546884f1687989e1cacc8c56751",
+        "version": "3.8.1-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libsemanage-common/copyright",
+        "name": "libsemanage-common",
+        "sha256": "fe5876a94047cafbeb8b164fd98304912d94b6028e19415f08b7a8a2f90645fe",
+        "version": "3.8.1-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libsemanage2/copyright",
+        "name": "libsemanage2:amd64",
+        "sha256": "fe5876a94047cafbeb8b164fd98304912d94b6028e19415f08b7a8a2f90645fe",
+        "version": "3.8.1-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libsepol2/copyright",
+        "name": "libsepol2:amd64",
+        "sha256": "78d2a34606a0302057ec499a3b3c07bcbc43ca334064ce4c80891a0f69c8f6c6",
+        "version": "3.8.1-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libsmartcols1/copyright",
+        "name": "libsmartcols1:amd64",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libsqlite3-0/copyright",
+        "name": "libsqlite3-0:amd64",
+        "sha256": "7b1679aaa97e6e49ec12460eefa85a82b432053bc468dd89dbdb50f2326589f3",
+        "version": "3.46.1-7+deb13u2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libssl3t64/copyright",
+        "name": "libssl3t64:amd64",
+        "sha256": "6a7da622fe0637a334d2a8fc470852d2ffb77d9a2b2f930f854e32a41ad6ef35",
+        "version": "3.5.7-1~deb13u3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libstdc++6/copyright",
+        "name": "libstdc++6:amd64",
+        "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+        "version": "14.2.0-19"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libsystemd0/copyright",
+        "name": "libsystemd0:amd64",
+        "sha256": "a79e4b379cabbd960bb44f6cc1a069081a3778c59a25ee529b68df5a2cb7d27d",
+        "version": "257.13-1~deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libtinfo6/copyright",
+        "name": "libtinfo6:amd64",
+        "sha256": "f838d6048fbc59356b7e56c207a7cb32dc6bf4adea95514a002596bde8f6e1e7",
+        "version": "6.5+20250216-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libudev1/copyright",
+        "name": "libudev1:amd64",
+        "sha256": "a79e4b379cabbd960bb44f6cc1a069081a3778c59a25ee529b68df5a2cb7d27d",
+        "version": "257.13-1~deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libuuid1/copyright",
+        "name": "libuuid1:amd64",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libxxhash0/copyright",
+        "name": "libxxhash0:amd64",
+        "sha256": "81affefe3047c8a88a9e4c94c8c698f51a7e0787e75b58e901bf1f8fcd433f58",
+        "version": "0.8.3-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/libzstd1/copyright",
+        "name": "libzstd1:amd64",
+        "sha256": "5cec9fef4d3fa7e0371fbef4ec3fc416e0105dc2a9922117f84e825cb11f50f8",
+        "version": "1.5.7+dfsg-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/login/copyright",
+        "name": "login",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/login.defs/copyright",
+        "name": "login.defs",
+        "sha256": "305494b6f5f6bb65ead9160077d4fdf45ccdf06de7c958ff96f27a632b8729a3",
+        "version": "1:4.17.4-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/mawk/copyright",
+        "name": "mawk",
+        "sha256": "f6b94f461b09398ef192207356d89d7bf59833fe03082a14b910b3c740f2a318",
+        "version": "1.3.4.20250131-1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/mount/copyright",
+        "name": "mount",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/ncurses-base/copyright",
+        "name": "ncurses-base",
+        "sha256": "f838d6048fbc59356b7e56c207a7cb32dc6bf4adea95514a002596bde8f6e1e7",
+        "version": "6.5+20250216-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/ncurses-bin/copyright",
+        "name": "ncurses-bin",
+        "sha256": "f838d6048fbc59356b7e56c207a7cb32dc6bf4adea95514a002596bde8f6e1e7",
+        "version": "6.5+20250216-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/netbase/copyright",
+        "name": "netbase",
+        "sha256": "795b66147ea5ad692991caa7008ece551fb0fa88b9c53656223bd1518dc58ab2",
+        "version": "6.5"
+      },
+      {
+        "copyright_file": "/usr/share/doc/openssl/copyright",
+        "name": "openssl",
+        "sha256": "6a7da622fe0637a334d2a8fc470852d2ffb77d9a2b2f930f854e32a41ad6ef35",
+        "version": "3.5.7-1~deb13u3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/openssl-provider-legacy/copyright",
+        "name": "openssl-provider-legacy",
+        "sha256": "6a7da622fe0637a334d2a8fc470852d2ffb77d9a2b2f930f854e32a41ad6ef35",
+        "version": "3.5.7-1~deb13u3"
+      },
+      {
+        "copyright_file": "/usr/share/doc/passwd/copyright",
+        "name": "passwd",
+        "sha256": "305494b6f5f6bb65ead9160077d4fdf45ccdf06de7c958ff96f27a632b8729a3",
+        "version": "1:4.17.4-2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/perl-base/copyright",
+        "name": "perl-base",
+        "sha256": "8adf04cb72ca0719dee8fdb8d711768548d10373905eac21e8a640881c230257",
+        "version": "5.40.1-6+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/readline-common/copyright",
+        "name": "readline-common",
+        "sha256": "854c6f5f249a109a913e1e58528445c4fec96f063ae8ba496bfb2b460bcc6866",
+        "version": "8.2-6"
+      },
+      {
+        "copyright_file": "/usr/share/doc/sed/copyright",
+        "name": "sed",
+        "sha256": "719320e425e8e6da53a55e0fcfa2f2ed9b1332cea16abd65321bd651b2a88568",
+        "version": "4.9-2+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/sqv/copyright",
+        "name": "sqv",
+        "sha256": "b7ae2cde83ad585eae83cded853d125b034fcef480f6c4cee6d9ddd63327181a",
+        "version": "1.3.0-3+b2"
+      },
+      {
+        "copyright_file": "/usr/share/doc/sysvinit-utils/copyright",
+        "name": "sysvinit-utils",
+        "sha256": "53c7ef3839f64b24cc25a0937d11ce228517a48be0cc794f0d67b7e209b2a9ba",
+        "version": "3.14-4"
+      },
+      {
+        "copyright_file": "/usr/share/doc/tar/copyright",
+        "name": "tar",
+        "sha256": "a0a44d41b2a045eb5946a8952487151cfa6ff0cd080bbf4b2eec220751d23024",
+        "version": "1.35+dfsg-3.1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/tzdata/copyright",
+        "name": "tzdata",
+        "sha256": "cb61132bc0fc7b26ef5a82ee18b2fb644a1362f4f286ed980ff22e408471f59a",
+        "version": "2026e-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/util-linux/copyright",
+        "name": "util-linux",
+        "sha256": "56b67e2eb8bac5a15d91e261d558d73f1f029113cced229753138194997366b6",
+        "version": "2.41.5-0+deb13u1"
+      },
+      {
+        "copyright_file": "/usr/share/doc/zlib1g/copyright",
+        "name": "zlib1g:amd64",
+        "sha256": "9e5b96d63773a5d177ba264254390f792be07e41748ebd94730981c6cac31cc6",
+        "version": "1:1.3.dfsg+really1.3.1-1+b1"
+      }
+    ],
+    "python_base_license": "/usr/local/lib/python3.12/LICENSE.txt",
+    "source_access": "Debian source packages: https://sources.debian.org/ ; Python: https://www.python.org/downloads/source/"
+  },
+  "project": {
+    "license": "MIT",
+    "materials": [
+      "project/LICENSE",
+      "project/NOTICE"
+    ]
+  },
+  "python": [
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "alembic",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/alembic-1.18.5.dist-info/licenses/LICENSE",
+          "path": "python/alembic/6e68d94a03a0-LICENSE",
+          "sha256": "6e68d94a03a0e3e327ddf3e86d1ebedc14eece3922022618fc246a36296fd0cc"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.18.5"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "annotated-doc",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/licenses/LICENSE",
+          "path": "python/annotated-doc/fff170779a6a-LICENSE",
+          "sha256": "fff170779a6acbf65abdb405c087f1cee1786691e4a96a4034517e4a504a0cdf"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.0.4"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": null,
+      "name": "annotated-types",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/annotated_types-0.7.0.dist-info/licenses/LICENSE",
+          "path": "python/annotated-types/fe1049884b1a-LICENSE",
+          "sha256": "fe1049884b1a0d9342901e88e07f32925d24b3121d9972b6a6805fb9824b095d"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.7.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "anyio",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/anyio-4.15.1.dist-info/licenses/LICENSE",
+          "path": "python/anyio/5361ac9dc58f-LICENSE",
+          "sha256": "5361ac9dc58f2ef5fd2e9b09c68297c17f04950909bbc8023bdb82eacf22c2b0"
+        }
+      ],
+      "supplemented": false,
+      "version": "4.15.1"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "argon2-cffi",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/argon2_cffi-25.1.0.dist-info/licenses/LICENSE",
+          "path": "python/argon2-cffi/b6944d386e87-LICENSE",
+          "sha256": "b6944d386e87ccf49d9632da083685a4b7624733e686a7fe283dd2d428341d77"
+        }
+      ],
+      "supplemented": false,
+      "version": "25.1.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "argon2-cffi-bindings",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/argon2_cffi_bindings-25.1.0.dist-info/licenses/LICENSE",
+          "path": "python/argon2-cffi-bindings/9c158d4f4336-LICENSE",
+          "sha256": "9c158d4f433627f48ac24b6b4d37970afe4172514673c5318014d7cca157c6df"
+        }
+      ],
+      "supplemented": false,
+      "version": "25.1.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "Apache-2.0",
+      "license_metadata": null,
+      "name": "asyncpg",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/asyncpg-0.31.0.dist-info/licenses/LICENSE",
+          "path": "python/asyncpg/d9222d73fdac-LICENSE",
+          "sha256": "d9222d73fdac50992174076efa04f44f6fbcd9d56155a7c7092e98757042a6f6"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.31.0"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)"
+      ],
+      "license_expression": null,
+      "license_metadata": "MPL-2.0",
+      "name": "certifi",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/certifi-2026.10.23.dist-info/licenses/LICENSE",
+          "path": "python/certifi/e93716da6b9c-LICENSE",
+          "sha256": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7"
+        },
+        {
+          "path": "python/certifi/certifi-2026.10.23-LICENSE",
+          "sha256": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7",
+          "upstream_evidence": {
+            "file": "release/third-party/certifi-2026.10.23-LICENSE",
+            "license": "MPL-2.0",
+            "member": "certifi-2026.10.23/LICENSE",
+            "package": "certifi",
+            "sha256": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7",
+            "source_distribution_sha256": "a9895e6e2758b371e0545e321a3a8fd1fcfd9829ada8824a936dfb16aaaf36cd",
+            "source_distribution_url": "https://files.pythonhosted.org/packages/fd/11/b524cbd9bbdaca58608e4cf4053fd463417549e1959fa8d3aa18319f9555/certifi-2026.10.23.tar.gz",
+            "version": "2026.10.23"
+          }
+        }
+      ],
+      "supplemented": true,
+      "version": "2026.10.23"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT-0",
+      "license_metadata": null,
+      "name": "cffi",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/cffi-2.1.0.dist-info/licenses/LICENSE",
+          "path": "python/cffi/5ba24ddc5706-LICENSE",
+          "sha256": "5ba24ddc57067f9249add644c3afc41a5d6dc37e23433ef759d95df370b0af63"
+        }
+      ],
+      "supplemented": false,
+      "version": "2.1.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "charset-normalizer",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/charset_normalizer-3.4.9.dist-info/licenses/LICENSE",
+          "path": "python/charset-normalizer/6d0d41bfe170-LICENSE",
+          "sha256": "6d0d41bfe170ac6c7dc248c9a63e254d0fb45a60d50a8257d0af92c6e249b887"
+        }
+      ],
+      "supplemented": false,
+      "version": "3.4.9"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "click",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/click-8.4.2.dist-info/licenses/LICENSE.txt",
+          "path": "python/click/9a8ad106a394-LICENSE.txt",
+          "sha256": "9a8ad106a394e853bfe21f42f4e72d592819a22805d991b5f3275029292b658d"
+        }
+      ],
+      "supplemented": false,
+      "version": "8.4.2"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata": "Apache License, Version 2.0",
+      "name": "distro",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/distro-1.9.0.dist-info/LICENSE",
+          "path": "python/distro/cb5e8e7e5f4a-LICENSE",
+          "sha256": "cb5e8e7e5f4a3988e1063c142c60dc2df75605f4c46515e776e3aca6df976e14"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.9.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "fastapi",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/fastapi-0.139.0.dist-info/licenses/LICENSE",
+          "path": "python/fastapi/4ec89ffc8148-LICENSE",
+          "sha256": "4ec89ffc81485b97fec584b2d4a961032eeffe834453894fd9c1274906cc744e"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.139.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT AND PSF-2.0",
+      "license_metadata": null,
+      "name": "greenlet",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/greenlet-3.5.3.dist-info/licenses/LICENSE",
+          "path": "python/greenlet/769831d6e5df-LICENSE",
+          "sha256": "769831d6e5dfaf2c20802faccff1fafb4c2025dd8f6253dfa47fcad59d4d0979"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/greenlet-3.5.3.dist-info/licenses/LICENSE.PSF",
+          "path": "python/greenlet/e5ff3c23c110-LICENSE.PSF",
+          "sha256": "e5ff3c23c110e494cd7d736c10fd96d462457bafeca310840db6527298c7d46b"
+        }
+      ],
+      "supplemented": false,
+      "version": "3.5.3"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "h11",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/h11-0.16.0.dist-info/licenses/LICENSE.txt",
+          "path": "python/h11/37db5bb85926-LICENSE.txt",
+          "sha256": "37db5bb85926db28a427a25867f10b1232003aea1be69ccb851138adb8e6f361"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.16.0"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "httpcore",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/httpcore-1.0.9.dist-info/licenses/LICENSE.md",
+          "path": "python/httpcore/fdcb59154c74-LICENSE.md",
+          "sha256": "fdcb59154c74cbaba16a11242f7740bea9f23d6feb5547917d8c5f94a80392a5"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.0.9"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "httptools",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/httptools-0.8.0.dist-info/licenses/LICENSE",
+          "path": "python/httptools/f4573e7cb767-LICENSE",
+          "sha256": "f4573e7cb7676745fb5b8d36fa548aa93e391cfb6872ddacd65130c45ea6a92d"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/httptools-0.8.0.dist-info/licenses/vendor/http-parser/LICENSE-MIT",
+          "path": "python/httptools/79e6ba8b687c-LICENSE-MIT",
+          "sha256": "79e6ba8b687cb54786207342b9b6fcee0ac10218453ed9009b84d949b2233cc0"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/httptools-0.8.0.dist-info/licenses/vendor/llhttp/LICENSE",
+          "path": "python/httptools/628168d68bb5-LICENSE",
+          "sha256": "628168d68bb5a8a17e0bbefb3bd74e326e1edc20583d76f52f457c82c921867d"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.8.0"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata": "BSD-3-Clause",
+      "name": "httpx",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/httpx-0.28.1.dist-info/licenses/LICENSE.md",
+          "path": "python/httpx/4ec59d544f12-LICENSE.md",
+          "sha256": "4ec59d544f12b5f539a3a716fd321ac58ccd8030b465221f2c880200cdf28d8d"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.28.1"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "idna",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/idna-3.18.dist-info/licenses/LICENSE.md",
+          "path": "python/idna/1a9a4f0e3d47-LICENSE.md",
+          "sha256": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04"
+        }
+      ],
+      "supplemented": false,
+      "version": "3.18"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata": "Modified BSD License",
+      "name": "jsonpatch",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/jsonpatch-1.33.dist-info/LICENSE",
+          "path": "python/jsonpatch/4393eb6733fa-LICENSE",
+          "sha256": "4393eb6733fa1e367f41769b382f4f1be7bf0daeb1e243ed92b3f5d8bafd236f"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.33"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata": "Modified BSD License",
+      "name": "jsonpointer",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/jsonpointer-3.1.1.dist-info/licenses/LICENSE.txt",
+          "path": "python/jsonpointer/d8b24f15d472-LICENSE.txt",
+          "sha256": "d8b24f15d472885f788a2d6e985850f264627b86012a17bb242c83f310d907e5"
+        }
+      ],
+      "supplemented": false,
+      "version": "3.1.1"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "langchain-core",
+      "notice_files": [
+        {
+          "path": "python/langchain-core/langchain-core-1.4.9-LICENSE",
+          "sha256": "4ec67e4ca6e6721dba849b2ca82261597c86a61ee214bbf21416006b7b2d0478",
+          "upstream_evidence": {
+            "file": "release/third-party/langchain-core-1.4.9-LICENSE",
+            "license": "MIT",
+            "package": "langchain-core",
+            "reason": "Wheel and exact-version sdist do not include a license file; supplement full upstream MIT text from immutable version-matching release commit.",
+            "sha256": "4ec67e4ca6e6721dba849b2ca82261597c86a61ee214bbf21416006b7b2d0478",
+            "upstream_revision": "1c3a4186cf2ba4f28face59118ac7786de009f91",
+            "upstream_url": "https://raw.githubusercontent.com/langchain-ai/langchain/1c3a4186cf2ba4f28face59118ac7786de009f91/LICENSE",
+            "version": "1.4.9",
+            "version_evidence_sha256": "d78adb0905d790726aeeefcdb110b13781b505174c13548ad7f60f5321fc883e",
+            "version_evidence_url": "https://raw.githubusercontent.com/langchain-ai/langchain/1c3a4186cf2ba4f28face59118ac7786de009f91/libs/core/pyproject.toml"
+          }
+        }
+      ],
+      "supplemented": true,
+      "version": "1.4.9"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "langchain-protocol",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/langchain_protocol-0.0.18.dist-info/licenses/LICENSE",
+          "path": "python/langchain-protocol/893e6e302758-LICENSE",
+          "sha256": "893e6e30275896912c21c77f9f7c112aba85fd985d05b26a29424cf7e511d177"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.0.18"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "langgraph",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/langgraph-1.2.17.dist-info/licenses/LICENSE",
+          "path": "python/langgraph/d9bb52f2e354-LICENSE",
+          "sha256": "d9bb52f2e3540d60ff50d8f0f5b6ba649b7fd346948c4c3d086c8afb120763c7"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.2.17"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "langgraph-checkpoint",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/langgraph_checkpoint-4.3.0.dist-info/licenses/LICENSE",
+          "path": "python/langgraph-checkpoint/d9bb52f2e354-LICENSE",
+          "sha256": "d9bb52f2e3540d60ff50d8f0f5b6ba649b7fd346948c4c3d086c8afb120763c7"
+        }
+      ],
+      "supplemented": false,
+      "version": "4.3.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "langgraph-prebuilt",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/langgraph_prebuilt-1.1.1.dist-info/licenses/LICENSE",
+          "path": "python/langgraph-prebuilt/d9bb52f2e354-LICENSE",
+          "sha256": "d9bb52f2e3540d60ff50d8f0f5b6ba649b7fd346948c4c3d086c8afb120763c7"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.1.1"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "langgraph-sdk",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/langgraph_sdk-0.4.9.dist-info/licenses/LICENSE",
+          "path": "python/langgraph-sdk/d9bb52f2e354-LICENSE",
+          "sha256": "d9bb52f2e3540d60ff50d8f0f5b6ba649b7fd346948c4c3d086c8afb120763c7"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.4.9"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "langsmith",
+      "notice_files": [
+        {
+          "path": "python/langsmith/langsmith-0.10.2-LICENSE",
+          "sha256": "34e0b9842c7a31d34e53bc7eb224e81e07a34996106e029bbc72dea2d449f496",
+          "upstream_evidence": {
+            "file": "release/third-party/langsmith-0.10.2-LICENSE",
+            "license": "MIT",
+            "package": "langsmith",
+            "reason": "Wheel and exact-version sdist do not include a license file; supplement full upstream MIT text from immutable version-matching release commit.",
+            "sha256": "34e0b9842c7a31d34e53bc7eb224e81e07a34996106e029bbc72dea2d449f496",
+            "upstream_revision": "687fc8d527a28504432f52bd08c75f2894c209fe",
+            "upstream_url": "https://raw.githubusercontent.com/langchain-ai/langsmith-sdk/687fc8d527a28504432f52bd08c75f2894c209fe/LICENSE",
+            "version": "0.10.2",
+            "version_evidence_sha256": "2748a9ee0e346d087f3e351cd1b38196c413155d2e7dac58859f34e5d561d11b",
+            "version_evidence_url": "https://raw.githubusercontent.com/langchain-ai/langsmith-sdk/687fc8d527a28504432f52bd08c75f2894c209fe/python/langsmith/__init__.py"
+          }
+        }
+      ],
+      "supplemented": true,
+      "version": "0.10.2"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "mako",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/mako-1.3.12.dist-info/licenses/LICENSE",
+          "path": "python/mako/68d7064e53e3-LICENSE",
+          "sha256": "68d7064e53e3ffa8e9f420a9e604bd2e2059d9c330492fa6ebd4eb3d48111689"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.3.12"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "markupsafe",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/markupsafe-3.0.3.dist-info/licenses/LICENSE.txt",
+          "path": "python/markupsafe/489a8e110850-LICENSE.txt",
+          "sha256": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea"
+        }
+      ],
+      "supplemented": false,
+      "version": "3.0.3"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License",
+        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)"
+      ],
+      "license_expression": "MPL-2.0 AND (Apache-2.0 OR MIT)",
+      "license_metadata": null,
+      "name": "orjson",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/orjson-3.11.9.dist-info/licenses/LICENSE-APACHE",
+          "path": "python/orjson/a60eea817514-LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/orjson-3.11.9.dist-info/licenses/LICENSE-MIT",
+          "path": "python/orjson/23f18e03dc49-LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/orjson-3.11.9.dist-info/licenses/LICENSE-MPL-2.0",
+          "path": "python/orjson/66a3107d5ad6-LICENSE-MPL-2.0",
+          "sha256": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172"
+        }
+      ],
+      "supplemented": false,
+      "version": "3.11.9"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License",
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": "Apache-2.0 OR MIT",
+      "license_metadata": null,
+      "name": "ormsgpack",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/ormsgpack-1.12.2.dist-info/licenses/LICENSE-APACHE",
+          "path": "python/ormsgpack/a60eea817514-LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/ormsgpack-1.12.2.dist-info/licenses/LICENSE-MIT",
+          "path": "python/ormsgpack/23f18e03dc49-LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.12.2"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "Apache-2.0 OR BSD-2-Clause",
+      "license_metadata": null,
+      "name": "packaging",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/packaging-26.2.dist-info/licenses/LICENSE",
+          "path": "python/packaging/cad1ef5bd340-LICENSE",
+          "sha256": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/packaging-26.2.dist-info/licenses/LICENSE.APACHE",
+          "path": "python/packaging/0d542e0c8804-LICENSE.APACHE",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/packaging-26.2.dist-info/licenses/LICENSE.BSD",
+          "path": "python/packaging/b70e7e9b742f-LICENSE.BSD",
+          "sha256": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5"
+        }
+      ],
+      "supplemented": false,
+      "version": "26.2"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "pip",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/pip-25.0.1.dist-info/LICENSE.txt",
+          "path": "python/pip/634300a669d4-LICENSE.txt",
+          "sha256": "634300a669d49aeae65b12c6c48c924c51a4cdf3d1ff086dc3456dc8bcaa2104"
+        }
+      ],
+      "supplemented": false,
+      "version": "25.0.1"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "pycparser",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/pycparser-3.0.dist-info/licenses/LICENSE",
+          "path": "python/pycparser/0c846399369e-LICENSE",
+          "sha256": "0c846399369ea76ddd7b5c44fe6d16497415fcf015f5cbb508c24bf98b81c5b1"
+        }
+      ],
+      "supplemented": false,
+      "version": "3.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "pydantic",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/pydantic-2.13.4.dist-info/licenses/LICENSE",
+          "path": "python/pydantic/a9e186f3ca16-LICENSE",
+          "sha256": "a9e186f3ca16b5eef84318e7a701721351a00cb7b8ae3a4394b67b49e3529ef3"
+        }
+      ],
+      "supplemented": false,
+      "version": "2.13.4"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "pydantic-settings",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/pydantic_settings-2.14.2.dist-info/licenses/LICENSE",
+          "path": "python/pydantic-settings/eb355a753e02-LICENSE",
+          "sha256": "eb355a753e020346d33d83bf9769135b89fc610568ac531a01c295bcee7fd998"
+        }
+      ],
+      "supplemented": false,
+      "version": "2.14.2"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "pydantic-core",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/pydantic_core-2.46.4.dist-info/licenses/LICENSE",
+          "path": "python/pydantic-core/2afdd30d54b4-LICENSE",
+          "sha256": "2afdd30d54b4d62b6f488a6bcc1546e84ec5061f13f4209c03d012348783795a"
+        }
+      ],
+      "supplemented": false,
+      "version": "2.46.4"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "pyjwt",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/pyjwt-2.15.1.dist-info/licenses/LICENSE",
+          "path": "python/pyjwt/797a7a20231d-LICENSE",
+          "sha256": "797a7a20231d4c433e9f1911db1731d06b5828b98f499819a034f7c0f56f5ce5"
+        }
+      ],
+      "supplemented": false,
+      "version": "2.15.1"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata": "BSD-3-Clause",
+      "name": "python-dotenv",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/python_dotenv-1.2.2.dist-info/licenses/LICENSE",
+          "path": "python/python-dotenv/80619b7049f0-LICENSE",
+          "sha256": "80619b7049f08c81683ad0e01f08f257a840652dd71ee83146d36658c7d2c2b9"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.2.2"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "pyyaml",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/pyyaml-6.0.3.dist-info/licenses/LICENSE",
+          "path": "python/pyyaml/8d3928f9dc44-LICENSE",
+          "sha256": "8d3928f9dc4490fd635707cb88eb26bd764102a7282954307d3e5167a577e8a4"
+        }
+      ],
+      "supplemented": false,
+      "version": "6.0.3"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "redis",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/redis-5.3.1.dist-info/LICENSE",
+          "path": "python/redis/a57b250a5bf0-LICENSE",
+          "sha256": "a57b250a5bf03d7afe55b74063313f2adb7b00d546c0ab149a89398333fe3cc8"
+        }
+      ],
+      "supplemented": false,
+      "version": "5.3.1"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata": "Apache-2.0",
+      "name": "requests",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/requests-2.34.2.dist-info/licenses/LICENSE",
+          "path": "python/requests/09e8a9bcec80-LICENSE",
+          "sha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/requests-2.34.2.dist-info/licenses/NOTICE",
+          "path": "python/requests/f5110972deda-NOTICE",
+          "sha256": "f5110972dedad2b4e9d314518daf3b7d72d6e02e499acd802181de6f74571dcc"
+        }
+      ],
+      "supplemented": false,
+      "version": "2.34.2"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata": "Apache 2.0",
+      "name": "requests-toolbelt",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/requests_toolbelt-1.0.0.dist-info/LICENSE",
+          "path": "python/requests-toolbelt/1f8cf8bdacd9-LICENSE",
+          "sha256": "1f8cf8bdacd98ed6d36d0fec0c07f7765acebd6e81205962ab5146023b3c858d"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.0.0"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT OR Apache-2.0",
+      "name": "sniffio",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/sniffio-1.3.1.dist-info/LICENSE",
+          "path": "python/sniffio/652c878488d1-LICENSE",
+          "sha256": "652c878488d1456361e08c3f8607fd7ba59892a14103d15cce4ff93c85b5cc8b"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/sniffio-1.3.1.dist-info/LICENSE.APACHE2",
+          "path": "python/sniffio/cfc7749b96f6-LICENSE.APACHE2",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/sniffio-1.3.1.dist-info/LICENSE.MIT",
+          "path": "python/sniffio/3e6dae555eb9-LICENSE.MIT",
+          "sha256": "3e6dae555eb92787fc82d1d48355677f454c7f65aeb38d3f9e72bf9a3daf034b"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.3.1"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "sqlalchemy",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/sqlalchemy-2.0.51.dist-info/licenses/LICENSE",
+          "path": "python/sqlalchemy/e862bb5b904f-LICENSE",
+          "sha256": "e862bb5b904fb5513c3e14288d7a25a12eb0ecc7847a0a965d310e9a955e7cb9"
+        }
+      ],
+      "supplemented": false,
+      "version": "2.0.51"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "starlette",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/starlette-1.3.1.dist-info/licenses/LICENSE.md",
+          "path": "python/starlette/dcb95677a022-LICENSE.md",
+          "sha256": "dcb95677a02240243187e964f941847d19b17821cf99e5afae684fab328c19bf"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.3.1"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License",
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": "MIT OR Apache-2.0",
+      "license_metadata": null,
+      "name": "structlog",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/structlog-25.5.0.dist-info/licenses/LICENSE-APACHE",
+          "path": "python/structlog/0d542e0c8804-LICENSE-APACHE",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/structlog-25.5.0.dist-info/licenses/LICENSE-MIT",
+          "path": "python/structlog/2bc12bb94eec-LICENSE-MIT",
+          "sha256": "2bc12bb94eec2ccea211daebb763235bec3169276197a7be1f858963db31c5dd"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/structlog-25.5.0.dist-info/licenses/NOTICE",
+          "path": "python/structlog/274a71ae0642-NOTICE",
+          "sha256": "274a71ae064275a87378f2a93ad2cf351b2929f016e280a33fc3c836a3f0f84c"
+        }
+      ],
+      "supplemented": false,
+      "version": "25.5.0"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata": "Apache 2.0",
+      "name": "tenacity",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/tenacity-9.1.4.dist-info/licenses/LICENSE",
+          "path": "python/tenacity/58d1e17ffe51-LICENSE",
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        }
+      ],
+      "supplemented": false,
+      "version": "9.1.4"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "typing-inspection",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/typing_inspection-0.4.2.dist-info/licenses/LICENSE",
+          "path": "python/typing-inspection/804b59b25f2c-LICENSE",
+          "sha256": "804b59b25f2c31bd278f9202a19ae49a3945aa2664387e2d0a128c7cacc61ec3"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.4.2"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "PSF-2.0",
+      "license_metadata": null,
+      "name": "typing-extensions",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/typing_extensions-4.16.0.dist-info/licenses/LICENSE",
+          "path": "python/typing-extensions/3b2f81fe21d1-LICENSE",
+          "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf"
+        }
+      ],
+      "supplemented": false,
+      "version": "4.16.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "name": "urllib3",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/urllib3-2.8.0.dist-info/licenses/LICENSE.txt",
+          "path": "python/urllib3/130e3a64d5fd-LICENSE.txt",
+          "sha256": "130e3a64d5fdd5d096a752694634a7d9df284469de86e5732100268041e3d686"
+        }
+      ],
+      "supplemented": false,
+      "version": "2.8.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "uuid-utils",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/uuid_utils-0.17.0.dist-info/licenses/LICENSE.md",
+          "path": "python/uuid-utils/0c47f52b4c48-LICENSE.md",
+          "sha256": "0c47f52b4c484bd04c78e7c969542eea31afe644f587f3b8a8ccce86352c6046"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.17.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "uvicorn",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/uvicorn-0.51.0.dist-info/licenses/LICENSE.md",
+          "path": "python/uvicorn/efe1acf3e62f-LICENSE.md",
+          "sha256": "efe1acf3e62fb99c288b0ec73e5a773b7268ef4320fe757ea994214e4b63c371"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.51.0"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License",
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT License",
+      "name": "uvloop",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/uvloop-0.22.1.dist-info/licenses/LICENSE-APACHE",
+          "path": "python/uvloop/377025287798-LICENSE-APACHE",
+          "sha256": "377025287798f9dcd819e1f826fa5fc5e2f382528691ab0528c5cf8c8c282c27"
+        },
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/uvloop-0.22.1.dist-info/licenses/LICENSE-MIT",
+          "path": "python/uvloop/6dd4c399f26d-LICENSE-MIT",
+          "sha256": "6dd4c399f26de043d77a2ad7e31db4cb5bf08ea8368b0a42d6e158635cc8ab62"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.22.1"
+    },
+    {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "name": "watchfiles",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/watchfiles-1.2.0.dist-info/licenses/LICENSE",
+          "path": "python/watchfiles/4fd78355b67c-LICENSE",
+          "sha256": "4fd78355b67ce2677ede9fb6f63a250f377bb7e22088136a5f4699adb4bc069f"
+        }
+      ],
+      "supplemented": false,
+      "version": "1.2.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "websockets",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/websockets-16.0.dist-info/licenses/LICENSE",
+          "path": "python/websockets/3d6a0c050d8b-LICENSE",
+          "sha256": "3d6a0c050d8bec52fabad502e45fb25bd02bcadbd70dea34d447b6a0ff4e6da8"
+        }
+      ],
+      "supplemented": false,
+      "version": "16.0"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata": "BSD-2-Clause",
+      "name": "xxhash",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/xxhash-3.8.1.dist-info/licenses/LICENSE",
+          "path": "python/xxhash/b3c620adc9a8-LICENSE",
+          "sha256": "b3c620adc9a8812cc0c3c7fc09567fa9a9930d3546de955dfb955b168cf989ac"
+        }
+      ],
+      "supplemented": false,
+      "version": "3.8.1"
+    },
+    {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "name": "zstandard",
+      "notice_files": [
+        {
+          "installed_source": "/usr/local/lib/python3.12/site-packages/zstandard-0.25.0.dist-info/licenses/LICENSE",
+          "path": "python/zstandard/788fe85e5372-LICENSE",
+          "sha256": "788fe85e53724a40b299051c4abc9cf74d42b27e7968325b80891c25f79adb4b"
+        }
+      ],
+      "supplemented": false,
+      "version": "0.25.0"
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Actual installed distributions and base OS, not just root MIT metadata"
+}

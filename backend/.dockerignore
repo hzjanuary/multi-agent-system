@@ -8,5 +8,6 @@ __pycache__/
 *.pyd
 .env
 .env.*
+.maos/
 !.env.example
 Dockerfile

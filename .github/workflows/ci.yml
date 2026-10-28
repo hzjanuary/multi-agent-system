@@ -1,36 +1,106 @@
-name: CI
-
+name: Release candidate CI
 on:
   pull_request:
   push:
-    branches:
-      - main
+    branches: [main, feat/spec-030-open-source-release-hardening]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  quality-gates:
-    name: Quality gates
+  backend:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Run local quality gates
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
         env:
-          BACKEND_GATE_CLEANUP: "1"
-        run: bash scripts/ci/all-gates.sh
-
-      - name: Cleanup Compose services
-        if: always()
+          POSTGRES_USER: maos
+          POSTGRES_PASSWORD: ci-test-isolated-database-only
+          POSTGRES_DB: maos_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U maos -d maos_test"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+      redis:
+        image: redis:7-alpine@sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af
+        ports: [6379:6379]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    env:
+      APP_ENV: testing
+      DATABASE_URL: postgresql+asyncpg://maos:ci-test-isolated-database-only@localhost:5432/maos_test
+      MAOS_TEST_DATABASE_URL: postgresql+asyncpg://maos:ci-test-isolated-database-only@localhost:5432/maos_test
+      REDIS_URL: redis://localhost:6379/0
+      LLM_MODEL: contract-tests-only
+      MAOS_EXTENSION_MODULES: maos_examples.text_review
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: Install locked tooling and dependencies
         run: |
-          docker compose down --remove-orphans || true
-          docker compose -f docker-compose.prod.yml --env-file docs/deployment/.env.production.example down --remove-orphans || true
+          pip install poetry==1.8.5
+          cd backend
+          poetry install --with dev --no-root
+      - name: Generate isolated secrets
+        run: |
+          echo "JWT_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')" >> "$GITHUB_ENV"
+      - name: Offline and database gates
+        env:
+          MAOS_TEST_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: bash scripts/ci/backend-gate.sh
+      - name: Operations and release-security tests
+        run: |
+          python -m unittest discover -s scripts/ops -p 'test_*.py'
+          poetry -C backend run ruff check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py scripts/ops/verify_release_install.py scripts/ops/os_image_probe.py scripts/ops/os_vulnerability_triage.py scripts/ops/test_os_vulnerability_triage.py scripts/ops/test_verify_release_install.py scripts/ci/check-release-image.py
+          poetry -C backend run black --check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py scripts/ops/verify_release_install.py scripts/ops/os_image_probe.py scripts/ops/os_vulnerability_triage.py scripts/ops/test_os_vulnerability_triage.py scripts/ops/test_verify_release_install.py scripts/ci/check-release-image.py
+      - name: Full tracked-file secret and private-path scan
+        run: |
+          python scripts/ops/scan_secrets.py --strict --allow-approved-fixtures
+          python scripts/ops/release_artifacts.py index
+      - name: Source archive, release build, revision, licenses and image manifest
+        env:
+          MAOS_RELEASE_IMAGE: multi-agent-os:local
+        run: bash scripts/ci/release-gate.sh
+      - name: Validate CLI and Compose without provider credentials
+        run: |
+          mkdir -p .maos
+          chmod 700 .maos
+          docker run --rm --user "$(id -u):$(id -g)" --mount "type=bind,source=$(pwd)/.maos,target=/config" multi-agent-os:local python -m app.cli config init --output /config/.env
+          docker run --rm multi-agent-os:local python -m app.cli --version
+          bash scripts/ci/compose-gate.sh
+      - name: Isolated clean-clone installation without inference
+        id: clean-install
+        run: python scripts/ops/verify_release_install.py --image multi-agent-os:local --source "$(git rev-parse HEAD)" --directory .maos/clean-install --project maos-spec030-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Python dependency vulnerability audit (no exceptions)
+        run: |
+          poetry -C backend export --only main --format requirements.txt --output /tmp/maos-main-requirements.txt
+          pip install pip-audit==2.10.1
+          pip-audit --require-hashes --disable-pip --no-deps -r /tmp/maos-main-requirements.txt --format json --output .maos/python-audit.json
+      - name: OS and language vulnerability scan, SBOM (HIGH/CRITICAL block release)
+        if: ${{ !cancelled() && steps.clean-install.outcome == 'success' }}
+        run: |
+          python scripts/ops/release_security.py install-trivy --tool .maos/tools/trivy
+          python scripts/ops/release_security.py scan-image --tool .maos/tools/trivy --image multi-agent-os:local --output .maos/security
+      - name: Diff hygiene
+        run: git diff --check
+      - name: Retain sanitized release proof even when vulnerability gate fails
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-security-${{ github.sha }}
+          if-no-files-found: warn
+          retention-days: 30
+          include-hidden-files: true
+          path: |
+            .maos/security/image-vulnerabilities.json
+            .maos/security/sbom.cdx.json
+            .maos/python-audit.json
+            .maos/clean-install-summary.json
+            .maos/spec-030/evidence/*/image-verification.json

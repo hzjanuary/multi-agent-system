@@ -1,0 +1,341 @@
+{
+  "source_clone": "281537a24220f6a2fe2df2aaa438e1f9cb60a6a6",
+  "runtime_source": "281537a24220f6a2fe2df2aaa438e1f9cb60a6a6",
+  "image": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+  "project": "maos-spec030-p2-clean-install",
+  "generation_requests": 0,
+  "model_availability": "NOT_CHECKED; loopback closed endpoint; no provider check",
+  "empty_after_migration": {
+    "users": 0,
+    "runs": 0,
+    "events": 0
+  },
+  "after_explicit_bootstrap": {
+    "users": 1,
+    "runs": 0,
+    "events": 0
+  },
+  "runtime_security_controls": {
+    "api": {
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "user": "app"
+    },
+    "worker": {
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "user": "app"
+    }
+  },
+  "doctor": {
+    "checks": [
+      {
+        "name": "postgres_schema",
+        "status": "ok",
+        "required": true,
+        "latency_ms": 148.91,
+        "message": "ready"
+      },
+      {
+        "name": "configuration",
+        "status": "ok",
+        "required": true,
+        "latency_ms": 32.29,
+        "message": "ready"
+      },
+      {
+        "name": "redis_notifications",
+        "status": "ok",
+        "required": false,
+        "latency_ms": 3.0,
+        "message": "ready"
+      }
+    ],
+    "worker_available": true,
+    "status": "ready"
+  },
+  "workflow_discovery": [
+    {
+      "id": "text_review",
+      "version": "1.0.0",
+      "name": "Human-approved text review",
+      "definition_hash": "e0e45904abf82e0f2e4cd416ffef771bb3147c72f3711c1fe5bb7d18f2d1b628",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "maxLength": 16000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TextInput",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "Analysis": {
+            "additionalProperties": false,
+            "properties": {
+              "summary": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Summary",
+                "type": "string"
+              },
+              "key_points": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 12,
+                "minItems": 1,
+                "title": "Key Points",
+                "type": "array"
+              }
+            },
+            "required": [
+              "summary",
+              "key_points"
+            ],
+            "title": "Analysis",
+            "type": "object"
+          },
+          "FinalInput": {
+            "additionalProperties": false,
+            "properties": {
+              "analysis": {
+                "$ref": "#/$defs/Analysis"
+              },
+              "review": {
+                "$ref": "#/$defs/Review"
+              }
+            },
+            "required": [
+              "analysis",
+              "review"
+            ],
+            "title": "FinalInput",
+            "type": "object"
+          },
+          "Review": {
+            "additionalProperties": false,
+            "properties": {
+              "assessment": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Assessment",
+                "type": "string"
+              },
+              "suggestions": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 12,
+                "title": "Suggestions",
+                "type": "array"
+              }
+            },
+            "required": [
+              "assessment",
+              "suggestions"
+            ],
+            "title": "Review",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "result": {
+            "$ref": "#/$defs/FinalInput"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "FinalOutput",
+        "type": "object"
+      },
+      "nodes": [
+        "analyze",
+        "review",
+        "approve",
+        "assemble"
+      ],
+      "limits": {
+        "max_calls": 2,
+        "max_nodes": 32,
+        "max_input_bytes": 65536,
+        "max_node_output_bytes": 65536,
+        "max_total_bytes": 1048576
+      },
+      "extension": {
+        "module": "maos_examples.text_review",
+        "version": "1.0.0",
+        "artifact": "a3456af2ffad1d15f2ba9987b9d2a54082a7b2ec38d77141e0ff0d8fd25c6a6a"
+      }
+    }
+  ],
+  "run_listing": [],
+  "auth_file_mode": "0o600",
+  "final_counts": {
+    "users": 1,
+    "runs": 0,
+    "events": 0
+  },
+  "status": "PASS",
+  "services_stopped_volumes_retained": true,
+  "commands": [
+    [
+      "config",
+      "--quiet"
+    ],
+    [
+      "up",
+      "-d",
+      "--wait",
+      "postgres",
+      "redis"
+    ],
+    [
+      "run",
+      "--rm",
+      "--no-deps",
+      "api",
+      "python",
+      "-m",
+      "app.cli",
+      "migrate"
+    ],
+    [
+      "exec",
+      "-T",
+      "postgres",
+      "psql",
+      "-U",
+      "maos",
+      "-d",
+      "maos",
+      "-At",
+      "-c",
+      "SELECT json_build_object('users',(SELECT count(*) FROM users),'runs',(SELECT count(*) FROM runs),'events',(SELECT count(*) FROM run_events));"
+    ],
+    [
+      "run",
+      "--rm",
+      "-T",
+      "--no-deps",
+      "api",
+      "python",
+      "-m",
+      "app.cli",
+      "admin",
+      "bootstrap",
+      "--email",
+      "verification@example.invalid",
+      "--password-stdin"
+    ],
+    [
+      "exec",
+      "-T",
+      "postgres",
+      "psql",
+      "-U",
+      "maos",
+      "-d",
+      "maos",
+      "-At",
+      "-c",
+      "SELECT json_build_object('users',(SELECT count(*) FROM users),'runs',(SELECT count(*) FROM runs),'events',(SELECT count(*) FROM run_events));"
+    ],
+    [
+      "up",
+      "-d",
+      "--wait",
+      "api",
+      "worker"
+    ],
+    [
+      "ps",
+      "--quiet",
+      "api"
+    ],
+    [
+      "ps",
+      "--quiet",
+      "worker"
+    ],
+    [
+      "exec",
+      "-T",
+      "api",
+      "python",
+      "-m",
+      "app.cli",
+      "--json",
+      "doctor"
+    ],
+    [
+      "--profile",
+      "cli",
+      "run",
+      "--rm",
+      "-T",
+      "cli",
+      "auth",
+      "login",
+      "--email",
+      "verification@example.invalid",
+      "--password-stdin"
+    ],
+    [
+      "--profile",
+      "cli",
+      "run",
+      "--rm",
+      "-T",
+      "cli",
+      "--json",
+      "workflow",
+      "list"
+    ],
+    [
+      "--profile",
+      "cli",
+      "run",
+      "--rm",
+      "-T",
+      "cli",
+      "--json",
+      "run",
+      "list"
+    ],
+    [
+      "exec",
+      "-T",
+      "postgres",
+      "psql",
+      "-U",
+      "maos",
+      "-d",
+      "maos",
+      "-At",
+      "-c",
+      "SELECT json_build_object('users',(SELECT count(*) FROM users),'runs',(SELECT count(*) FROM runs),'events',(SELECT count(*) FROM run_events));"
+    ],
+    [
+      "stop"
+    ]
+  ]
+}

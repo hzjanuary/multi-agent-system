@@ -1,0 +1,48 @@
+{
+  "files": {
+    "/usr/bin/infocmp": {
+      "owner": "ncurses-bin: /usr/bin/infocmp",
+      "present": true,
+      "resolved": "/usr/bin/infocmp",
+      "setuid": false,
+      "sha256": "934ce418360bd162a188f22310509640f3b0c14a858ec4ec04c25df64f97feb0"
+    },
+    "/usr/bin/nsenter": {
+      "owner": "util-linux: /usr/bin/nsenter",
+      "present": true,
+      "resolved": "/usr/bin/nsenter",
+      "setuid": false,
+      "sha256": "09ea3a612a16b59c04aa55d894a1e868deaddb8a6a9927c4f1993827a3554de1"
+    },
+    "/usr/lib/x86_64-linux-gnu/libacl.so.1": {
+      "owner": "libacl1:amd64: /usr/lib/x86_64-linux-gnu/libacl.so.1.1.2302",
+      "present": true,
+      "resolved": "/usr/lib/x86_64-linux-gnu/libacl.so.1.1.2302",
+      "setuid": false,
+      "sha256": "3c03774961231d8485a4dba36ec359a95939a84719799c58cd26173e44bbde90"
+    },
+    "/usr/lib/x86_64-linux-gnu/libmount.so.1": {
+      "owner": "libmount1:amd64: /usr/lib/x86_64-linux-gnu/libmount.so.1.1.0",
+      "present": true,
+      "resolved": "/usr/lib/x86_64-linux-gnu/libmount.so.1.1.0",
+      "setuid": false,
+      "sha256": "1654d2cf948e3608cc0d38340807d4ddac1114315a3a77f7b274c4c859cb2181"
+    }
+  },
+  "image": "sha256:7e94df64783b09c385a9aebb3b7ba05289b20a5879bfe6fd40e43d56070f4c3c",
+  "observed_at": "2026-10-27T16:38:35.863530+00:00",
+  "probe_sha256": "905389f6169d1cb30f00d42bb377ea646c0d074ad0f6c6e19b51b39dbf9d9884",
+  "purpose": "Read-only file ownership/hash/export inspection, no mount/ACL/namespace operation or exploitation attempt",
+  "symbols_present": {
+    "libacl.so.1": {
+      "acl_delete_def_file": true,
+      "acl_extended_file": true,
+      "acl_get_file": true,
+      "acl_set_file": true
+    },
+    "libmount.so.1": {
+      "mnt_context_apply_fstab": true,
+      "mnt_context_mount": true
+    }
+  }
+}

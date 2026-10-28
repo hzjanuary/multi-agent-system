@@ -1,0 +1,266 @@
+{
+  "recorded_at": "2026-10-27T06:01:11.072070+00:00",
+  "scope": "One explicitly authorized bounded live attempt; failed first call, no retry or fresh run",
+  "starting_branch": "feat/spec-029-headless-oss",
+  "tested_handoff_head": "fad43831a92dfe9831cd77216b04ee379b2d65ba",
+  "image_source": "f6317e25317c13c2da83c3e784b4d660f48fea45",
+  "image_digest": "sha256:99078eeb57903c074973fdcbdb10d68e0b488e1e634f6e5999bc7c4401ad6527",
+  "image_tag": "multi-agent-os:openrouter-free-smoke",
+  "command": "python3 scripts/ops/openrouter_free_smoke.py run --approve",
+  "attempt_started_at": "2026-10-27T05:56:46.058098+00:00",
+  "preflight": {
+    "status": "PASS",
+    "metadata_fetched_at": "2026-10-27T05:56:44.943001+00:00",
+    "exact_free_variant_and_single_eligible_route": true,
+    "actual_api_worker_configuration_image_and_isolation": "PASS"
+  },
+  "effective_profile": {
+    "name": "openrouter-free-smoke",
+    "application_slot": "default",
+    "provider_integration": "openrouter",
+    "model": "google/gemma-4-31b-it:free",
+    "canonical_slug": "google/gemma-4-31b-it-20260402",
+    "provider_route": "google-ai-studio",
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+    "provider_preferences": {
+      "data_collection": "allow",
+      "zdr": false,
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "only": [
+        "google-ai-studio"
+      ],
+      "max_price": {
+        "prompt": 0,
+        "completion": 0,
+        "request": 0
+      }
+    },
+    "MAX_PROVIDER_CALLS": 2,
+    "LLM_MAX_RETRIES": 0,
+    "LLM_MAX_OUTPUT_TOKENS": 1024,
+    "transport_connect_retries": 0,
+    "timeout_seconds": 60,
+    "persisted_identity": {
+      "model": "google/gemma-4-31b-it:free",
+      "profile": "default",
+      "provider": "openrouter",
+      "max_retries": "0",
+      "routing_hash": "57bbb1686b892b2600ac75b878a2a12c5a2b339ac078655c311ecd2396ae92ec",
+      "endpoint_hash": "e08186e0c8c6074c97ee0f4211ebd491d6848f2f12f4b761fb51ce23ad641cfa",
+      "timeout_seconds": "60",
+      "max_output_tokens": "1024"
+    }
+  },
+  "operator_journey": {
+    "pre_migration_public_tables": 0,
+    "schema": "029_headless_01",
+    "users_and_runs_after_migration": [
+      0,
+      0
+    ],
+    "explicit_local_bootstrap_confirmed": true,
+    "users_after_bootstrap": 1,
+    "runs_before_attempt": 0,
+    "doctor_ready": true,
+    "api_worker_healthy_before_attempt": true,
+    "fresh_cli_session_mode": "0600",
+    "separate_cli_workflow_discovery": "PASS",
+    "credentials": "Entered locally by maintainer; never recorded here"
+  },
+  "live_outcome": "FAIL",
+  "run": {
+    "id": "75039b34-2bf1-4e89-a1c1-704dd2f0be28",
+    "workflow_id": "text_review",
+    "workflow_version": "1.0.0",
+    "status": "FAILED",
+    "error": {
+      "code": "provider_rate_limit"
+    },
+    "durable_call_count": 1,
+    "event_count": 6,
+    "definition_hash": "e0e45904abf82e0f2e4cd416ffef771bb3147c72f3711c1fe5bb7d18f2d1b628"
+  },
+  "nodes": [
+    {
+      "id": "592a0849-2b61-44bf-87b2-6d2e31d0d485",
+      "node_id": "analyze",
+      "kind": "agent",
+      "attempt": 1,
+      "status": "FAILED",
+      "error": {
+        "code": "provider_rate_limit"
+      },
+      "reserved_calls": 1,
+      "output_present": false
+    }
+  ],
+  "request_observation": {
+    "client_generation_attempts": 1,
+    "successful_generations": 0,
+    "analyst_attempts": 1,
+    "reviewer_attempts": 0,
+    "application_retries_observed": 0,
+    "additional_probe_warmup_repair_or_new_run": false,
+    "persisted_error_code": "provider_rate_limit",
+    "http_status_inferred_from_unique_production_adapter_mapping": 429,
+    "raw_http_status_not_retained_in_durable_record": true,
+    "model_provider_in_successful_response": null,
+    "upstream_provider_route_observed": null,
+    "provider_request_ids": null,
+    "usage": null,
+    "reported_cost": null,
+    "unknown_fields": "No successful provider response metadata is available; model/upstream execution, IDs, usage and cost stay unknown. Zero price ceilings are not a reported zero cost. Upstream internal request/work counts are not observable."
+  },
+  "acceptance_journey": {
+    "reviewer_consumed_analyst_output": "NOT_REACHED",
+    "validated_agent_outputs_persisted": false,
+    "durable_failure_and_events_persisted": true,
+    "waiting_approval": "NOT_REACHED",
+    "approval_decision": "NOT_REACHED",
+    "explicit_resume": "NOT_REACHED",
+    "final_assembly": "NOT_REACHED",
+    "final_output_present": false,
+    "post_failure_separate_cli_show_nodes_events_approvals": "PASS",
+    "post_worker_stop_new_database_session": "PASS"
+  },
+  "events": [
+    {
+      "sequence": 1,
+      "event_type": "run.created",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "event_type": "run.queued",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "event_type": "run.started",
+      "node_id": null
+    },
+    {
+      "sequence": 4,
+      "event_type": "node.started",
+      "node_id": "analyze"
+    },
+    {
+      "sequence": 5,
+      "event_type": "node.failed",
+      "node_id": "analyze"
+    },
+    {
+      "sequence": 6,
+      "event_type": "run.failed",
+      "node_id": null
+    }
+  ],
+  "acceptance": {
+    "PASS": 30,
+    "BLOCKED": 2,
+    "FAIL": 0,
+    "NOT_RUN": 0,
+    "AC-08": "BLOCKED: external provider rate-limit response prevented two successful genuine chained calls",
+    "AC-29": "BLOCKED: documented real-model journey did not complete; historical clean-clone evidence retains its old image provenance",
+    "classification": "The live attempt failed. Acceptance criteria remain externally blocked, not passed; no claim that a fixture or failed response meets them."
+  },
+  "remaining_action": "Investigate rate-limit/quota or availability for the same isolated free route without inference or global-policy changes. Any later attempt requires a new explicit maintainer budget decision; do not delete attempt.json, resume this failed run, retry, switch models/routes or automatically create a fresh run.",
+  "retention": {
+    "stopped_services": [
+      "api",
+      "postgres",
+      "redis",
+      "worker"
+    ],
+    "all_stopped": true,
+    "database_volume_retained": true,
+    "configuration_auth_input_evidence_retained": true,
+    "attempt_marker_retained": true
+  },
+  "private_artifacts": [
+    {
+      "path": ".maos/openrouter-free-smoke/manifest.json",
+      "sha256": "604520a60d78ccfc4158977358bb40d511d6ccee98c8cc54df00fdf93dad5ae1"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/attempt.json",
+      "sha256": "ed3b3ebc799a4797a8cba6fc28b59b9c171c47c07e1c001ed3806a38f338075a"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/preflight.json",
+      "sha256": "8a02f8db34d5f31f6878dc8356ee6333a7d29906df780d13d970d5ff2a9f16c4"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/public-metadata.json",
+      "sha256": "55d48ee4f1081668651deee0b4f1d20e45f49d270bf5f178b4d4ec9bb571a200"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/outcome.json",
+      "sha256": "eb1b3b3e5066e7733c0d62ade9f9e1bf8be547d4a364152b0e1a372ec7fc94e8"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live.stdout.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live.stderr.json",
+      "sha256": "977242362377e7059ab9ae6ffccedea4cac9172044325696921b1abd1aef83bd"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/api-evidence.json",
+      "sha256": "af20fd54b78f8ab568813abde823444796112b5bc717afd694e02044759f088f"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/database-before.json",
+      "sha256": "7e5c2131c430b3e405f64c20ff7a8d3ff9ee71e5a4fab5897dcb5dae08453bcd"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/database-after-migrate.json",
+      "sha256": "aee69c9c538052352adca31ef73e6f5b837c4893ff9d64afd940251b8389dcf4"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/operator-journey.json",
+      "sha256": "96d2f01c35285c59cf57501997cb39764d0d3a3062be54dd34644077bd9d47fd"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/running-profile.json",
+      "sha256": "9f016b79c3ad8dab659d214ceda2339d8ee7532d418917b2f3faf033340ab4ec"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/doctor.json",
+      "sha256": "12333dfb9307974802f3fe1bdf01184a9f9224e73226e76ac6388d24ca8f6902"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/cli-workflows.json",
+      "sha256": "a6ed774bb8e7e3cf84a9ee3a708f283a36d4b0c86021bc515e1589258230bcef"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/cli-show.json",
+      "sha256": "69d93d0e793e84452a4019d5f10f7e747734157eefb45515d7de1797f492ce58"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/cli-nodes.json",
+      "sha256": "5106ee963f7916e4853bde7efef16d75dce48252aeda05dbe7dc8bd6a63e34c0"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/cli-events.json",
+      "sha256": "c0806ca55f5582d7a05550b34f3c8c1b26bd79b0f94fb4bff5ac14a9df570313"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/cli-approvals.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/durable-readback.json",
+      "sha256": "194055c28a10d0a56656395dedfe41c2204ca20b9ffe95c6044de054a45cf01e"
+    },
+    {
+      "path": ".maos/openrouter-free-smoke/live-session-20261027/retention.json",
+      "sha256": "b14a143cac0ce3f38731e87a2123cc128a64eb09552139075ac803021a268814"
+    }
+  ],
+  "public_evidence_policy": "Only safe status, identifiers, profile settings and file hashes; no key, CLI tokens, email/password, test text, prompts or raw provider body",
+  "changes": "Documentation/evidence only; no runtime, schema, retry, budget, image or privacy-default change; no full-suite rerun or image rebuild",
+  "remote_actions": "Only the authorized OpenRouter generation attempt and public metadata GETs. No push, merge, publication, remote deployment, model download or retained-resource deletion."
+}

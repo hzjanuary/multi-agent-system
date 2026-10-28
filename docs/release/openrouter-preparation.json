@@ -1,0 +1,146 @@
+{
+  "scope": "Preparation only; zero generation requests; no live acceptance evidence",
+  "image_source": "f6317e25317c13c2da83c3e784b4d660f48fea45",
+  "verification_and_helper_source": "6287f1a2f7d9ecaad12cd4a02e4873fb4a880ac2",
+  "image_digest": "sha256:99078eeb57903c074973fdcbdb10d68e0b488e1e634f6e5999bc7c4401ad6527",
+  "image_tag": "multi-agent-os:openrouter-free-smoke",
+  "image_source_hashes": {
+    "source_revision": "f6317e25317c13c2da83c3e784b4d660f48fea45",
+    "image_id": "sha256:99078eeb57903c074973fdcbdb10d68e0b488e1e634f6e5999bc7c4401ad6527",
+    "shipped_files": 92,
+    "source_hash_match": true,
+    "current_shipped_files_match": true,
+    "manifest_hash": "e64ce8bdd8c93e6928f13022d256a8bcf7de8712ec0fca14aba2c799d0f1f7d6"
+  },
+  "build_command": "docker build --network=host --target runtime --label org.opencontainers.image.revision=f6317e25317c13c2da83c3e784b4d660f48fea45 -t multi-agent-os:openrouter-free-smoke backend",
+  "metadata": {
+    "retrieved_at": "2026-10-27T05:25:18.852007+00:00",
+    "catalog": "https://openrouter.ai/api/v1/models",
+    "allowed_catalog": "https://openrouter.ai/models?variant=free",
+    "model_details": "https://openrouter.ai/api/v1/model/google/gemma-4-31b-it:free",
+    "endpoints": "https://openrouter.ai/api/v1/models/google/gemma-4-31b-it:free/endpoints",
+    "model": "google/gemma-4-31b-it:free",
+    "canonical_slug": "google/gemma-4-31b-it-20260402",
+    "provider_tag": "google-ai-studio",
+    "provider_name": "Google AI Studio",
+    "endpoint_count_matching_provider": 1,
+    "endpoint_status": 0,
+    "prompt_price": "0",
+    "completion_price": "0",
+    "request_price": "omitted/not advertised; explicit free variant; outbound cap is 0",
+    "required_parameters": [
+      "temperature",
+      "max_tokens",
+      "response_format"
+    ],
+    "response_format": "json_object (normal Pydantic schemas preserved)",
+    "mandatory_reasoning": false,
+    "default_reasoning": false,
+    "optional_addons": "No search, tools, paid plugins, media or explicit cache operations requested; endpoint page advertised implicit caching disabled and zero text/reasoning SKUs",
+    "snapshot_sha256": "f29472abeea21fb66f77dbf7298cb82ea2a2fc319b354390dbc3b0f91b2d37ea",
+    "canonical_details_trap": "The free model links.details points at the paid canonical variant. Preflight explicitly checks the exact :free response ID."
+  },
+  "offline_verification": {
+    "backend_pytest": {
+      "passed": 228,
+      "skipped": 0,
+      "failed": 0,
+      "warnings": 2,
+      "duration_seconds": 206.6,
+      "database": "fresh maos-or-prep-postgres-20261027 on loopback 55431",
+      "redis": "fresh maos-or-prep-redis-20261027 on loopback 56331"
+    },
+    "lock_check": "PASS",
+    "ruff_app_and_examples": "PASS",
+    "black_app_examples_alembic": {
+      "status": "PASS",
+      "files": 121
+    },
+    "strict_mypy_app_examples": {
+      "status": "PASS",
+      "files": 119
+    },
+    "followup": "First gate found two MyPy import-export errors in the new test only. Corrected the test reference, reran Ruff/Black/MyPy and all 10 OpenRouter tests successfully. Production code unchanged; full 228 tests were not unnecessarily repeated.",
+    "ops_unittest": {
+      "passed": 29,
+      "smoke_helper_tests": 17,
+      "existing_ops_tests": 12
+    },
+    "scripts_ruff_black": "PASS",
+    "compose_base_and_example_override_gate": "PASS",
+    "actual_compose_api_worker_oneoffs": "PASS: same selected model/policy/caps and blank key; validate_ready fails before generation",
+    "resolved_compose": "PASS: pinned image, loopback port, dedicated postgres identity/volume, separate CLI mount; no API/worker credential mounts",
+    "runtime_image_content": "PASS: unprivileged, packaged text_review opt-in; tests/fakes/private configuration absent",
+    "container_public_metadata_get": "PASS: unauthenticated GET from actual image on isolated Compose network; no generation",
+    "container_image_identity": "PASS: actual container Image equals pinned image ID",
+    "missing_key_preflight": "BLOCKED enter_private_key_locally_first, before inference/attempt reservation",
+    "secret_scan": "PASS: tracked files, no findings",
+    "backend_gate_command": "PATH=\"$PWD/backend/.venv/bin:$PATH\" MAOS_TEST_DATABASE_URL=postgresql+asyncpg://maos_test:maos-isolated-test-only@127.0.0.1:55431/maos_test MAOS_TEST_POSTGRES_CONTAINER=maos-or-prep-postgres-20261027 DATABASE_URL=postgresql+asyncpg://maos_test:maos-isolated-test-only@127.0.0.1:55431/maos_test REDIS_URL=redis://127.0.0.1:56331/0 bash scripts/ci/backend-gate.sh",
+    "followup_commands_from_backend": [
+      ".venv/bin/ruff check app maos_examples",
+      ".venv/bin/black --check app maos_examples alembic",
+      ".venv/bin/poetry run mypy app maos_examples",
+      ".venv/bin/pytest app/tests/test_openrouter_smoke.py -q --tb=short"
+    ],
+    "ops_command": "python3 -m unittest scripts.ops.test_openrouter_free_smoke scripts.ops.test_scan_secrets scripts.ops.test_validate_environment -q",
+    "compose_gate_command": "MAOS_ENV_FILE=.maos/openrouter-free-smoke/private.env bash scripts/ci/compose-gate.sh (private/COMPOSE shell overrides removed, output captured and withheld)"
+  },
+  "private_preparation": {
+    "directory": ".maos/openrouter-free-smoke/",
+    "key_file": "private.env",
+    "key_variable": "OPENROUTER_API_KEY",
+    "key_present": false,
+    "input_empty": true,
+    "attempt_absent": true,
+    "directory_mode": "0700",
+    "file_mode": "0600",
+    "git_ignored": true,
+    "outside_backend_build_context": true,
+    "backend_dockerignore_also_excludes_maos": true
+  },
+  "call_budget": {
+    "MAX_PROVIDER_CALLS": 2,
+    "LLM_MAX_RETRIES": 0,
+    "LLM_MAX_OUTPUT_TOKENS": 1024,
+    "transport_connect_retries": 0,
+    "durable_reservation": "before dispatch, preserved across recovery",
+    "wrapper": "exclusive permanent attempt marker, no automatic new run",
+    "observation_boundary": "At most two client generation HTTP attempts, including uncertain outcomes; OpenRouter/upstream internal behavior is not observable or asserted."
+  },
+  "acceptance": {
+    "PASS": 30,
+    "BLOCKED": 2,
+    "FAIL": 0,
+    "NOT_RUN": 0,
+    "blocked": [
+      "AC-08",
+      "AC-29 real-model journey"
+    ],
+    "generation": "NOT_RUN"
+  },
+  "retention": "Only new task-owned gate containers stopped; their volumes retained. All pre-existing resources and original image preserved. Profile services not started; only temporary validation oneoffs executed.",
+  "remote_actions": "No inference, push, merge, publication, remote deployment, model download or retained-resource deletion",
+  "changed_files": [
+    ".env.example",
+    "CONTRIBUTING.md",
+    "backend/.dockerignore",
+    "backend/app/config/default.env",
+    "backend/app/config/settings.py",
+    "backend/app/llm/clients/http.py",
+    "backend/app/llm/clients/openrouter.py",
+    "backend/app/llm/factory.py",
+    "backend/app/llm/provider_preferences.py",
+    "backend/app/llm/service.py",
+    "backend/app/llm/settings.py",
+    "backend/app/tests/test_openrouter_smoke.py",
+    "docker-compose.yml",
+    "docs/openrouter-free-smoke.md",
+    "docs/plans/active/spec-029-headless-oss.md",
+    "docs/release/openrouter-preparation.json",
+    "docs/release/verification.md",
+    "scripts/ci/check-release-image.py",
+    "scripts/ops/live_text_review.py",
+    "scripts/ops/openrouter_free_smoke.py",
+    "scripts/ops/test_openrouter_free_smoke.py"
+  ]
+}
