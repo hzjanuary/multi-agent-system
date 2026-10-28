@@ -58,8 +58,8 @@ jobs:
       - name: Operations and release-security tests
         run: |
           python -m unittest discover -s scripts/ops -p 'test_*.py'
-          poetry -C backend run ruff check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py scripts/ops/verify_release_install.py scripts/ops/os_image_probe.py scripts/ops/os_vulnerability_triage.py scripts/ops/test_os_vulnerability_triage.py scripts/ci/check-release-image.py
-          poetry -C backend run black --check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py scripts/ops/verify_release_install.py scripts/ops/os_image_probe.py scripts/ops/os_vulnerability_triage.py scripts/ops/test_os_vulnerability_triage.py scripts/ci/check-release-image.py
+          poetry -C backend run ruff check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py scripts/ops/verify_release_install.py scripts/ops/os_image_probe.py scripts/ops/os_vulnerability_triage.py scripts/ops/test_os_vulnerability_triage.py scripts/ops/test_verify_release_install.py scripts/ci/check-release-image.py
+          poetry -C backend run black --check scripts/ops/release_policy.py scripts/ops/scan_secrets.py scripts/ops/license_inventory.py scripts/ops/release_artifacts.py scripts/ops/release_security.py scripts/ops/test_scan_secrets.py scripts/ops/test_release_artifacts.py scripts/ops/test_release_security.py scripts/ops/test_license_inventory.py scripts/ops/verify_release_install.py scripts/ops/os_image_probe.py scripts/ops/os_vulnerability_triage.py scripts/ops/test_os_vulnerability_triage.py scripts/ops/test_verify_release_install.py scripts/ci/check-release-image.py
       - name: Full tracked-file secret and private-path scan
         run: |
           python scripts/ops/scan_secrets.py --strict --allow-approved-fixtures
@@ -76,6 +76,7 @@ jobs:
           docker run --rm multi-agent-os:local python -m app.cli --version
           bash scripts/ci/compose-gate.sh
       - name: Isolated clean-clone installation without inference
+        id: clean-install
         run: python scripts/ops/verify_release_install.py --image multi-agent-os:local --source "$(git rev-parse HEAD)" --directory .maos/clean-install --project maos-spec030-ci-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Python dependency vulnerability audit (no exceptions)
         run: |
@@ -83,6 +84,7 @@ jobs:
           pip install pip-audit==2.10.1
           pip-audit --require-hashes --disable-pip --no-deps -r /tmp/maos-main-requirements.txt --format json --output .maos/python-audit.json
       - name: OS and language vulnerability scan, SBOM (HIGH/CRITICAL block release)
+        if: ${{ !cancelled() && steps.clean-install.outcome == 'success' }}
         run: |
           python scripts/ops/release_security.py install-trivy --tool .maos/tools/trivy
           python scripts/ops/release_security.py scan-image --tool .maos/tools/trivy --image multi-agent-os:local --output .maos/security
@@ -100,4 +102,5 @@ jobs:
             .maos/security/image-vulnerabilities.json
             .maos/security/sbom.cdx.json
             .maos/python-audit.json
+            .maos/clean-install-summary.json
             .maos/spec-030/evidence/*/image-verification.json

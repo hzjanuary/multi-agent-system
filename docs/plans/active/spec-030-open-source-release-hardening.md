@@ -308,3 +308,20 @@ or branch protection; no force push/bypass. Keep this SPEC030 plan active.
   original pushed PR SHA/run evidence distinct. SPEC030 stays active; SPEC029
   remains32PASS/0BLOCKED. No inference, tag/merge/release/image publication/
   deployment/history rewrite or retained-resource deletion.
+
+
+### Authorized clean-install CI isolation repair and source preview continuation
+
+- Owner authorizes a narrow helper isolation/diagnostic correction, regression
+  tests, hostile-parent local installation, relevant full gates, and update of
+  existing PR1. Keep historical failed runs and known raw vulnerability gate.
+- In progress: explicit safe host/Docker environment allowlist; compare resolved
+  API/worker/CLI private database, Redis, JWT and model settings before startup;
+  allowlisted public failure summary, private subprocess records, scoped stop.
+- Required proof: synthetic hostile CI environment, stage/exit/redaction/cleanup
+  regression tests, actual empty migration/bootstrap/readiness/separate CLI; no
+  inference. Run new Actions candidate; Python audit and Trivy must execute.
+- Resume normal merge/tag/source-only prerelease only if all newly required
+  checks pass and remaining scan failure is limited to disclosed findings. Stop
+  for new unexpected failure, material security delta or repository protection.
+  No image publication, security policy relaxation, data deletion or new campaign.
